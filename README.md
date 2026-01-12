@@ -5,6 +5,8 @@ A hardened, optimized, security-focused shell environment for advanced users, re
 
 Based upon the work of https://github.com/gitdurandal/bashrc ,"A more elegant weapon of a civilized age".
 
+COMING UP:BIG OL' UPDATE w/ an enhanced version of Kitty as who doesnt love cats also like....ill be real i did this before i knew zsh existed...and its kinda lowkey better so instead of conceding ill KICK IT UP A NOTCH(nope no issues hered doc)
+
 
 
 ## Table of Contents
