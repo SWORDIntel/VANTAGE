@@ -90,17 +90,19 @@ elapsed_ns=$((end_ns - start_ns))
 [[ "$elapsed_ns" -lt 200000000 ]] || fail "telemetry no-op too slow (${elapsed_ns}ns)"
 
 # Shellcheck on modified scripts (fast gate)
-shellcheck -x \
-  "${PROJECT_ROOT}/installer/config.py" >/dev/null 2>&1 || true
-shellcheck -x \
-  "${PROJECT_ROOT}/installer/lib/preflight.sh" \
-  "${PROJECT_ROOT}/installer/lib/install_core.sh" \
-  "${PROJECT_ROOT}/installer/helpers.sh" \
-  "${PROJECT_ROOT}/installer/dependencies.sh" \
-  "${PROJECT_ROOT}/installer/bash.sh" \
-  "${PROJECT_ROOT}/bash_modules.d/fabric_integration.module" \
-  "${PROJECT_ROOT}/bash_modules.d/hmac.module" \
-  "${PROJECT_ROOT}/bash_modules.d/python_integration.module" >/dev/null
+if command -v shellcheck >/dev/null 2>&1; then
+  shellcheck -x \
+    "${PROJECT_ROOT}/installer/lib/preflight.sh" \
+    "${PROJECT_ROOT}/installer/lib/install_core.sh" \
+    "${PROJECT_ROOT}/installer/helpers.sh" \
+    "${PROJECT_ROOT}/installer/dependencies.sh" \
+    "${PROJECT_ROOT}/installer/bash.sh" \
+    "${PROJECT_ROOT}/bash_modules.d/fabric_integration.module" \
+    "${PROJECT_ROOT}/bash_modules.d/hmac.module" \
+    "${PROJECT_ROOT}/bash_modules.d/python_integration.module" >/dev/null
+fi
+
+python3 -m py_compile "${PROJECT_ROOT}/installer/config.py"
 
 if command -v shfmt >/dev/null 2>&1; then
   shfmt -d \
@@ -115,4 +117,3 @@ if command -v shfmt >/dev/null 2>&1; then
 fi
 
 echo "OK"
-

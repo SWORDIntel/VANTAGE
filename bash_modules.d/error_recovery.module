@@ -29,6 +29,8 @@ mkdir -p "$SENTINEL_ERROR_RECOVERY_DIR"
 declare -gA SENTINEL_CIRCUIT_BREAKERS
 declare -gA SENTINEL_CIRCUIT_BREAKER_FAILURES
 declare -gA SENTINEL_CIRCUIT_BREAKER_LAST_FAILURE
+declare -gA SENTINEL_CIRCUIT_BREAKER_THRESHOLDS
+declare -gA SENTINEL_CIRCUIT_BREAKER_TIMEOUTS
 declare -gA SENTINEL_MODULE_FALLBACKS
 
 # Error context storage
@@ -45,6 +47,8 @@ sentinel_circuit_breaker_init() {
     SENTINEL_CIRCUIT_BREAKERS["$component"]="closed"
     SENTINEL_CIRCUIT_BREAKER_FAILURES["$component"]=0
     SENTINEL_CIRCUIT_BREAKER_LAST_FAILURE["$component"]=0
+    SENTINEL_CIRCUIT_BREAKER_THRESHOLDS["$component"]="$threshold"
+    SENTINEL_CIRCUIT_BREAKER_TIMEOUTS["$component"]="$timeout"
     
     [[ -n "$(type -t sentinel_log_debug)" ]] && \
         sentinel_log_debug "error_recovery" "Circuit breaker initialized for $component (threshold=$threshold, timeout=$timeout)"
@@ -57,6 +61,7 @@ sentinel_circuit_breaker_check() {
     local component="${1:?Component name required}"
     local state="${SENTINEL_CIRCUIT_BREAKERS[$component]:-closed}"
     local last_failure="${SENTINEL_CIRCUIT_BREAKER_LAST_FAILURE[$component]:-0}"
+    local timeout="${SENTINEL_CIRCUIT_BREAKER_TIMEOUTS[$component]:-$SENTINEL_CIRCUIT_BREAKER_TIMEOUT}"
     local current_time=$(date +%s)
     
     case "$state" in
@@ -65,7 +70,7 @@ sentinel_circuit_breaker_check() {
             ;;
         "open")
             # Check if timeout has passed
-            if (( current_time - last_failure >= SENTINEL_CIRCUIT_BREAKER_TIMEOUT )); then
+            if (( current_time - last_failure >= timeout )); then
                 # Move to half-open state
                 SENTINEL_CIRCUIT_BREAKERS["$component"]="half-open"
                 [[ -n "$(type -t sentinel_log_info)" ]] && \
@@ -102,6 +107,7 @@ sentinel_circuit_breaker_failure() {
     local component="${1:?Component name required}"
     local error_message="${2:-Unknown error}"
     local failures="${SENTINEL_CIRCUIT_BREAKER_FAILURES[$component]:-0}"
+    local threshold="${SENTINEL_CIRCUIT_BREAKER_THRESHOLDS[$component]:-$SENTINEL_CIRCUIT_BREAKER_THRESHOLD}"
     local current_time=$(date +%s)
     
     # Increment failure count
@@ -110,7 +116,7 @@ sentinel_circuit_breaker_failure() {
     SENTINEL_CIRCUIT_BREAKER_LAST_FAILURE["$component"]=$current_time
     
     # Check if threshold reached
-    if (( failures >= SENTINEL_CIRCUIT_BREAKER_THRESHOLD )); then
+    if (( failures >= threshold )); then
         SENTINEL_CIRCUIT_BREAKERS["$component"]="open"
         [[ -n "$(type -t sentinel_log_error)" ]] && \
             sentinel_log_error "error_recovery" "Circuit breaker for $component opened after $failures failures: $error_message"
@@ -119,7 +125,7 @@ sentinel_circuit_breaker_failure() {
         sentinel_trigger_fallback "$component"
     else
         [[ -n "$(type -t sentinel_log_warning)" ]] && \
-            sentinel_log_warning "error_recovery" "Component $component failure $failures/$SENTINEL_CIRCUIT_BREAKER_THRESHOLD: $error_message"
+            sentinel_log_warning "error_recovery" "Component $component failure $failures/$threshold: $error_message"
     fi
 }
 

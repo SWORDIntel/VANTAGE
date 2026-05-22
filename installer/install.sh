@@ -6,9 +6,24 @@ source "$(dirname "${BASH_SOURCE[0]}")/lib/init.sh"
 
 # Handle --dry-run flag
 DRY_RUN=0
-if [[ " $@ " =~ " --dry-run " ]]; then
-    DRY_RUN=1
-fi
+INTERACTIVE="${INTERACTIVE:-1}"
+
+# Parse flags that affect control flow before any prompts.
+for arg in "$@"; do
+    case "$arg" in
+        --dry-run)
+            DRY_RUN=1
+            ;;
+        --non-interactive)
+            INTERACTIVE=0
+            ;;
+        --headless)
+            export SENTINEL_HEADLESS=1
+            export SENTINEL_SKIP_BLESH=1
+            export SENTINEL_SKIP_WAVE=1
+            ;;
+    esac
+done
 
 # Detect installation pathway
 INSTALL_PATHWAY="${SENTINEL_INSTALL_PATHWAY:-bash}"

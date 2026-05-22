@@ -8,6 +8,48 @@ import yaml
 
 
 _SAFE_ENV_RE = re.compile(r"^[A-Z_][A-Z0-9_]*$")
+_SECTION_KEY_MAP: dict[str, dict[str, str]] = {
+    "performance": {
+        "lazy_load": "LAZY_LOAD",
+        "parallel_loading": "SENTINEL_PARALLEL_LOADING",
+        "parallel_max_jobs": "SENTINEL_PARALLEL_MAX_JOBS",
+    },
+    "security": {
+        "module_verify": "SENTINEL_MODULE_VERIFY",
+        "tools_allowed_commands": "SENTINEL_TOOLS_ALLOWED_COMMANDS",
+        "secure_bash_history": "SENTINEL_SECURE_BASH_HISTORY",
+        "secure_ssh_known_hosts": "SENTINEL_SECURE_SSH_KNOWN_HOSTS",
+        "secure_clean_cache": "SENTINEL_SECURE_CLEAN_CACHE",
+        "secure_browser_cache": "SENTINEL_SECURE_BROWSER_CACHE",
+        "secure_recent": "SENTINEL_SECURE_RECENT",
+        "secure_vim_undo": "SENTINEL_SECURE_VIM_UNDO",
+        "secure_clipboard": "SENTINEL_SECURE_CLIPBOARD",
+        "clear_screen_on_logout": "SENTINEL_CLEAR_SCREEN_ON_LOGOUT",
+        "secure_dirs": "SENTINEL_SECURE_DIRS",
+        "workspace_temp": "SENTINEL_WORKSPACE_TEMP",
+    },
+    "modules": {
+        "debug": "SENTINEL_MODULE_DEBUG",
+        "autoload": "SENTINEL_MODULE_AUTOLOAD",
+        "cache_enabled": "SENTINEL_MODULE_CACHE_ENABLED",
+        "enabled_modules": "SENTINEL_MODULES_ENABLED",
+        "lazy_load_modules": "SENTINEL_LAZY_LOAD_MODULES",
+        "core_modules": "SENTINEL_CORE_MODULES",
+    },
+    "obfuscation": {
+        "enabled": "SENTINEL_OBFUSCATE_ENABLED",
+        "output_dir": "OBFUSCATE_OUTPUT_DIR",
+    },
+    "hashcat": {
+        "bin": "HASHCAT_BIN",
+        "wordlists_dir": "HASHCAT_WORDLISTS_DIR",
+        "output_dir": "HASHCAT_OUTPUT_DIR",
+    },
+    "distcc": {
+        "hosts": "DISTCC_HOSTS",
+        "ccache_size": "CCACHE_SIZE",
+    },
+}
 
 
 def _shell_single_quote(value: str) -> str:
@@ -25,7 +67,8 @@ def _safe_env_name(name: str) -> str | None:
         return None
     return n
 
-def parse_yaml(file_path: Path):
+def parse_yaml(file_path: str | os.PathLike[str] | Path):
+    file_path = Path(file_path)
     with file_path.open("r", encoding="utf-8") as f:
         return yaml.safe_load(f) or {}
 
@@ -45,7 +88,7 @@ def _iter_kv(settings, prefix: str | None = None):
         # Leaf
         yield (prefix, settings)
 
-def export_variables(config) -> list[str]:
+def export_variables(config, *, emit_output: bool = True) -> list[str]:
     """
     Generate safe `export KEY='VALUE'` lines.
 
@@ -78,12 +121,14 @@ def export_variables(config) -> list[str]:
         lines.append(f"export {safe_name}={_shell_single_quote(value_str)}")
 
     for section, settings in (config or {}).items():
+        section_name = str(section)
         if not isinstance(settings, dict):
+            emit(section_name, settings)
             continue
 
         # SECURITY/COMPAT: Fabric config is exported with a FABRIC_ prefix to
         # prevent collisions with other sections (many have "enabled", etc.).
-        if str(section) == "fabric":
+        if section_name == "fabric":
             base = "FABRIC"
             for key, value in settings.items():
                 k = str(key)
@@ -95,26 +140,29 @@ def export_variables(config) -> list[str]:
                     emit(f"{base}_{k}", value)
             continue
 
+        section_map = _SECTION_KEY_MAP.get(section_name, {})
         for key, value in settings.items():
-            # Special cases used by the module system
-            if key == "enabled_modules":
-                emit("SENTINEL_MODULES_ENABLED", value)
-                continue
-            if key == "lazy_load_modules":
-                emit("SENTINEL_LAZY_LOAD_MODULES", value)
-                continue
-            if key == "core_modules":
-                emit("SENTINEL_CORE_MODULES", value)
+            key_name = str(key)
+            mapped_name = section_map.get(key_name)
+            if mapped_name:
+                emit(mapped_name, value)
                 continue
 
-            # Historical behavior: export by leaf key only. For nested structures,
-            # flatten with KEY_SUBKEY... naming.
             if isinstance(value, dict):
-                for flat_key, flat_val in _iter_kv(value, prefix=str(key)):
+                for flat_key, flat_val in _iter_kv(value, prefix=key_name):
                     if flat_key:
-                        emit(flat_key, flat_val)
+                        prefix = section_name if section_name not in {"general", "paths"} else None
+                        emit(f"{prefix}_{flat_key}" if prefix else flat_key, flat_val)
             else:
-                emit(str(key), value)
+                if section_name in {"general", "paths"}:
+                    emit(key_name, value)
+                elif section_name in {"performance"} and key_name == "lazy_load":
+                    emit(key_name, value)
+                else:
+                    emit(f"{section_name}_{key_name}", value)
+
+    if emit_output and lines:
+        sys.stdout.write("\n".join(lines) + "\n")
 
     return lines
 
@@ -146,7 +194,7 @@ def main() -> int:
         print("echo 'Configuration file not found.' >&2")
         return 1
 
-    lines = export_variables(config)
+    lines = export_variables(config, emit_output=False)
     content = "\n".join(lines) + ("\n" if lines else "")
 
     if args.output:

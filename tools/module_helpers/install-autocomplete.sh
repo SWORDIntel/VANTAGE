@@ -66,7 +66,8 @@ _check_command() {
 
 # Get script directory and set up paths
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
-REPO_ROOT="$(cd -- "$SCRIPT_DIR/.." && pwd -P)"
+REPO_ROOT="$(cd -- "$SCRIPT_DIR/../.." && pwd -P)"
+MODULES_SOURCE_DIR="${REPO_ROOT}/bash_modules.d"
 ALIASES_DIR="${HOME}/bash_aliases.d"
 
 # Determine the modules directory (support both environment variable and default)
@@ -103,7 +104,7 @@ if [[ ! -d "$ALIASES_DIR" ]]; then
 fi
 
 # Create temporary wrapper file if not found in repo
-if [[ ! -f "$REPO_ROOT/bash_aliases.d/autocomplete.new" && -f "$SCRIPT_DIR/autocomplete.module" ]]; then
+if [[ ! -f "$REPO_ROOT/bash_aliases.d/autocomplete.new" && -f "$MODULES_SOURCE_DIR/autocomplete.module" ]]; then
     _info "Creating autocomplete wrapper file"
     mkdir -p "$REPO_ROOT/bash_aliases.d"
     cat > "$REPO_ROOT/bash_aliases.d/autocomplete.new" << 'EOF'
@@ -147,9 +148,9 @@ fi
 
 # Copy required module files if not present
 for module in autocomplete.module logging.module snippets.module fuzzy_correction.module command_chains.module; do
-    if [[ -f "$SCRIPT_DIR/$module" && ! -f "$MODULES_DIR/$module" ]]; then
+    if [[ -f "$MODULES_SOURCE_DIR/$module" && ! -f "$MODULES_DIR/$module" ]]; then
         _info "Copying $module to $MODULES_DIR"
-        cp "$SCRIPT_DIR/$module" "$MODULES_DIR/$module"
+        cp "$MODULES_SOURCE_DIR/$module" "$MODULES_DIR/$module"
         chmod 600 "$MODULES_DIR/$module"
     fi
 done

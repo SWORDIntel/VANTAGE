@@ -3,7 +3,7 @@
 # Implements parallel loading with dependency graph analysis and caching
 
 # Prevent multiple loading
-[[ -n "${_SENTINEL_PARALLEL_LOADER_LOADED}" ]] && return 0
+[[ -n "${_SENTINEL_PARALLEL_LOADER_LOADED:-}" ]] && return 0
 export _SENTINEL_PARALLEL_LOADER_LOADED=1
 
 SENTINEL_MODULE_DESCRIPTION="Parallel module loading with dependency resolution and caching"
@@ -15,15 +15,15 @@ SENTINEL_MODULE_CACHE_DIR="${SENTINEL_MODULE_CACHE_DIR:-$HOME/.cache/sentinel/mo
 mkdir -p "$SENTINEL_MODULE_CACHE_DIR"
 
 # Timing data storage
-declare -A SENTINEL_MODULE_LOAD_TIMES
-declare -A SENTINEL_MODULE_CACHE_HITS
+declare -gA SENTINEL_MODULE_LOAD_TIMES
+declare -gA SENTINEL_MODULE_CACHE_HITS
 
 # Dependency graph storage
-declare -A SENTINEL_MODULE_DEPS_GRAPH
-declare -A SENTINEL_MODULE_REVERSE_DEPS
+declare -gA SENTINEL_MODULE_DEPS_GRAPH
+declare -gA SENTINEL_MODULE_REVERSE_DEPS
 
 # Module metadata cache
-declare -A SENTINEL_MODULE_METADATA_CACHE
+declare -gA SENTINEL_MODULE_METADATA_CACHE
 
 # Parallel loading configuration
 SENTINEL_PARALLEL_MAX_JOBS="${SENTINEL_PARALLEL_MAX_JOBS:-4}"
@@ -64,12 +64,21 @@ _load_module_metadata() {
             # Cache hit - load from cache
             SENTINEL_MODULE_CACHE_HITS["$module_name"]=1
             local metadata=$(tail -n +2 "$cache_file")
+            metadata="$(printf '%s\n' "$metadata" | sed "s|^FILE:.*$|FILE:$module_file|")"
             SENTINEL_MODULE_METADATA_CACHE["$module_name"]="$metadata"
             
             # Parse dependencies from cache
             local deps=$(echo "$metadata" | grep "^DEPS:" | cut -d':' -f2-)
             if [[ -n "$deps" ]]; then
                 SENTINEL_MODULE_DEPS_GRAPH["$module_name"]="$deps"
+                for dep in $deps; do
+                    local current_reverse="${SENTINEL_MODULE_REVERSE_DEPS[$dep]:-}"
+                    if [[ -n "$current_reverse" ]]; then
+                        SENTINEL_MODULE_REVERSE_DEPS["$dep"]="$current_reverse $module_name"
+                    else
+                        SENTINEL_MODULE_REVERSE_DEPS["$dep"]="$module_name"
+                    fi
+                done
             fi
             
             local end_time=$(date +%s%N 2>/dev/null || date +%s)
@@ -123,7 +132,7 @@ FILE:$module_file"
         
         # Build reverse dependency graph
         for dep in $dependencies; do
-            local current_reverse="${SENTINEL_MODULE_REVERSE_DEPS[$dep]}"
+            local current_reverse="${SENTINEL_MODULE_REVERSE_DEPS[$dep]:-}"
             if [[ -n "$current_reverse" ]]; then
                 SENTINEL_MODULE_REVERSE_DEPS["$dep"]="$current_reverse $module_name"
             else
@@ -151,6 +160,10 @@ _build_dependency_graph() {
     local start_time=$(date +%s%N 2>/dev/null || date +%s)
     
     echo "Building module dependency graph..." >&2
+
+    SENTINEL_MODULE_DEPS_GRAPH=()
+    SENTINEL_MODULE_REVERSE_DEPS=()
+    SENTINEL_MODULE_METADATA_CACHE=()
     
     # Find all modules
     local modules=()
@@ -160,25 +173,27 @@ _build_dependency_graph() {
         modules+=("$module_name:$module_file")
     done < <(find "$module_path" -maxdepth 3 -type f \( -name "*.module" -o -name "*.sh" \) 2>/dev/null | sort)
     
-    # Load metadata for all modules in parallel (using process substitution)
-    local count=0
+    # Load metadata in the current shell so dependency arrays are populated
+    # reliably. Background subshells cannot update the parent shell's maps.
+    local load_failed=0
+    local restore_errexit=0
+    [[ $- == *e* ]] && restore_errexit=1 && set +e
     for module_info in "${modules[@]}"; do
         local module_name="${module_info%%:*}"
         local module_file="${module_info#*:}"
-        
-        # Load metadata (this will use cache if available)
-        ( _load_module_metadata "$module_name" "$module_file" >/dev/null 2>&1 & disown ) 2>/dev/null
-        
-        # Limit parallel jobs
-        ((count++))
-        if (( count % SENTINEL_PARALLEL_MAX_JOBS == 0 )); then
-            wait
+
+        if ! _load_module_metadata "$module_name" "$module_file" >/dev/null 2>&1; then
+            load_failed=1
         fi
     done
-    wait
-    
+    [[ $restore_errexit -eq 1 ]] && set -e
+
     local end_time=$(date +%s%N 2>/dev/null || date +%s)
     local duration=$((($end_time - $start_time) / 1000000))
+    if [[ $load_failed -ne 0 ]]; then
+        echo "Dependency graph built with partial metadata in ${duration}ms" >&2
+        return 0
+    fi
     echo "Dependency graph built in ${duration}ms" >&2
 }
 
@@ -189,18 +204,19 @@ _topological_sort() {
     local -a zero_degree
     local -a sorted_order
     
-    # Calculate in-degree for each module
-    for module in "${!SENTINEL_MODULE_DEPS_GRAPH[@]}"; do
+    # Seed every discovered module, including modules without dependencies.
+    for module in "${!SENTINEL_MODULE_METADATA_CACHE[@]}"; do
         in_degree["$module"]=0
         visited["$module"]=0
     done
     
-    # Count incoming edges
+    # Count each module's dependencies and ensure dependency nodes exist.
     for module in "${!SENTINEL_MODULE_DEPS_GRAPH[@]}"; do
-        local deps="${SENTINEL_MODULE_DEPS_GRAPH[$module]}"
+        local deps="${SENTINEL_MODULE_DEPS_GRAPH[$module]:-}"
         for dep in $deps; do
             if [[ -n "$dep" ]]; then
-                ((in_degree["$dep"]++))
+                [[ -n "${in_degree[$dep]:-}" ]] || in_degree["$dep"]=0
+                ((in_degree["$module"]++))
             fi
         done
     done
@@ -211,6 +227,9 @@ _topological_sort() {
             zero_degree+=("$module")
         fi
     done
+    if [[ ${#zero_degree[@]} -gt 0 ]]; then
+        mapfile -t zero_degree < <(printf '%s\n' "${zero_degree[@]}" | sort)
+    fi
     
     # Process modules in topological order
     while [[ ${#zero_degree[@]} -gt 0 ]]; do
@@ -219,13 +238,16 @@ _topological_sort() {
         sorted_order+=("$current")
         
         # Check modules that depend on current
-        local reverse_deps="${SENTINEL_MODULE_REVERSE_DEPS[$current]}"
+        local reverse_deps="${SENTINEL_MODULE_REVERSE_DEPS[$current]:-}"
         for dependent in $reverse_deps; do
             ((in_degree["$dependent"]--))
             if [[ "${in_degree[$dependent]}" -eq 0 ]]; then
                 zero_degree+=("$dependent")
             fi
         done
+        if [[ ${#zero_degree[@]} -gt 1 ]]; then
+            mapfile -t zero_degree < <(printf '%s\n' "${zero_degree[@]}" | sort)
+        fi
     done
     
     # Return sorted order
@@ -266,15 +288,17 @@ _identify_parallel_groups() {
     # Group modules by level
     local -a parallel_groups
     for ((i=0; i<=max_level; i++)); do
-        local group=""
-        for module in "${!module_level[@]}"; do
+        local -a group_modules=()
+        for module in "${sorted_modules[@]}"; do
             # Skip empty module names
             [[ -z "$module" ]] && continue
             if [[ "${module_level[$module]:-}" -eq $i ]]; then
-                group="$group $module"
+                group_modules+=("$module")
             fi
         done
-        if [[ -n "$group" ]]; then
+        if [[ ${#group_modules[@]} -gt 0 ]]; then
+            local group
+            group="$(printf '%s ' "${group_modules[@]}")"
             parallel_groups+=("$group")
         fi
     done
@@ -330,12 +354,16 @@ parallel_load_modules() {
             [[ -z "$module_name" || "$module_name" =~ ^# ]] && continue
             
             # Skip if already loaded
-            if [[ "${SENTINEL_LOADED_MODULES[$module_name]}" == "1" ]]; then
+            if [[ "${SENTINEL_LOADED_MODULES[$module_name]:-}" == "1" ]]; then
                 continue
             fi
             
             # Skip lazy modules during startup
             if declare -F is_lazy_load_module &>/dev/null && is_lazy_load_module "$module_name"; then
+                local module_file=""
+                if [[ -n "${SENTINEL_MODULE_METADATA_CACHE[$module_name]:-}" ]]; then
+                    module_file="$(printf '%s\n' "${SENTINEL_MODULE_METADATA_CACHE[$module_name]}" | grep '^FILE:' | cut -d':' -f2-)"
+                fi
                 if declare -F create_lazy_proxy &>/dev/null; then
                     create_lazy_proxy "$module_name" "$module_file"
                 fi
@@ -383,11 +411,12 @@ parallel_load_modules() {
         local group="${parallel_groups[$i]}"
         echo "Loading group $((i+1)): $group" >&2
         
-        # Load modules in this group in parallel
+        # Load modules in dependency order within the current shell so the
+        # sourced modules can modify the active environment.
         for module_name in $group; do
-            if [[ -n "${modules_to_load[$module_name]}" ]]; then
+            if [[ -n "${modules_to_load[$module_name]:-}" ]]; then
                 # Get module file from metadata
-                local metadata="${SENTINEL_MODULE_METADATA_CACHE[$module_name]}"
+                local metadata="${SENTINEL_MODULE_METADATA_CACHE[$module_name]:-}"
                 local module_file=$(echo "$metadata" | grep "^FILE:" | cut -d':' -f2-)
                 
                 # If no metadata, try to find the module file directly
@@ -400,14 +429,12 @@ parallel_load_modules() {
                 fi
                 
                 if [[ -n "$module_file" && -f "$module_file" ]]; then
-                    ( _load_module_with_timing "$module_name" "$module_file" & ) 2>/dev/null
-                    ((total_loaded++))
+                    if _load_module_with_timing "$module_name" "$module_file" >/dev/null 2>&1; then
+                        ((total_loaded++))
+                    fi
                 fi
             fi
         done
-        
-        # Wait for this group to complete
-        wait
     done
     
     local end_time=$(date +%s%N 2>/dev/null || date +%s)
@@ -454,9 +481,9 @@ clear_module_cache() {
     unset SENTINEL_MODULE_DEPS_GRAPH
     unset SENTINEL_MODULE_REVERSE_DEPS
     
-    declare -A SENTINEL_MODULE_METADATA_CACHE
-    declare -A SENTINEL_MODULE_DEPS_GRAPH
-    declare -A SENTINEL_MODULE_REVERSE_DEPS
+    declare -gA SENTINEL_MODULE_METADATA_CACHE
+    declare -gA SENTINEL_MODULE_DEPS_GRAPH
+    declare -gA SENTINEL_MODULE_REVERSE_DEPS
     
     echo "All module caches cleared" >&2
 }

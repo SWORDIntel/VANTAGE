@@ -10,12 +10,12 @@
 # For this test, we'll assume the functions/modules are available
 # as they would be in a normal shell session after the changes.
 
-# Load bashrc in a way that makes functions available.
-# This is tricky; for a real test framework, you'd have a more robust setup.
-# As a simple approach, we'll try to source it if it's not breaking things.
-# Or, more safely, just check for function existence.
+export SENTINEL_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")"/.. && pwd)"
 
-source "$HOME/bashrc" 2>/dev/null || echo "Warning: Could not source bashrc for tests, functions might not be available."
+source "${SENTINEL_ROOT}/bash_modules.d/logging.module" 2>/dev/null || true
+source "${SENTINEL_ROOT}/bash_functions.d/venv_helpers"
+export SENTINEL_AUTO_INSTALL_ENABLED=0
+source "${SENTINEL_ROOT}/bash_modules.d/auto_install.module"
 
 echo "--- Test Suite for New Features ---"
 
@@ -62,6 +62,7 @@ echo "It will install packages, which might take some time."
 # We will redirect mkvenv output to /dev/null to keep test output clean,
 # but this means we won't see its progress.
 _test_mkvenv_creation() {
+    export SENTINEL_MKVENV_SKIP_PACKAGES=1
     # Temporarily disable interactive prompts for the test
     # This is a simple way; a more robust way would be to expect/provide input.
     alias read='echo "N" | read'
@@ -85,21 +86,25 @@ _test_mkvenv_creation() {
                 #    return 1
                 # fi
                 deactivate # Deactivate after check
+                unset SENTINEL_MKVENV_SKIP_PACKAGES
                 unalias read # Restore read
                 return 0 # Success
             else
                 echo "pip command NOT found in venv."
                 deactivate
+                unset SENTINEL_MKVENV_SKIP_PACKAGES
                 unalias read
                 return 1 # Failure
             fi
         else
             echo "Venv directory '$TEMP_VENV_DIR' or activate script '$TEMP_VENV_DIR/bin/activate' not found."
+            unset SENTINEL_MKVENV_SKIP_PACKAGES
             unalias read
             return 1 # Failure
         fi
     else
         echo "mkvenv command itself failed to execute or returned an error."
+        unset SENTINEL_MKVENV_SKIP_PACKAGES
         unalias read
         return 1 # Failure
     fi
@@ -114,10 +119,8 @@ _run_test "mkvenv basic creation (directory and activate script)" "_test_mkvenv_
 # A better test would be to mock `command -v fzf` and see if it tries to install.
 _run_test "auto_install_module loading (check for _auto_install_log)" "type _auto_install_log &>/dev/null"
 
-# 2. More specific test: Check if SENTINEL_AUTO_INSTALL_ENABLED is set (if module sourced)
-# This assumes the module sets this or it's set before sourcing.
-# The module defaults it, so this should be true if sourced.
-_run_test "auto_install_module SENTINEL_AUTO_INSTALL_ENABLED default" '[[ "${SENTINEL_AUTO_INSTALL_ENABLED}" == "1" ]]'
+# 2. Verify the test harness can disable side effects when sourcing the module.
+_run_test "auto_install_module explicit disable respected" '[[ "${SENTINEL_AUTO_INSTALL_ENABLED}" == "0" ]]'
 
 
 # --- Summary ---

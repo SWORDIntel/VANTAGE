@@ -7,7 +7,7 @@ SENTINEL_MODULE_VERSION="1.0.0"
 SENTINEL_MODULE_DEPENDENCIES="logging"
 
 # Prevent double loading
-[[ -n "${_SENTINEL_HEALTH_CHECK_LOADED}" ]] && return 0
+[[ -n "${_SENTINEL_HEALTH_CHECK_LOADED:-}" ]] && return 0
 export _SENTINEL_HEALTH_CHECK_LOADED=1
 
 # Health check configuration
@@ -25,11 +25,11 @@ readonly HEALTH_CRITICAL=3
 readonly HEALTH_UNKNOWN=4
 
 # Module health registry
-declare -A SENTINEL_MODULE_HEALTH_STATUS
-declare -A SENTINEL_MODULE_HEALTH_CHECKS
-declare -A SENTINEL_MODULE_FAILURE_COUNT
-declare -A SENTINEL_MODULE_LAST_CHECK
-declare -A SENTINEL_MODULE_RECOVERY_ATTEMPTS
+declare -gA SENTINEL_MODULE_HEALTH_STATUS
+declare -gA SENTINEL_MODULE_HEALTH_CHECKS
+declare -gA SENTINEL_MODULE_FAILURE_COUNT
+declare -gA SENTINEL_MODULE_LAST_CHECK
+declare -gA SENTINEL_MODULE_RECOVERY_ATTEMPTS
 
 # Performance thresholds
 SENTINEL_HEALTH_MEMORY_THRESHOLD="${SENTINEL_HEALTH_MEMORY_THRESHOLD:-100000}"  # 100MB in KB
@@ -454,8 +454,16 @@ _check_module_file_exists() {
 _get_module_memory_usage() {
     local module_name="$1"
     # This is an approximation - tracks variables and functions related to module
-    local var_count=$(set | grep -c "^SENTINEL_${module_name^^}_" 2>/dev/null || echo 0)
-    local func_size=$(declare -f | grep -A 1000 "^[[:alnum:]_]*${module_name}[[:alnum:]_]*\s*()" 2>/dev/null | wc -c || echo 0)
+    local var_count=0
+    local func_size=0
+
+    var_count="$(set | grep -c "^SENTINEL_${module_name^^}_" 2>/dev/null || true)"
+    func_size="$(declare -f | grep -A 1000 "^[[:alnum:]_]*${module_name}[[:alnum:]_]*\\s*()" 2>/dev/null | wc -c)"
+
+    var_count="${var_count//[^0-9]/}"
+    func_size="${func_size//[^0-9]/}"
+    : "${var_count:=0}"
+    : "${func_size:=0}"
     
     echo $((var_count * 1 + func_size / 1024))  # Rough estimate in KB
 }
@@ -503,12 +511,18 @@ _health_status_to_text() {
     esac
 }
 
+_is_valid_health_module_name() {
+    local module_name="$1"
+    [[ -n "$module_name" && ! "$module_name" =~ ^[0-9]+$ ]]
+}
+
 _save_health_status() {
     local status_file="$SENTINEL_HEALTH_CHECK_DIR/module_status.dat"
     
     # Save current status
     {
         for module in "${!SENTINEL_MODULE_HEALTH_STATUS[@]}"; do
+            _is_valid_health_module_name "$module" || continue
             echo "${module}|${SENTINEL_MODULE_HEALTH_STATUS[$module]}|${SENTINEL_MODULE_LAST_CHECK[$module]:-0}"
         done
     } > "$status_file.tmp"
@@ -565,6 +579,7 @@ health_check_status() {
     printf "%-30s %-10s %-20s %-10s\n" "------" "------" "----------" "--------"
     
     for module in $(echo "${!SENTINEL_MODULE_HEALTH_STATUS[@]}" | tr ' ' '\n' | sort); do
+        _is_valid_health_module_name "$module" || continue
         local status=${SENTINEL_MODULE_HEALTH_STATUS[$module]}
         local status_text=$(_health_status_to_text $status)
         local last_check=${SENTINEL_MODULE_LAST_CHECK[$module]:-0}

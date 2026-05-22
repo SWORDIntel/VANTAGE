@@ -17,7 +17,8 @@ BOLD="\033[1m"
 NC="\033[0m" # No Color
 
 # Paths
-SENTINEL_DIR="${HOME}/Documents/GitHub/SENTINEL"
+SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
+SENTINEL_DIR="${SENTINEL_ROOT:-$(cd -- "$SCRIPT_DIR/../.." && pwd -P)}"
 POSTCUSTOM="${SENTINEL_DIR}/bashrc.postcustom"
 BASH_MODULES="${SENTINEL_DIR}/bash_modules"
 MODULES_DIR="${SENTINEL_DIR}/bash_modules.d"

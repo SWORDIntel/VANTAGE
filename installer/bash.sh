@@ -149,16 +149,26 @@ copy_postcustom_bootstrap() {
 copy_bash_modules() {
     if ! is_done "CORE_MODULES_INSTALLED"; then
       MODULE_SRC="${PROJECT_ROOT}/bash_modules.d"
+      MODULE_HELPER_SRC="${PROJECT_ROOT}/tools/module_helpers"
 
       if [[ -d "$MODULE_SRC" ]]; then
         step "Copying core bash modules from '${MODULE_SRC}/'"
-        rsync -a --delete "${MODULE_SRC}/" "${MODULES_DIR}/"
-        chmod 700 "${MODULES_DIR}"
+        mkdir -p "${MODULES_DIR}"
+        rsync -a --delete \
+          --include='*/' \
+          --include='*.module' \
+          --include='*.plugin' \
+          --include='*.conf' \
+          --include='README.md' \
+          --include='*.README.md' \
+          --exclude='*' \
+          "${MODULE_SRC}/" "${MODULES_DIR}/"
+        find "${MODULES_DIR}" -type d -exec chmod 700 {} \;
         find "${MODULES_DIR}" -type f -exec chmod 600 {} \;
         ok "Modules synced → ${MODULES_DIR}"
 
         # Automatically run install-autocomplete.sh if present
-        AUTOCOMPLETE_INSTALLER="${MODULE_SRC}/install-autocomplete.sh"
+        AUTOCOMPLETE_INSTALLER="${MODULE_HELPER_SRC}/install-autocomplete.sh"
         if [[ -f "$AUTOCOMPLETE_INSTALLER" ]]; then
           step "Running modular autocomplete installer"
           # Export MODULES_DIR explicitly for install-autocomplete.sh
@@ -166,7 +176,7 @@ copy_bash_modules() {
           bash "$AUTOCOMPLETE_INSTALLER" || warn "install-autocomplete.sh failed; check logs."
           ok "Modular autocomplete installer completed"
         else
-          warn "install-autocomplete.sh not found in $MODULE_SRC; autocomplete modules may not be fully installed."
+          warn "install-autocomplete.sh not found in $MODULE_HELPER_SRC; autocomplete modules may not be fully installed."
         fi
       else
         warn "No bash_modules.d/ directory found – skipping module sync"
@@ -473,7 +483,9 @@ run_verification_checks() {
 
     # Check that Python venv exists and has basic packages
     VENV_PYTHON="${HOME}/venv/bin/python3"
-    if [[ ! -f "$VENV_PYTHON" ]]; then
+    if [[ "${SENTINEL_SKIP_PYTHON_VENV:-0}" == "1" ]]; then
+      log "Skipping Python venv verification (SENTINEL_SKIP_PYTHON_VENV=1)"
+    elif [[ ! -f "$VENV_PYTHON" ]]; then
       warn "Python virtual environment not properly installed"
     else
       ok "Python virtual environment found at ${HOME}/venv"

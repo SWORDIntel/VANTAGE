@@ -104,43 +104,43 @@ run_tests() {
     
     # Test 1: Basic text generation
     if test_case "Basic text generation" "python3 '${SCRIPT_PATH}' --input '${TEST_DIR}/input.txt' --output '${TEST_DIR}/output1.txt' --count 3"; then
-        ((passed++))
+        ((++passed))
     else
-        ((failed++))
+        ((++failed))
     fi
-    ((total++))
+    ((++total))
     
     # Test 2: Check if output file was created
     if test_case "Output file verification" "test -f '${TEST_DIR}/output1.txt' && test -s '${TEST_DIR}/output1.txt'"; then
-        ((passed++))
+        ((++passed))
     else
-        ((failed++))
+        ((++failed))
     fi
-    ((total++))
+    ((++total))
     
     # Test 3: Pipe input through stdin
     if test_case "Stdin input" "cat '${TEST_DIR}/input.txt' | python3 '${SCRIPT_PATH}' --stdin --output '${TEST_DIR}/output2.txt'"; then
-        ((passed++))
+        ((++passed))
     else
-        ((failed++))
+        ((++failed))
     fi
-    ((total++))
+    ((++total))
     
     # Test 4: Different state sizes
     if test_case "Larger state size" "python3 '${SCRIPT_PATH}' --input '${TEST_DIR}/input.txt' --output '${TEST_DIR}/output3.txt' --state-size 3"; then
-        ((passed++))
+        ((++passed))
     else
-        ((failed++))
+        ((++failed))
     fi
-    ((total++))
+    ((++total))
     
     # Test 5: Direct text input
     if test_case "Direct text input" "python3 '${SCRIPT_PATH}' --text 'This is a test sentence. Another test sentence.' --output '${TEST_DIR}/output4.txt'"; then
-        ((passed++))
+        ((++passed))
     else
-        ((failed++))
+        ((++failed))
     fi
-    ((total++))
+    ((++total))
     
     # Test 6: Create corpus directory
     mkdir -p "${TEST_DIR}/corpus"
@@ -148,21 +148,21 @@ run_tests() {
     echo "Additional test data for corpus testing." > "${TEST_DIR}/corpus/input2.txt"
     
     if test_case "Corpus directory" "python3 '${SCRIPT_PATH}' --corpus-dir '${TEST_DIR}/corpus' --output '${TEST_DIR}/output5.txt'"; then
-        ((passed++))
+        ((++passed))
     else
-        ((failed++))
+        ((++failed))
     fi
-    ((total++))
+    ((++total))
     
     # Test 7: Check module file exists
     if [[ -f "${MODULE_PATH}" ]]; then
         log "${GREEN}Module file exists${NC}"
-        ((passed++))
+        ((++passed))
     else
         log "${RED}Module file not found at ${MODULE_PATH}${NC}"
-        ((failed++))
+        ((++failed))
     fi
-    ((total++))
+    ((++total))
     
     # Test results
     echo ""

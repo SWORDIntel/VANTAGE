@@ -78,7 +78,7 @@ mkvenv() {
 
     # 1. Create the virtual environment
     _venv_helper_log "INFO" "Creating virtual environment in '$venv_dir'..."
-    if $python_executable -m venv "$venv_dir"; then
+    if $python_executable -I -m venv "$venv_dir"; then
         _venv_helper_log "INFO" "Virtual environment created successfully."
     else
         _venv_helper_log "ERROR" "Failed to create virtual environment."
@@ -105,43 +105,47 @@ mkvenv() {
         return 1
     fi
 
-    # 3. Upgrade pip
-    _venv_helper_log "INFO" "Upgrading pip..."
-    if pip install --upgrade pip; then
-        _venv_helper_log "INFO" "pip upgraded successfully."
+    if [[ "${SENTINEL_MKVENV_SKIP_PACKAGES:-0}" == "1" ]]; then
+        _venv_helper_log "INFO" "Skipping package installation (SENTINEL_MKVENV_SKIP_PACKAGES=1)."
     else
-        _venv_helper_log "WARN" "Failed to upgrade pip. Continuing with existing version."
-    fi
-
-    # 4. Install predefined packages
-    local packages_to_install=(
-        "wheel"
-        "numpy"
-        "requests"
-        "aiohttp"
-        "jupyter"
-        # PyQt5/PySide2 are handled separately due to potential complexities
-    )
-
-    _venv_helper_log "INFO" "Installing core packages: ${packages_to_install[*]}"
-    if pip install "${packages_to_install[@]}"; then
-        _venv_helper_log "INFO" "Core packages installed successfully."
-    else
-        _venv_helper_log "ERROR" "Failed to install one or more core packages. Please check the output above."
-        # Optionally, you might want to deactivate and offer to clean up here.
-        # For now, we'll leave the venv as is for inspection.
-    fi
-
-    # Install GUI toolkit (PyQt5 or PySide2)
-    _venv_helper_log "INFO" "Attempting to install GUI toolkit (PyQt5 or PySide2)..."
-    if pip install PyQt5; then
-        _venv_helper_log "INFO" "PyQt5 installed successfully."
-    else
-        _venv_helper_log "WARN" "Failed to install PyQt5. Attempting PySide2..."
-        if pip install PySide2; then
-            _venv_helper_log "INFO" "PySide2 installed successfully."
+        # 3. Upgrade pip
+        _venv_helper_log "INFO" "Upgrading pip..."
+        if pip install --upgrade pip; then
+            _venv_helper_log "INFO" "pip upgraded successfully."
         else
-            _venv_helper_log "WARN" "Failed to install PySide2. Skipping GUI toolkit installation."
+            _venv_helper_log "WARN" "Failed to upgrade pip. Continuing with existing version."
+        fi
+
+        # 4. Install predefined packages
+        local packages_to_install=(
+            "wheel"
+            "numpy"
+            "requests"
+            "aiohttp"
+            "jupyter"
+            # PyQt5/PySide2 are handled separately due to potential complexities
+        )
+
+        _venv_helper_log "INFO" "Installing core packages: ${packages_to_install[*]}"
+        if pip install "${packages_to_install[@]}"; then
+            _venv_helper_log "INFO" "Core packages installed successfully."
+        else
+            _venv_helper_log "ERROR" "Failed to install one or more core packages. Please check the output above."
+            # Optionally, you might want to deactivate and offer to clean up here.
+            # For now, we'll leave the venv as is for inspection.
+        fi
+
+        # Install GUI toolkit (PyQt5 or PySide2)
+        _venv_helper_log "INFO" "Attempting to install GUI toolkit (PyQt5 or PySide2)..."
+        if pip install PyQt5; then
+            _venv_helper_log "INFO" "PyQt5 installed successfully."
+        else
+            _venv_helper_log "WARN" "Failed to install PyQt5. Attempting PySide2..."
+            if pip install PySide2; then
+                _venv_helper_log "INFO" "PySide2 installed successfully."
+            else
+                _venv_helper_log "WARN" "Failed to install PySide2. Skipping GUI toolkit installation."
+            fi
         fi
     fi
 

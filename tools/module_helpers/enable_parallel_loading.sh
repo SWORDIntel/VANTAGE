@@ -4,6 +4,8 @@
 
 set -euo pipefail
 
+SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
+SENTINEL_ROOT="${SENTINEL_ROOT:-$(cd -- "$SCRIPT_DIR/../.." && pwd -P)}"
 MODULES_DIR="${SENTINEL_ROOT}/bash_modules.d"
 ENABLED_MODULES="$HOME/.enabled_modules"
 
@@ -138,8 +140,8 @@ cat << 'USAGE'
    $ export SENTINEL_PARALLEL_LOADING=0
 
 For more information, see:
-  "${SENTINEL_ROOT}/docs/improvement_project/team1_performance/parallel_loading.md"
-  "${SENTINEL_ROOT}/docs/improvement_project/team1_performance/caching.md"
+  "${SENTINEL_ROOT}/docs/internal/improvement_project/team1_performance/parallel_loading.md"
+  "${SENTINEL_ROOT}/docs/internal/improvement_project/team1_performance/caching.md"
 
 USAGE
 

@@ -34,7 +34,7 @@ export SENTINEL_IPC_DIR="${SENTINEL_PYTHON_INTEGRATION_IPC_DIR}"
 export SENTINEL_LOG_DIR="${SENTINEL_PYTHON_INTEGRATION_LOG_DIR}"
 
 # Shared configuration system
-declare -A SENTINEL_CONFIG
+declare -gA SENTINEL_CONFIG
 
 # Load configuration from JSON file if exists
 _sentinel_load_config() {
@@ -237,7 +237,9 @@ sentinel_python_module_install() {
     pip install "$module" 2>&1 | while IFS= read -r line; do
         sentinel_log "info" "pip: $line"
     done
+    local pip_rc=${PIPESTATUS[0]}
     deactivate
+    return "$pip_rc"
 }
 
 sentinel_python_module_list() {
@@ -258,13 +260,12 @@ sentinel_ml_sync_state() {
     local component="$1"
     local state_file="${SENTINEL_STATE_DIR}/ml_${component}.json"
     
-    # Create sync wrapper script if not exists
     local sync_script="${SENTINEL_CONFIG_DIR}/ml_sync.py"
-    if [[ ! -f "$sync_script" ]]; then
-        cat > "$sync_script" << 'EOFPY'
+    cat > "$sync_script" << 'EOFPY'
 #!/usr/bin/env python3
 import json
 import os
+import subprocess
 import sys
 
 def sync_ml_state(component, state_file):
@@ -279,7 +280,16 @@ def sync_ml_state(component, state_file):
     # Update state based on component
     if component == 'autolearn':
         state['last_sync'] = os.popen('date').read().strip()
-        state['command_count'] = len(os.popen('history | wc -l').read().strip())
+        history_count = subprocess.run(
+            ['bash', '-lc', 'history | wc -l'],
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        try:
+            state['command_count'] = int((history_count.stdout or '0').strip() or 0)
+        except ValueError:
+            state['command_count'] = 0
     elif component == 'context':
         state['current_dir'] = os.getcwd()
         state['user'] = os.environ.get('USER', 'unknown')
@@ -301,8 +311,7 @@ if __name__ == '__main__':
     state = sync_ml_state(component, state_file)
     print(json.dumps(state))
 EOFPY
-        chmod +x "$sync_script"
-    fi
+    chmod +x "$sync_script"
     
     # Execute sync
     sentinel_python_exec "$sync_script" "$component" "$state_file"
@@ -310,12 +319,15 @@ EOFPY
 
 # Initialize bash-python bridge
 _sentinel_init_python_bridge() {
-    # Create Python integration library
-    local lib_dir="${SENTINEL_ROOT:-${HOME}/.sentinel}/lib"
-    mkdir -p "$lib_dir"
+    # Create Python integration library in both the repo-local runtime path and
+    # the compatibility path used by contrib tooling.
+    local primary_lib_dir="${SENTINEL_ROOT:-${HOME}/.sentinel}/lib"
+    local compat_lib_dir="${HOME}/.config/sentinel/lib"
+    local integration_file="${primary_lib_dir}/sentinel_integration.py"
+    mkdir -p "$primary_lib_dir" "$compat_lib_dir"
     
     # Create sentinel_integration.py module
-    cat > "$lib_dir/sentinel_integration.py" << 'EOFPY'
+    cat > "$integration_file" << 'EOFPY'
 #!/usr/bin/env python3
 """
 SENTINEL Python Integration Module
@@ -396,8 +408,7 @@ class SentinelIntegration:
         """Execute bash command and return result"""
         try:
             result = subprocess.run(
-                command,
-                shell=True,
+                ['bash', '-lc', command],
                 capture_output=True,
                 text=True,
                 env=os.environ
@@ -421,8 +432,13 @@ class SentinelIntegration:
         """Send message via IPC"""
         channel_path = self.ipc_dir / f'{channel}.in'
         if channel_path.exists():
-            with open(channel_path, 'w') as f:
-                f.write(message)
+            fd = None
+            try:
+                fd = os.open(channel_path, os.O_RDWR | os.O_NONBLOCK)
+                os.write(fd, message.encode())
+            finally:
+                if fd is not None:
+                    os.close(fd)
         else:
             self.logger.error(f"IPC channel '{channel}' not found")
     
@@ -443,6 +459,11 @@ class SentinelIntegration:
 # Global instance
 sentinel = SentinelIntegration()
 EOFPY
+    chmod +x "$integration_file"
+    cp "$integration_file" "${compat_lib_dir}/sentinel_integration.py"
+    
+    # Add to PYTHONPATH
+    export PYTHONPATH="${primary_lib_dir}:${compat_lib_dir}:${PYTHONPATH:-}"
 }
 
 # Command aliases for easier usage

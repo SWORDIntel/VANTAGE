@@ -33,8 +33,9 @@ if declare -F sentinel_log >/dev/null; then
 fi
 
 # Define paths
+SENTINEL_MARKOV_ROOT="${SENTINEL_ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]}")"/.. && pwd)}"
 SENTINEL_MARKOV_DIR="${HOME}/markov"
-SENTINEL_MARKOV_SCRIPT="${PROJECT_ROOT:-$HOME/Documents/GitHub/SENTINEL}/markov_generator.py"
+SENTINEL_MARKOV_SCRIPT="${SENTINEL_MARKOV_ROOT}/markov_generator.py"
 SENTINEL_MARKOV_CORPUS="${SENTINEL_MARKOV_DIR}/corpus"
 SENTINEL_MARKOV_CONFIG="${SENTINEL_MARKOV_DIR}/config.json"
 SENTINEL_MARKOV_CACHE="${SENTINEL_MARKOV_DIR}/cache"
@@ -58,7 +59,7 @@ function __sentinel_markov_init() {
         else
             echo "ERROR: Markov generator script not found at ${SENTINEL_MARKOV_SCRIPT}"
         fi
-        return 0
+        return 1
     fi
     
     # Ensure the script is executable
@@ -105,7 +106,7 @@ function sentinel_markov() {
     shift 2>/dev/null
     
     # Initialize the environment
-    __sentinel_markov_init || return 0
+    __sentinel_markov_init || return 1
     
     case "${subcommand}" in
         generate|gen)
@@ -140,7 +141,7 @@ function sentinel_markov() {
                         ;;
                     *)
                         echo "Unknown option: $1"
-                        return 0
+                        return 1
                         ;;
                 esac
             done
@@ -149,7 +150,7 @@ function sentinel_markov() {
             if [[ -z "${input_file}" ]]; then
                 echo "Error: Input file is required"
                 echo "Usage: sentinel_markov generate -i input_file [-o output_file] [-s state_size] [-c count] [-l max_length]"
-                return 0
+                return 1
             fi
             
             # Generate text
@@ -170,7 +171,7 @@ function sentinel_markov() {
                 echo "---"
             else
                 echo "Error generating text. Check logs for details."
-                return 0
+                    return 1
             fi
             ;;
             
@@ -180,7 +181,7 @@ function sentinel_markov() {
             if [[ -z "${file}" ]]; then
                 echo "Error: File path is required"
                 echo "Usage: sentinel_markov corpus file_path"
-                return 0
+                return 1
             fi
             
             # Check if file exists

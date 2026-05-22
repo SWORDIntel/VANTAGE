@@ -14,6 +14,9 @@
 # Conflicts:             none
 ### END MODULE INFO
 
+[[ -n "${_SENTINEL_ML_STATE_SYNC_LOADED:-}" ]] && return 0
+export _SENTINEL_ML_STATE_SYNC_LOADED=1
+
 # Check if python_integration module is loaded
 if ! declare -f sentinel_state_get &>/dev/null; then
     echo "[ML_STATE_SYNC] Error: python_integration module not loaded"
@@ -60,6 +63,7 @@ sync_environment_context() {
     
     python3 -c "
 import os
+import sys
 import json
 import socket
 import pwd
@@ -74,7 +78,7 @@ context = {
     'sentinel_version': os.environ.get('SENTINEL_VERSION', 'unknown'),
     'python_version': '.'.join(map(str, sys.version_info[:3])),
     'ml_enabled': os.environ.get('SENTINEL_ML_ENABLED', '0'),
-    'timestamp': $(date +%s)
+    'timestamp': int(${EPOCHSECONDS:-$(date +%s)})
 }
 
 print(json.dumps(context, indent=2))
@@ -161,7 +165,9 @@ ml_state_summary() {
 
 # Hook into prompt command for auto-sync
 if [[ -n "$PROMPT_COMMAND" ]]; then
-    PROMPT_COMMAND="${PROMPT_COMMAND}; ml_auto_sync"
+    if [[ ";${PROMPT_COMMAND};" != *"; ml_auto_sync;"* && ";${PROMPT_COMMAND};" != *";ml_auto_sync;"* ]]; then
+        PROMPT_COMMAND="${PROMPT_COMMAND}; ml_auto_sync"
+    fi
 else
     PROMPT_COMMAND="ml_auto_sync"
 fi

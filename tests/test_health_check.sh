@@ -2,13 +2,20 @@
 # Test script for SENTINEL health check module
 
 export SENTINEL_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")"/.. && pwd)"
+export SENTINEL_SKIP_AUTO_LOAD=1
+export SENTINEL_QUIET_MODULES=1
+tmp_home="$(mktemp -d)"
+trap 'rm -rf "$tmp_home" "${SENTINEL_HEALTH_CHECK_DIR}"' EXIT
+export HOME="$tmp_home"
+export SENTINEL_HEALTH_CHECK_DIR="/tmp/sentinel_health_test_$$"
+rm -rf "${SENTINEL_HEALTH_CHECK_DIR}"
 
 # Source the module system
 source "${SENTINEL_ROOT}/bash_modules"
 
 # Enable health check module
 echo "Loading health check module..."
-module_enable health_check
+module_enable health_check >/dev/null 2>&1
 
 # Run some tests
 echo -e "\n=== Testing Health Check System ===\n"

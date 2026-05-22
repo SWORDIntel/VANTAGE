@@ -33,14 +33,76 @@ fi
 
 # Main logging function with error handling to prevent terminal crashes
 sentinel_log() {
-    # Parse parameters with defaults to prevent unbound variable errors
-    local level=${1:-1}
-    local component=${2:-"unknown"}
-    local message=${3:-""}
-    local exit_code=${4:-0}
+    # Support both current and legacy call signatures:
+    #   sentinel_log <numeric-level> <component> <message> [exit_code]
+    #   sentinel_log <text-level> <message>
+    #   sentinel_log <component> <message>
+    #   sentinel_log <message>
+    local level component message exit_code
+    case "${1:-}" in
+        '' )
+            level=${SENTINEL_LOG_LEVEL_INFO:-1}
+            component="unknown"
+            message=""
+            exit_code=0
+            ;;
+        ''|*[!0-9]*)
+            case "${1,,}" in
+                debug)
+                    level=${SENTINEL_LOG_LEVEL_DEBUG:-0}
+                    component=${2:-"unknown"}
+                    message=${3:-${2:-""}}
+                    [[ $# -ge 3 ]] || component="unknown"
+                    exit_code=${4:-0}
+                    ;;
+                info)
+                    level=${SENTINEL_LOG_LEVEL_INFO:-1}
+                    component=${2:-"unknown"}
+                    message=${3:-${2:-""}}
+                    [[ $# -ge 3 ]] || component="unknown"
+                    exit_code=${4:-0}
+                    ;;
+                warning|warn)
+                    level=${SENTINEL_LOG_LEVEL_WARNING:-2}
+                    component=${2:-"unknown"}
+                    message=${3:-${2:-""}}
+                    [[ $# -ge 3 ]] || component="unknown"
+                    exit_code=${4:-0}
+                    ;;
+                error)
+                    level=${SENTINEL_LOG_LEVEL_ERROR:-3}
+                    component=${2:-"unknown"}
+                    message=${3:-${2:-""}}
+                    [[ $# -ge 3 ]] || component="unknown"
+                    exit_code=${4:-0}
+                    ;;
+                critical)
+                    level=${SENTINEL_LOG_LEVEL_CRITICAL:-4}
+                    component=${2:-"unknown"}
+                    message=${3:-${2:-""}}
+                    [[ $# -ge 3 ]] || component="unknown"
+                    exit_code=${4:-0}
+                    ;;
+                *)
+                    level=${SENTINEL_LOG_LEVEL_INFO:-1}
+                    component=${2:-"unknown"}
+                    message=${2:-$1}
+                    [[ $# -ge 2 ]] || component="unknown"
+                    exit_code=${3:-0}
+                    ;;
+            esac
+            ;;
+        *)
+            level=${1:-${SENTINEL_LOG_LEVEL_INFO:-1}}
+            component=${2:-"unknown"}
+            message=${3:-""}
+            exit_code=${4:-0}
+            ;;
+    esac
     
     # Early return if log level is below configured level
     # Example: If SENTINEL_LOG_LEVEL=2 (WARNING), DEBUG(0) and INFO(1) are skipped
+    [[ "$level" =~ ^[0-9]+$ ]] || level=${SENTINEL_LOG_LEVEL_INFO:-1}
     [[ $level -lt ${SENTINEL_LOG_LEVEL:-1} ]] && return 0
     
     # Generate timestamp safely

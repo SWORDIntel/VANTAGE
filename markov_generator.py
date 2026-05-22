@@ -41,12 +41,15 @@ except ImportError:
     sys.exit(1)
 
 # Configure logging
+LOG_DIR = Path(os.path.expanduser("~/logs"))
+LOG_DIR.mkdir(parents=True, exist_ok=True)
+
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s [%(levelname)s] %(message)s',
     handlers=[
         logging.StreamHandler(),
-        logging.FileHandler(os.path.expanduser("~/logs/markov_generator.log"))
+        logging.FileHandler(LOG_DIR / "markov_generator.log")
     ]
 )
 logger = logging.getLogger("sentinel_markov")
@@ -201,15 +204,33 @@ class MarkovTextGenerator:
                 models = [model for model, _ in self.models]
                 model = markovify.combine(models, model_weights)
 
-            # Try a few times to get a good sentence
-            for _ in range(5):
-                sentence = model.make_short_sentence(
+            # Try stricter generation first, then progressively relax constraints
+            # for small corpora where overlap checks may reject every candidate.
+            generation_attempts = (
+                lambda: model.make_short_sentence(
                     max_chars=max_chars,
                     tries=100,
-                    max_overlap_ratio=0.3
-                )
+                    max_overlap_ratio=0.3,
+                ),
+                lambda: model.make_short_sentence(
+                    max_chars=max_chars,
+                    tries=200,
+                    max_overlap_ratio=0.7,
+                    test_output=False,
+                ),
+                lambda: model.make_sentence(
+                    tries=200,
+                    max_overlap_ratio=0.7,
+                    test_output=False,
+                ),
+            )
+
+            for attempt in generation_attempts:
+                sentence = attempt()
                 if sentence:
-                    return sentence
+                    sentence = sentence.strip()
+                    if sentence and len(sentence) <= max_chars:
+                        return sentence
 
             return None
 
@@ -304,6 +325,10 @@ def main():
 
     # Generate text
     sentences = generator.generate_text(args.count, args.max_length)
+
+    if not sentences:
+        logger.error("Failed to generate any sentences from the provided input")
+        return 1
 
     # Output the generated text
     output_text = '\n'.join(sentences)

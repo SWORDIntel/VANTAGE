@@ -46,9 +46,44 @@ declare -A SENTINEL_LAZY_MODULES
 declare -A SENTINEL_MODULE_LOADING_STRATEGY
 
 # Load lazy loading configuration if it exists
-    # Default list of core modules that should always be loaded eagerly
+declare -a SENTINEL_CORE_MODULES
+declare -a SENTINEL_LAZY_LOAD_MODULES
 
-    # Default list of heavy modules that should be lazy loaded
+if [[ -n "${SENTINEL_CORE_MODULES:-}" ]]; then
+    read -r -a SENTINEL_CORE_MODULES <<< "${SENTINEL_CORE_MODULES}"
+else
+    SENTINEL_CORE_MODULES=(
+        blesh_installer
+        autocomplete
+        logging
+        shell_security
+        config_cache
+        module_manager
+        bash_logout
+    )
+fi
+
+if [[ -n "${SENTINEL_LAZY_LOAD_MODULES:-}" ]]; then
+    read -r -a SENTINEL_LAZY_LOAD_MODULES <<< "${SENTINEL_LAZY_LOAD_MODULES}"
+else
+    SENTINEL_LAZY_LOAD_MODULES=(
+        sentinel_ml
+        sentinel_ml_enhanced
+        sentinel_osint
+        sentinel_cybersec_ml
+        sentinel_chat
+        sentinel_gitstar
+        sentinel_context
+        sentinel_markov
+        sentinel_smallllm
+        hashcat
+        obfuscate
+        aws_security
+        docker_security
+        vault_integration
+        script_helper
+    )
+fi
 
 # Initialize modules directory if it doesn't exist
 if [[ ! -d "$SENTINEL_MODULES_PATH" ]]; then
@@ -83,13 +118,25 @@ find_all_modules() {
     
     [[ "$debug_mode" == "1" ]] && echo "DEBUG: Searching for modules in $search_path and subdirectories" >&2
     
-    # Find all .module and .sh files with security constraints
+    # Find all .module files with security constraints
     # Use -maxdepth to prevent deep recursion and potential security issues
     # Use timeout to prevent hanging on circular symlinks
-    timeout 10s find "$search_path" -maxdepth 3 -type f \( -name "*.module" -o -name "*.sh" \) 2>/dev/null | sort || {
+    timeout 10s find "$search_path" -maxdepth 3 -type f -name "*.module" 2>/dev/null | sort || {
         # Fallback to simple ls if find fails or times out
-        ls "$search_path"/*.module "$search_path"/*.sh 2>/dev/null || true
+        ls "$search_path"/*.module 2>/dev/null || true
     }
+}
+
+is_loadable_module_file() {
+    local module_path="$1"
+
+    [[ -f "$module_path" ]] || return 1
+
+    if grep -qE '(^### BEGIN MODULE INFO|^# SENTINEL Module:|SENTINEL_MODULE_DESCRIPTION=)' "$module_path" 2>/dev/null; then
+        return 0
+    fi
+
+    return 1
 }
 
 # Function to convert a file path to a module name
@@ -361,11 +408,8 @@ module_enable() {
     # More lenient permission checking to prevent installation issues
     if [[ "$perms" != "600" && "$perms" != "640" && "$perms" != "644" && "$force" != "1" ]]; then
         eerror "Security warning: Module file '$module_file' permissions are $perms (should be 600)." 2>/dev/null || true
-        
-        # Try to fix permissions instead of refusing to load
-        chmod 600 "$module_file" 2>/dev/null || true
-        
-        # Continue with loading - more permissive approach to prevent crashes
+
+        # Warn but do not mutate repository or shared module files during load.
     fi
     
     # Security: Verify module integrity if HMAC verification is enabled - with error handling
@@ -476,11 +520,6 @@ module_enable() {
     # Flag to track loading success
     local module_loaded=0
     
-    # Try to make the file executable if it's not
-    if [[ ! -x "$module_file" && "$force" != "1" ]]; then
-        chmod +x "$module_file" 2>/dev/null || true
-    fi
-    
     # Always use safe_source_module for consistency and maximum protection
     # Don't rely on specialized functions that might not be available
     [[ "$debug_mode" == "1" ]] && { echo "DEBUG: Loading module '$module_name' safely" >&2; } 2>/dev/null || true
@@ -590,11 +629,18 @@ _load_all_modules() {
     # Find all modules
     local all_modules=$(find_all_modules "$SENTINEL_MODULES_PATH")
     
-    # Load each module if not already loaded
-    echo "$all_modules" | while IFS= read -r module_path; do
-        [[ -z "$module_path" ]] && continue
+        # Load each module if not already loaded
+        echo "$all_modules" | while IFS= read -r module_path; do
+            [[ -z "$module_path" ]] && continue
+
+            # Skip helper scripts that are present in the module directory but are
+            # not modules themselves.
+            if ! is_loadable_module_file "$module_path"; then
+                [[ "$debug_mode" == "1" ]] && echo "DEBUG: Skipping non-module helper $module_path" >&2
+                continue
+            fi
         
-        local module_name=$(get_module_name_from_path "$module_path")
+            local module_name=$(get_module_name_from_path "$module_path")
         
         # Skip if already loaded
         if [[ "${SENTINEL_LOADED_MODULES[$module_name]}" == "1" ]]; then
@@ -928,8 +974,12 @@ safe_source_module() {
 # Load modules on startup with safety wrapper
 safe_module_loader _load_enabled_modules
 
-# Load all modules from all subdirectories with safety wrapper
-safe_module_loader _load_all_modules
+# Load every discoverable module only when explicitly requested. The default
+# startup path should respect the enabled-module registry and avoid helper
+# scripts in bash_modules.d with installer side effects.
+if [[ "${SENTINEL_LOAD_ALL_MODULES:-0}" == "1" && "${SENTINEL_SKIP_AUTO_LOAD:-0}" != "1" ]]; then
+    safe_module_loader _load_all_modules
+fi
 
 # Interactive menu for module management
 module_menu() {

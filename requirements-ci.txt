@@ -1,0 +1,5 @@
+# Minimal Python dependencies required by the current CI validation suite.
+# Keep this file limited to packages needed by tests that are intended to run
+# on every push and pull request.
+pyyaml>=6.0
+argcomplete>=3.2.3
