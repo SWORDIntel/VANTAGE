@@ -1,28 +1,46 @@
 # SENTINEL Installer
 
-This directory contains the scripts for the SENTINEL installer. The installer is a modular system, with each component responsible for a specific part of the installation process.
+The supported installer entrypoint is the repository-root [`install.sh`](../install.sh). That wrapper resolves the project root and then delegates to [`installer/install.sh`](install.sh).
 
-## How it works
+## Flow
 
-The main entry point for the installer is the `install.sh` script in the root of the repository. This script is a simple wrapper that calls the main installer logic in `installer/main.sh`.
+- `install.sh`: public entrypoint
+- `installer/install.sh`: main installer control flow
+- `installer/lib/init.sh`: shared initialization and environment setup
+- `installer/lib/preflight.sh`: dependency and environment checks
+- `installer/lib/install_core.sh`: standard Bash install path
+- `installer/lib/install_kitty_core.sh`: kitty-primary install path
+- `installer/lib/finalize.sh`: post-install finalization
 
-The `installer/main.sh` script sources the other installer scripts in this directory and calls the functions in the correct order.
+## Related Components
 
-## Configuration
+- [`config.py`](config.py): parses the YAML config and exports environment variables for the installer
+- [`bash.sh`](bash.sh): installs shell-facing files and wiring
+- [`python.sh`](python.sh): Python environment setup helpers
+- [`blesh.sh`](blesh.sh): BLE.sh-related install helpers when that path is enabled
 
-The installer is configured using a YAML file. By default, it will look for a `config.yaml` file in the root of the repository. If it doesn't find one, it will use the `config.yaml.dist` file as a fallback.
+## Supported Modes
 
-To customize your installation, you can copy `config.yaml.dist` to `config.yaml` and modify it to your needs.
+Standard install:
 
-The configuration file is parsed by the `installer/config.py` script, which exports the configuration values as environment variables.
+```bash
+bash install.sh
+```
 
-## Scripts
+Unattended install:
 
--   **`main.sh`**: The main entry point for the installer.
--   **`helpers.sh`**: Helper functions for logging, file operations, etc.
--   **`dependencies.sh`**: Functions for checking dependencies.
--   **`directories.sh`**: Functions for setting up the directory structure.
--   **`python.sh`**: Functions for setting up the Python virtual environment.
--   **`blesh.sh`**: Functions for installing and configuring BLE.sh.
--   **`bash.sh`**: Functions for patching the user's bashrc and copying shell files.
--   **`config.py`**: A Python script that parses the configuration file and exports the values as environment variables.
+```bash
+bash install.sh --non-interactive --headless
+```
+
+Kitty-primary install:
+
+```bash
+bash install.sh --kitty-primary
+```
+
+## Notes
+
+- Control-flow flags are parsed before any interactive pathway prompt.
+- Headless mode disables the interactive pathway selector and skips optional UI-oriented setup.
+- The canonical post-change validation path is the repository test runner: `make test-fast` or `make test`.

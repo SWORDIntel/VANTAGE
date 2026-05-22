@@ -46,9 +46,9 @@ Team 5 Agent 2 has implemented a comprehensive external tool integration system 
   - Helm integration
 
 ### 3. Documentation
-- **Main Documentation**: `/docs/improvement_project/team5_integration/external_tools.md`
-- **MCP Integration Guide**: `/docs/improvement_project/team5_integration/mcp_integration_example.md`
-- **This README**: `/docs/improvement_project/team5_integration/README.md`
+- **Main Documentation**: `/docs/internal/improvement_project/team5_integration/external_tools.md`
+- **MCP Integration Guide**: `/docs/internal/improvement_project/team5_integration/mcp_integration_example.md`
+- **This README**: `/docs/internal/improvement_project/team5_integration/README.md`
 
 ### 4. Testing
 - **Test Script**: `/opt/github/SENTINEL/tests/test_external_tools.sh`
@@ -166,7 +166,7 @@ To create a new plugin:
 ## Support
 
 For issues or questions:
-1. Check documentation in `/docs/improvement_project/team5_integration/`
+1. Check documentation in `/docs/internal/improvement_project/team5_integration/`
 2. Review test examples
 3. Enable debug mode: `export SENTINEL_MODULE_DEBUG=1`
 

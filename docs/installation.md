@@ -1,108 +1,89 @@
 # SENTINEL Installation Guide
 
-## Overview
+This document covers the supported installation, reinstallation, removal, and validation paths for SENTINEL.
 
-The SENTINEL framework provides enhanced security, autocomplete, and Python virtual environment support for your Bash shell. This document explains the installation process and troubleshooting steps.
+## Requirements
 
-## Installation
+- Bash on a Unix-like system
+- Python 3
+- `git`
+- Standard shell tooling used by the installer
 
-To install SENTINEL:
+Optional features such as the Markov generator require additional Python packages documented in [`requirements-markov.txt`](../requirements-markov.txt).
 
-1. Clone the repository:
+## Standard Installation
+
 ```bash
-git clone https://github.com/username/SENTINEL.git
+git clone https://github.com/SWORDIntel/SENTINEL.git
 cd SENTINEL
-```
-
-2. Run the installer:
-```bash
 bash install.sh
-```
-
-3. Restart your shell or source the configuration:
-```bash
 source ~/.bashrc
 ```
 
-## Reinstallation
+The installer configures the shell integration, installs the core SENTINEL files, and wires the module system into your shell startup.
 
-If you need to completely reinstall SENTINEL:
+## Kitty-Focused Installation
 
-1. Run the reinstall script:
+If you use kitty as your primary terminal:
+
 ```bash
-bash reinstall.sh
+git clone https://github.com/SWORDIntel/SENTINEL.git
+cd SENTINEL
+bash install_kitty.sh
 ```
 
-2. Restart your shell or source the configuration.
+You can also run `bash install.sh` and choose the kitty pathway when prompted.
 
-## Uninstallation
+## Unattended Installation
 
-To remove SENTINEL from your system:
+For non-interactive environments:
 
-1. Run the uninstall script:
 ```bash
+bash install.sh --non-interactive --headless
+```
+
+This path is the right choice for CI, remote bootstrap scripts, or scripted workstation setup.
+
+## Reinstall and Uninstall
+
+Top-level maintenance scripts are included in the repository:
+
+```bash
+bash reinstall.sh
 bash uninstall.sh
 ```
 
-2. Remove any remaining configuration files manually if needed.
+Use `reinstall.sh` if the shell wiring is damaged or you want to refresh a local install without manually removing files first.
 
-## Directory Structure
+## Validation
 
-1. Back up your current SENTINEL configuration
-2. Clean up your environment
-3. Remove all SENTINEL components
-
-### Locations
-
-- **Core Framework**: Located in `${HOME}`
-- **Python venv**: Located in `${HOME}/venv`
-- **BLE.sh**: Located in `${HOME}/.local/share/blesh`
-- **Modules**: Located in `${HOME}/bash_modules.d`
-- **Configuration**: Various files in `${HOME}`
-
-## Verification
-
-After installation, verify that SENTINEL was installed correctly:
+Use the canonical local runner after install:
 
 ```bash
-source ${HOME}/bashrc.postcustom
-@autocomplete status
+make test-fast
+make test
+make test RUN_OPTIONAL=1
 ```
+
+- `make test-fast`: core regression coverage
+- `make test`: broader shell and Python integration coverage
+- `make test RUN_OPTIONAL=1`: includes optional dependency-gated tests such as the Markov generator
+
+To enable the optional Markov lane:
+
+```bash
+python3 -m pip install -r requirements-markov.txt
+```
+
+## Repository Layout Notes
+
+- Loadable shell modules live in `bash_modules.d/` and use the `*.module` suffix.
+- Repository helper scripts that are not loadable modules live in `tools/module_helpers/`.
+- Test orchestration lives in `scripts/test-all.sh` and is exposed through the top-level `Makefile`.
 
 ## Troubleshooting
 
-### Common Issues
-
-1. **Autocomplete not working**:
-   - Check that BLE.sh is properly installed
-   - Ensure your .bashrc loads the SENTINEL framework
-   - Try running `@autocomplete fix`
-
-2. **Python environment issues**:
-   - Ensure Python 3.6+ is installed
-   - Check logs in `${HOME}/logs/`
-   - Try reinstalling the venv with `bash reinstall.sh`
-
-3. **Configuration problems**:
-   - Ensure `VENV_AUTO=1` is set in your `${HOME}/bashrc.postcustom`
-   - Check that your .bashrc is sourcing the SENTINEL framework
-   - Check that required Python packages are installed in `${HOME}/venv/`
-
-### Logs
-
-For detailed troubleshooting, check the log files:
-
-- Installation logs: `${HOME}/logs/install.log`
-- Autocomplete logs: `${HOME}/logs/autocomplete-YYYYMMDD.log`
-- Module logs: `${HOME}/logs/module-YYYYMMDD.log`
-
-### Advanced Troubleshooting
-
-1. Check the detailed logs in `${HOME}/logs/`
-2. Run the verification checks: `bash sentinel_postinstall_check.sh`
-3. Try a clean reinstallation: `bash reinstall.sh`
-
----
-
-- SENTINEL Version: 2.3.0
-- Last Updated: 2025-05-16
+- Check `~/logs/` for runtime and installer logs.
+- Re-run the installer with `--non-interactive --headless` to get a cleaner failure surface.
+- If optional tests are skipped, install `requirements-markov.txt` before rerunning `make test RUN_OPTIONAL=1`.
+- If a specific module is causing trouble, inspect it directly in `bash_modules.d/` and validate module loading with `bash test_module_loading.sh`.

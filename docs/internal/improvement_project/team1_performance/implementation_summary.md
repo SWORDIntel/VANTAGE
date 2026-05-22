@@ -53,7 +53,7 @@ Metrics tracked:
 
 ### 4. Integration Tools
 
-- **Enable Script** (`enable_parallel_loading.sh`): One-command setup
+- **Enable Script** (`tools/module_helpers/enable_parallel_loading.sh`): One-command setup
 - **Test Suite** (`test_parallel_loading.sh`): Comprehensive validation
 - **Documentation**: Detailed guides for users and developers
 
@@ -92,7 +92,7 @@ Testing with 30 typical SENTINEL modules:
 
 ```bash
 # Enable parallel loading
-/opt/github/SENTINEL/bash_modules.d/enable_parallel_loading.sh
+/opt/github/SENTINEL/tools/module_helpers/enable_parallel_loading.sh
 
 # Restart shell or source bashrc
 source ~/.bashrc
@@ -238,5 +238,5 @@ _build_dependency_graph
 The parallel loading and caching implementation provides substantial performance improvements while maintaining compatibility and safety. The modular design allows for future enhancements and easy maintenance.
 
 For questions or issues, see the detailed documentation in:
-- `/opt/github/SENTINEL/docs/improvement_project/team1_performance/parallel_loading.md`
-- `/opt/github/SENTINEL/docs/improvement_project/team1_performance/caching.md`
+- `/opt/github/SENTINEL/docs/internal/improvement_project/team1_performance/parallel_loading.md`
+- `/opt/github/SENTINEL/docs/internal/improvement_project/team1_performance/caching.md`

@@ -34,7 +34,7 @@ export SENTINEL_LAZY_LOADING_ENABLED=1
 source ~/.bashrc
 
 # 2. Enable parallel loading
-/opt/github/SENTINEL/bash_modules.d/enable_parallel_loading.sh
+/opt/github/SENTINEL/tools/module_helpers/enable_parallel_loading.sh
 
 # 3. Enable health monitoring
 module_enable health_check
@@ -89,9 +89,9 @@ external_tools list
 ## Documentation
 
 Detailed documentation available in:
-- `docs/improvement_project/team1_performance/`
-- `docs/improvement_project/team2_reliability/`
-- `docs/improvement_project/team5_integration/`
+- `docs/internal/improvement_project/team1_performance/`
+- `docs/internal/improvement_project/team2_reliability/`
+- `docs/internal/improvement_project/team5_integration/`
 
 ## Support
 

@@ -78,4 +78,4 @@ config = sentinel.get_config('setting', 'default')
 
 ## Advanced Usage
 
-See `/opt/github/SENTINEL/docs/improvement_project/team5_integration/python_bash_integration.md` for comprehensive documentation.
+See `/opt/github/SENTINEL/docs/internal/improvement_project/team5_integration/python_bash_integration.md` for comprehensive documentation.

@@ -10,3 +10,12 @@
 CLAUDEMASTER.md
 CLAUDE.md
 *.pyc
+/.config/
+/.state/
+/lib/
+/logs/
+/tests/markov_test/
+
+/.ipc/
+
+__pycache__/

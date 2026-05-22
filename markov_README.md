@@ -1,137 +1,45 @@
-# SENTINEL Markov Text Generator
+# SENTINEL Markov Generator
 
-A secure, high-performance Markov chain text generator integrated with the SENTINEL framework. This module uses advanced text analysis and probabilistic models to generate natural-looking text based on input sources.
+SENTINEL includes an optional Markov-based text generator implemented in [`markov_generator.py`](markov_generator.py) and exposed through [`bash_modules.d/sentinel_markov.module`](bash_modules.d/sentinel_markov.module).
 
-## Features
+## Dependencies
 
-- **Intelligent Generation**: Advanced state-based Markov chain text generation
-- **Corpus Management**: Add, list, and analyze corpus files
-- **Secure Processing**: Validation of inputs and secure file handling
-- **Terminal Integration**: Seamless integration with SENTINEL shell environment
-- **Command Suggestions**: Optional integration with command prediction system
-
-## Installation
-
-The Markov generator is included with SENTINEL. To ensure all dependencies are installed:
+The Markov path is optional and requires extra Python packages:
 
 ```bash
-# Activate the SENTINEL Python environment
-source "$HOME/venv/bin/activate"
-
-# Install dependencies
-pip install markovify numpy tqdm unidecode
+python3 -m pip install -r requirements-markov.txt
 ```
 
-Enable the module in SENTINEL:
+## Validation
+
+Run the Markov lane through the canonical test entrypoint:
 
 ```bash
-# Add to your modules configuration
-echo "sentinel_markov" >> ~/.bash_modules
+make test RUN_OPTIONAL=1
 ```
 
-## Usage
-
-### Basic Text Generation
-
-Generate text from an input file:
+Or run the Markov suite directly:
 
 ```bash
-sentinel_markov generate -i input.txt -o output.txt -s 3 -c 10
+bash tests/test_markov_generator.sh
 ```
 
-Where:
-- `-i, --input`: Input file path (required)
-- `-o, --output`: Output file path (optional)
-- `-s, --state-size`: Markov chain state size (default: 2)
-- `-c, --count`: Number of sentences to generate (default: 5)
-- `-l, --max-length`: Maximum sentence length (default: 280)
-
-### Corpus Management
-
-Add a file to the corpus:
+## Basic Usage
 
 ```bash
-sentinel_markov corpus ~/Documents/sample.txt
+python3 markov_generator.py --input input.txt --output output.txt --count 3
+python3 markov_generator.py --stdin --output output.txt < input.txt
+python3 markov_generator.py --corpus-dir ./corpus --output output.txt
 ```
 
-List all corpus files:
+## Behavior Notes
 
-```bash
-sentinel_markov list
-```
-
-View corpus statistics:
-
-```bash
-sentinel_markov corpus-stats
-```
-
-Clean cached data:
-
-```bash
-sentinel_markov clean
-```
-
-## Advanced Configuration
-
-The Markov generator can be customized through its configuration file. The default configuration is created on first run, but you can modify it to adjust behavior:
-
-```json
-{
-    "state_size": 2,
-    "default_count": 5,
-    "max_length": 280,
-    "retention_ratio": 1.0,
-    "extensions": [".txt", ".md", ".rst"],
-    "security": {
-        "max_file_size": 10485760,
-        "validate_input": true,
-        "log_level": "info"
-    }
-}
-```
-
-## Technical Details
-
-### Algorithm
-
-The generator uses a state-based Markov chain that:
-
-1. Analyzes input text and builds probabilistic state transitions
-2. Generates new sequences based on learned probability distributions
-3. Applies validation rules to ensure output quality and security
-
-### Security Features
-
-- Input validation and sanitization
-- File size limits and format validation
-- ASCII conversion to prevent unicode-based issues
-- Permissioned file operations
-
-## Integration with SENTINEL
-
-The Markov generator integrates with other SENTINEL features:
-
-- **Command Prediction**: Can suggest commands based on Markov analysis of shell history
-- **Module System**: Respects SENTINEL's module dependency management
-- **Logging System**: Integrates with SENTINEL's logging infrastructure
+- Empty output is treated as a failure condition, not a silent success.
+- The generator creates its log directory automatically when needed.
+- The shell module resolves the generator relative to the repository checkout instead of assuming a fixed path.
 
 ## Troubleshooting
 
-- **Empty Output**: Input may be too small or contain incompatible formatting
-- **Slow Performance**: Reduce state size or input file size
-- **Permissions Errors**: Check file permissions in ${HOME}/markov/
-- **Missing Dependencies**: Ensure all Python packages are installed
-
-For detailed logs, check:
-```bash
-cat ${HOME}/logs/markov_generator.log
-```
-
-## License
-
-This component is part of the SENTINEL project and is subject to the same license terms.
-
-## Authors
-
-- SENTINEL Team 
+- If the optional suite is skipped, install `requirements-markov.txt` first.
+- If generation fails on very small corpora, increase input size or reduce constraints such as state size.
+- Check `~/logs/markov_generator.log` for runtime diagnostics.

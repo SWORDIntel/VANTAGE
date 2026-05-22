@@ -229,7 +229,7 @@ echo $SENTINEL_KITTY_GPU_ACCEL  # Should show "1"
 
 - **User Guide**: `docs/KITTY_PRIMARY_CLI.md`
 - **Technical Guide**: `docs/KITTY_MODULE_PORTING.md`
-- **This Summary**: `KITTY_PORTING_SUMMARY.md`
+- **This Summary**: `docs/internal/KITTY_PORTING_SUMMARY.md`
 
 ## Status
 

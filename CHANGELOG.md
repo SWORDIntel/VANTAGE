@@ -1,28 +1,22 @@
 # Changelog
 
-All notable changes to this project will be documented in this file.
+All notable changes to this project are documented in this file.
 
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
-and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project aims to follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
 ### Added
-- Modularized the installer into smaller, more manageable scripts.
-- Added a centralized configuration file (`config.yaml`) to manage installer and shell options.
-- Added a Python script (`installer/config.py`) to parse the configuration file.
-- Improved the dependency check to verify versions of dependencies.
-- Added unit tests for the `installer/config.py` script.
-- Added integration tests for the installer using `bats-core`.
-- Added a `CONTRIBUTING.md` file with developer documentation.
-- Added a `docs/architecture.md` file with an overview of the system architecture.
-- Added this `CHANGELOG.md` file.
+- Canonical local test runner via `make test-fast`, `make test`, and `make test RUN_OPTIONAL=1`
+- CI workflow and dedicated requirements manifests for CI and optional Markov dependencies
+- Archived internal documentation area under `docs/internal/`
 
 ### Changed
-- The main `install.sh` script is now a simple wrapper that calls the main installer logic in `installer/main.sh`.
-- The installer now uses the `config.yaml` file for configuration.
-- The `README.md` file has been updated to reflect the changes to the installer and configuration.
+- Fixed installer control flow for unattended and headless operation
+- Hardened module loading, health-check, logging, Python bridge, and Markov integration paths
+- Standardized module discovery so helper scripts are no longer treated as loadable modules
+- Reworked public-facing documentation to match the current install, validation, and repository layout
 
 ### Removed
-- Hardcoded configuration variables from the installer scripts.
-- The `VENV_AUTO` check from the post-install verification script.
+- Tracked backup artifacts, stale helper copies, and committed bytecode/cache noise from the repository
+- Root-level internal progress and audit notes from the primary public surface

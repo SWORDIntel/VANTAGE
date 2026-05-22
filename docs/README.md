@@ -22,6 +22,8 @@ This documentation is organized into the following sections:
 - **[Error and Warning Report](errors.md):** A summary of static analysis findings and validation for the shell scripts.
 - **[Contributor Documentation (contrib_readme.md)](contrib_readme.md):** Information related to contributions, modules, and additional features provided by contributors.
 - **[Test Scripts Documentation (tests_readme.md)](tests_readme.md):** Information about the testing scripts and helpers for bashrc development.
+- **[Internal Notes Archive](internal/README.md):** Historical audit notes, progress trackers, and one-off implementation summaries for maintainers.
+- **[Improvement Project Archive](internal/improvement_project/IMPLEMENTATION_SUMMARY.md):** Archived multi-team implementation notes and internal project history.
 
 ### Feature Documentation
 - **[Markov Text Generator (markov_readme.md)](markov_readme.md):** Documentation for the SENTINEL Markov chain text generator module.

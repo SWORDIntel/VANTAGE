@@ -45,7 +45,7 @@
 ## Documentation Structure
 
 ```
-docs/improvement_project/
+docs/internal/improvement_project/
 ├── project_structure.md (this file)
 ├── progress_reports/
 │   ├── hourly/

@@ -102,7 +102,7 @@ health_check recover fuzzy_correction
 ## Files Created
 
 1. `/opt/github/SENTINEL/bash_modules.d/health_check.module` - Main implementation
-2. `/opt/github/SENTINEL/docs/improvement_project/team2_reliability/health_checks.md` - Full documentation
+2. `/opt/github/SENTINEL/docs/internal/improvement_project/team2_reliability/health_checks.md` - Full documentation
 3. `/opt/github/SENTINEL/tests/test_health_check.sh` - Test script
 
 ## Next Steps

@@ -31,8 +31,8 @@ Through systematic analysis of the module system, identified key sources of verb
    - Job completion messages appearing in terminal
 
 4. **Installation/Configuration Scripts**:
-   - `install-autocomplete.sh`: ASCII banner and installation messages
-   - `enable_parallel_loading.sh`: Configuration summary output
+   - `tools/module_helpers/install-autocomplete.sh`: ASCII banner and installation messages
+   - `tools/module_helpers/enable_parallel_loading.sh`: Configuration summary output
 
 ## Solution Implemented
 
@@ -65,8 +65,8 @@ Applied to:
 - `sentinel_ml_enhanced.module`
 - `config_cache.module`
 - `parallel_loader.module`
-- `install-autocomplete.sh`
-- `enable_parallel_loading.sh`
+- `tools/module_helpers/install-autocomplete.sh`
+- `tools/module_helpers/enable_parallel_loading.sh`
 
 ### 3. Background Job Noise Reduction
 - Modified `parallel_loader.module` to redirect background job output: `>/dev/null 2>&1 &`
@@ -96,8 +96,8 @@ Replaced verbose OpenVINO environment checks with minimal warning-only output in
 - `bash_modules.d/sentinel_ml_enhanced.module` - Conditional loading messages
 - `bash_modules.d/config_cache.module` - Conditional loading messages
 - `bash_modules.d/parallel_loader.module` - Conditional loader messages + background job silencing
-- `bash_modules.d/install-autocomplete.sh` - Conditional banner display
-- `bash_modules.d/enable_parallel_loading.sh` - Conditional status messages
+- `tools/module_helpers/install-autocomplete.sh` - Conditional banner display
+- `tools/module_helpers/enable_parallel_loading.sh` - Conditional status messages
 
 ## Testing Strategy
 - Modified modules use conditional checks with fallback defaults
