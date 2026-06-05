@@ -1,0 +1,23 @@
+function ssh() {
+    local target=""
+    local has_command=false
+    local args=()
+
+    for arg in "$@"; do
+        if [[ "$arg" != -* ]] && [[ -z "$target" ]]; then
+            target="$arg"
+        elif [[ -n "$target" ]]; then
+            has_command=true
+        fi
+        args+=("$arg")
+    done
+
+    # Only inject if it's a simple interactive SSH session
+    if [[ -n "$target" ]] && [[ "$has_command" == false ]]; then
+        echo "[Sentinel] Injecting Sentinel payload into $target..."
+        scp -q -r ~/.config/sentinel "$target":/tmp/sentinel_payload 2>/dev/null
+        command ssh -t "${args[@]}" "bash --rcfile /tmp/sentinel_payload/thin_bashrc"
+    else
+        command ssh "$@"
+    fi
+}
