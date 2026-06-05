@@ -216,7 +216,6 @@ sentinel_osint_fallback() {
 # === Logging Module Fallback ===
 logging_module_fallback() {
     # Super basic logging when main logging fails
-    echo "[FALLBACK] Setting up emergency logging" >&2
     
     # Emergency log function
     emergency_log() {
