@@ -46,9 +46,9 @@ fi
 
 # 2. Unpatch .bashrc
 echo -e "${BLUE}[*] Unpatching ~/.bashrc...${NC}"
-if grep -q "SENTINEL Thin Bash" ~/.bashrc; then
+if grep -q "sentinel/thin_bashrc" ~/.bashrc; then
     sed -i '/# SENTINEL Thin Bash/d' ~/.bashrc
-    sed -i '/source ~\/.config\/sentinel\/thin_bashrc/d' ~/.bashrc
+    sed -i '/\[\[ -f ~\/.config\/sentinel\/thin_bashrc \]\] && source ~\/.config\/sentinel\/thin_bashrc/d' ~/.bashrc
     echo -e "    ${GREEN}✔ Removed SENTINEL source hooks from ~/.bashrc${NC}"
 else
     echo -e "    ${YELLOW}⚠ No SENTINEL hooks found in ~/.bashrc${NC}"
