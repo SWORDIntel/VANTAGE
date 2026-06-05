@@ -1,0 +1,7 @@
+for d in ~/.config/sentinel/bash_aliases.d ~/.config/sentinel/bash_functions.d ~/.config/sentinel/completions.d; do
+    if [ -d "$d" ]; then
+        for f in "$d"/*.sh "$d"/*.module; do
+            [ -f "$f" ] && source "$f"
+        done
+    fi
+done

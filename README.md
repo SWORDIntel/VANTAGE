@@ -1,116 +1,25 @@
-# SENTINEL: Secure ENhanced Terminal INtelligent Layer
+# SENTINEL - WezTerm Edition
 
-SENTINEL is a modular Bash environment focused on security, shell ergonomics, Python integration, and optional ML-assisted workflows.
+**SENTINEL** has been completely overhauled. We have migrated away from complex Bash-heavy multiplexing towards a completely native, blazing fast **WezTerm + Lua** architecture.
 
-It builds on ideas from [gitdurandal/bashrc](https://github.com/gitdurandal/bashrc).
+## The 8 Core Pillars
+1. **LLM Chat Sidebar:** Native WezTerm pane splitting to run an AI chat seamlessly alongside your terminal.
+2. **Context Sessions:** Automatic workspace detection. Launch into `PenTest` or `AWS` workspaces and your UI natively turns Red to indicate privilege escalation context.
+3. **OSINT Dashboard:** Instantly fracture your terminal into a 4-pane layout to run simultaneous investigations.
+4. **Command Chains:** Fuzzy-find complex exploit chains and inject them directly into your prompt.
+5. **AI Suggestions:** Ask your local LLM to explain highlighted commands or suggest new ones, delivered directly via native WezTerm Toast overlays.
+6. **Instant Resurrection:** Using `wezterm-resurrect`, your workflow state is preserved across reboots.
+7. **Native Git UI:** Background Git status checks delivered as native terminal overlays.
+8. **Global Syncing:** All configurations are now stored cleanly in Lua for easy syncing across all your machines.
 
-## Core Features
+## Installation
 
-- Security-oriented shell modules with integrity and permission hardening
-- Dependency-aware module loading with lazy and parallel loading support
-- Hybrid autocomplete and command assistance
-- Bash/Python integration for config, state, and IPC workflows
-- Virtual environment helpers and optional Markov-based text generation
-
-## Quick Start
-
-### Standard install
-
+1. Install [WezTerm](https://wezfurlong.org/wezterm/install/linux.html).
+2. Run the bootstrap script:
 ```bash
-git clone https://github.com/SWORDIntel/SENTINEL.git
-cd SENTINEL
-bash install.sh
-source ~/.bashrc
+./install.sh
 ```
+3. Launch `wezterm`.
 
-### Kitty-first install
-
-```bash
-bash install_kitty.sh
-```
-
-### Unattended install
-
-```bash
-bash install.sh --non-interactive --headless
-```
-
-## Validation
-
-SENTINEL ships with a canonical local test runner:
-
-```bash
-make test-fast
-make test
-make test RUN_OPTIONAL=1
-```
-
-- `make test-fast`: core regression suite
-- `make test`: broader local validation
-- `make test RUN_OPTIONAL=1`: includes optional dependency-gated coverage
-
-Optional Markov dependencies:
-
-```bash
-python3 -m pip install -r requirements-markov.txt
-```
-
-## Documentation
-
-- Install guide: [`docs/installation.md`](docs/installation.md)
-- Documentation index: [`docs/README.md`](docs/README.md)
-- Contributing guide: [`CONTRIBUTING.md`](CONTRIBUTING.md)
-- Markov generator notes: [`markov_README.md`](markov_README.md)
-
-## Configuration
-
-SENTINEL is configured through shell environment variables plus the YAML config used by the installer.
-
-Common environment variables include:
-
-- `SENTINEL_ROOT`
-- `SENTINEL_DATASCIENCE_DIR`
-- `PYTHON_INSTALL_DIR`
-- `CODE_DIR`
-- `OPENVINO_SETUPVARS`
-- `ZFS_BUILD_DIR`, `ZFS_AI_DIR`, `ZFS_CODE_DIR`
-
-The installer reads `config.yaml` from the repository root when present and otherwise falls back to `config.yaml.dist`.
-
-## Project Structure
-
-- `bash_modules.d/`: loadable shell modules
-- `tools/module_helpers/`: repository helpers that are not loadable modules
-- `installer/`: installer implementation and shared installer libraries
-- `contrib/`: optional Python-side integrations and utilities
-- `scripts/test-all.sh`: canonical local test runner
-
-## Notable Components
-
-### Python integration
-
-`bash_modules.d/python_integration.module` provides:
-
-- `sentinel_config_get` / `sentinel_config_set`
-- `sentinel_state_get` / `sentinel_state_set`
-- `sentinel_python_exec`
-- `sentinel_python_module_install`
-
-### Module system
-
-`module_manager.module` and `bash_modules` provide dependency-aware module loading and module discovery.
-
-### Virtual environments
-
-`bash_functions.d/venv_helpers` provides `mkvenv` for repo-local virtual environment setup.
-
-## Troubleshooting
-
-- Check `~/logs/` for runtime and installer logs.
-- Re-run install with `bash install.sh --non-interactive --headless` for a cleaner failure surface.
-- Use `make test-fast` before broader debugging.
-- Install `requirements-markov.txt` if the optional Markov lane is skipped.
-
-## License
-
-SENTINEL is distributed under the GNU GPL v2. See [`LICENSE`](LICENSE).
+## Architecture Note
+This repo replaces thousands of lines of legacy bash logic. Heavy logic and state management are now offloaded to `~/.config/wezterm/sentinel/`, while primitive shell features (aliases and autocompletes) remain in `~/.config/sentinel/`.
