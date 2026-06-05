@@ -117,7 +117,7 @@ sentinel_snippet_list() {
 ###############################################################################
 # 5.  Command Routing & User Interface
 ###############################################################################
-@autocomplete() { sentinel_autocomplete_command "$@"; }
+_autocomplete() { sentinel_autocomplete_command "$@"; }
 sentinel_autocomplete_command() {
     local cmd="${1:-}"; shift || true
     case "$cmd" in
