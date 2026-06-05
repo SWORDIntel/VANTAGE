@@ -195,7 +195,7 @@ _sentinel_snippet_delete() {
     if [[ ! -f "$snippet_file" ]]; then
         echo "Error: Snippet '$name' not found"
         return 0
-    }
+    fi
     
     # Delete snippet and hash files
     rm -f "$snippet_file" "$hash_file"
@@ -219,14 +219,14 @@ _sentinel_snippet_list() {
     if [[ ! -d "$snippets_dir" ]]; then
         echo "No snippets found."
         return 0
-    }
+    fi
     
     local snippets=($(find "$snippets_dir" -name "*.snippet" -type f | sort))
     
     if [[ ${#snippets[@]} -eq 0 ]]; then
         echo "No snippets found."
         return 0
-    }
+    fi
     
     echo -e "\033[1;32mAvailable Snippets:\033[0m"
     echo ""
@@ -263,14 +263,14 @@ _sentinel_snippet_show() {
     if [[ -z "$name" ]]; then
         echo "Usage: sentinel_snippet_show <name>"
         return 0
-    }
+    fi
     
     # Prevent path traversal
     if [[ "$name" == *"/"* || "$name" == *".."* ]]; then
         echo "Error: Invalid snippet name"
         _snippets_log_error "Attempted path traversal in snippet show: $name"
         return 0
-    }
+    fi
     
     local snippets_dir="${HOME}/autocomplete/snippets"
     local snippet_file="$snippets_dir/$name.snippet"
@@ -279,7 +279,7 @@ _sentinel_snippet_show() {
     if [[ ! -f "$snippet_file" ]]; then
         echo "Error: Snippet '$name' not found"
         return 0
-    }
+    fi
     
     # Check verification status
     local verification_status

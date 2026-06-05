@@ -167,8 +167,6 @@ sentinel_init_fuzzy_correction() {
     # Check for ble.sh enhancements
     if type -t ble-bind &>/dev/null; then
         echo "BLE.sh detected - enabling enhanced fuzzy correction features" >&2
-    else
-        echo "BLE.sh not detected - using basic fuzzy correction features" >&2
     fi
     
     return 0

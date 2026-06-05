@@ -302,7 +302,7 @@ sentinel_autocomplete_init
 # 7.  Export for shell use
 ###############################################################################
 export -f sentinel_autocomplete_command
-export -f @autocomplete
+
 export -f sentinel_snippet_add
 export -f sentinel_snippet_list
 

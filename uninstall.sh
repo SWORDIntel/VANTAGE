@@ -39,6 +39,11 @@ if [[ -L ~/.config/wezterm/plugins/sentinel.wezterm ]]; then
     echo -e "    ${GREEN}✔ Removed ~/.config/wezterm/plugins/sentinel.wezterm symlink${NC}"
 fi
 
+if [[ -L ~/.config/wezterm/sentinel ]]; then
+    rm ~/.config/wezterm/sentinel
+    echo -e "    ${GREEN}✔ Removed legacy ~/.config/wezterm/sentinel symlink${NC}"
+fi
+
 if [[ -L ~/.wezterm.lua ]]; then
     rm ~/.wezterm.lua
     echo -e "    ${GREEN}✔ Removed ~/.wezterm.lua symlink${NC}"
