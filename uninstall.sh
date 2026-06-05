@@ -34,9 +34,9 @@ fi
 
 # 1. Remove WezTerm Lua Symlinks
 echo -e "${BLUE}[*] Removing WezTerm configurations...${NC}"
-if [[ -L ~/.config/wezterm/sentinel ]]; then
-    rm ~/.config/wezterm/sentinel
-    echo -e "    ${GREEN}✔ Removed ~/.config/wezterm/sentinel symlink${NC}"
+if [[ -L ~/.config/wezterm/plugins/sentinel.wezterm ]]; then
+    rm ~/.config/wezterm/plugins/sentinel.wezterm
+    echo -e "    ${GREEN}✔ Removed ~/.config/wezterm/plugins/sentinel.wezterm symlink${NC}"
 fi
 
 if [[ -L ~/.wezterm.lua ]]; then

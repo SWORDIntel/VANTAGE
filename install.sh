@@ -32,12 +32,12 @@ echo -e "    ${GREEN}✔ WezTerm found!${NC}"
 
 # 2. Setup WezTerm Configuration
 echo -e "\n${BLUE}[*] Setting up native WezTerm Lua architecture...${NC}"
-mkdir -p ~/.config/wezterm
-if [[ ! -L ~/.config/wezterm/sentinel ]]; then
-    ln -sfn "${PROJECT_ROOT}/wezterm_config/sentinel" ~/.config/wezterm/sentinel
-    echo -e "    ${GREEN}✔ Symlinked ~/.config/wezterm/sentinel${NC}"
+mkdir -p ~/.config/wezterm/plugins
+if [[ ! -L ~/.config/wezterm/plugins/sentinel.wezterm ]]; then
+    ln -sfn "${PROJECT_ROOT}" ~/.config/wezterm/plugins/sentinel.wezterm
+    echo -e "    ${GREEN}✔ Symlinked ~/.config/wezterm/plugins/sentinel.wezterm${NC}"
 else
-    echo -e "    ${YELLOW}⚠ ~/.config/wezterm/sentinel already linked.${NC}"
+    echo -e "    ${YELLOW}⚠ ~/.config/wezterm/plugins/sentinel.wezterm already linked.${NC}"
 fi
 
 if [[ ! -f ~/.wezterm.lua && ! -L ~/.wezterm.lua ]]; then
@@ -83,6 +83,16 @@ if wezterm show-keys &> /dev/null; then
     echo -e "    ${GREEN}✔ WezTerm configuration validated successfully!${NC}"
 else
     echo -e "    ${RED}❌ WezTerm validation failed, but installation finished. Check logs.${NC}"
+fi
+
+# 6. Build sentinel-core
+echo -e "\n${BLUE}[*] Building sentinel-core...${NC}"
+if command -v cargo &> /dev/null; then
+    echo -e "    ${GREEN}✔ Cargo found. Compiling Rust core...${NC}"
+    (cd "${PROJECT_ROOT}/sentinel-core" && cargo build --release)
+    echo -e "    ${GREEN}✔ Build successful!${NC}"
+else
+    echo -e "    ${YELLOW}⚠ Cargo not found. Skipping sentinel-core build.${NC}"
 fi
 
 echo -e "\n${CYAN}======================================================${NC}"
