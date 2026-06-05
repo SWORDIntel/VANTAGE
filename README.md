@@ -1,25 +1,31 @@
 # SENTINEL - WezTerm Edition
 
-**SENTINEL** has been completely overhauled. We have migrated away from complex Bash-heavy multiplexing towards a completely native, blazing fast **WezTerm + Lua** architecture.
+**SENTINEL** has been completely overhauled into a next-generation terminal operating system. We have migrated away from complex Bash-heavy multiplexing towards a completely native, blazing fast **WezTerm Plugin**, powered by a compiled **Rust Backend** and **Context-Aware AI**.
 
-## The 8 Core Pillars
-1. **LLM Chat Sidebar:** Native WezTerm pane splitting to run an AI chat seamlessly alongside your terminal.
-2. **Context Sessions:** Automatic workspace detection. Launch into `PenTest` or `AWS` workspaces and your UI natively turns Red to indicate privilege escalation context.
-3. **OSINT Dashboard:** Instantly fracture your terminal into a 4-pane layout to run simultaneous investigations.
-4. **Command Chains:** Fuzzy-find complex exploit chains and inject them directly into your prompt.
-5. **AI Suggestions:** Ask your local LLM to explain highlighted commands or suggest new ones, delivered directly via native WezTerm Toast overlays.
-6. **Instant Resurrection:** Using `wezterm-resurrect`, your workflow state is preserved across reboots.
-7. **Native Git UI:** Background Git status checks delivered as native terminal overlays.
-8. **Global Syncing:** All configurations are now stored cleanly in Lua for easy syncing across all your machines.
+## 🚀 The 3 Core Pillars (Phase 3 Architecture)
 
-## Installation
+1. **Official WezTerm Plugin:** SENTINEL is no longer a hacked-together config file. It is a standardized WezTerm plugin loaded instantly via `wezterm.plugin.require()`.
+2. **Rust Micro-Binary Core:** Heavy shell subprocesses (like status checks and system parsing) have been replaced by a compiled Rust binary (`sentinel-core`) that natively streams JSON state directly to the Lua UI with zero latency.
+3. **TurboQuant AI Autocomplete:** By pressing `CTRL+SPACE`, SENTINEL scrapes your screen context, detects your hardware (`nvidia-smi`), and generates contextual shell commands via a native WezTerm dropdown UI. 
+    - *Hardware Adaptive*: If you have a dedicated GPU, it uses full GPU KV-Caching offload via Ollama. If you don't, it natively routes through the `framewerx` AEGIS-LAB engines to use CPU/VPU optimized TurboQuant inference!
 
-1. Install [WezTerm](https://wezfurlong.org/wezterm/install/linux.html).
+## 📦 Installation
+
+SENTINEL still provides a rich UI bootstrapper to automatically wire up the `thin_bash` hooks and compile the Rust backend.
+
+1. Install [WezTerm](https://wezfurlong.org/wezterm/install/linux.html) and `cargo`.
 2. Run the bootstrap script:
 ```bash
 ./install.sh
 ```
 3. Launch `wezterm`.
 
-## Architecture Note
-This repo replaces thousands of lines of legacy bash logic. Heavy logic and state management are now offloaded to `~/.config/wezterm/sentinel/`, while primitive shell features (aliases and autocompletes) remain in `~/.config/sentinel/`.
+*(To completely purge the system or reinstall, you can use `./uninstall.sh` or `./reinstall.sh` respectively).*
+
+## ⌨️ Native Hotkeys
+
+- `CTRL+SHIFT+M`: Master SENTINEL UI Menu
+- `CTRL+SPACE`: TurboQuant AI Command Suggestions
+- `CTRL+SHIFT+S`: Save Context Session / Workspace State
+- `CTRL+SHIFT+L`: Load Context Session / Workspace State
+- `CTRL+PageUp/Down`: Smooth scrolling through terminal buffers
