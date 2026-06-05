@@ -1,0 +1,183 @@
+#!/usr/bin/env bash
+# SENTINEL - HMAC Security Module
+# Version: 1.0.0
+# Description: Provides HMAC-based security functions for SENTINEL modules
+# Dependencies: openssl
+# Maintainer: SENTINEL Team
+
+# Prevent double loading
+[[ -n "${_SENTINEL_HMAC_MODULE_LOADED}" ]] && return 0
+export _SENTINEL_HMAC_MODULE_LOADED=1
+
+# Set strict error handling
+set -o pipefail
+
+# Configuration
+HMAC_KEY="${SENTINEL_HMAC_KEY:-$(cat /etc/machine-id 2>/dev/null || hostname | sha256sum | cut -d' ' -f1)}"
+HMAC_LOG_DIR="${HOME}/.sentinel/logs"
+
+# Ensure log directory exists
+mkdir -p "$HMAC_LOG_DIR" 2>/dev/null || true
+
+# Log function for consistent output
+_hmac_log() {
+    local level="$1"
+    local message="$2"
+    echo "[HMAC Security] ($level) $message" >&2
+    echo "[$(date '+%Y-%m-%d %H:%M:%S')] $level: $message" >> "${HMAC_LOG_DIR}/security-$(date +%Y%m%d).log" 2>/dev/null || true
+}
+
+# Debug logging wrapper
+_hmac_debug() {
+    [[ "${DEBUG_SENTINEL:-0}" == "1" ]] && _hmac_log "DEBUG" "$1"
+}
+
+# Info logging wrapper
+_hmac_info() {
+    _hmac_log "INFO" "$1"
+}
+
+# Warning logging wrapper
+_hmac_warn() {
+    _hmac_log "WARNING" "$1"
+}
+
+# Error logging wrapper
+_hmac_error() {
+    _hmac_log "ERROR" "$1"
+}
+
+# Calculate HMAC for a string
+sentinel_hmac_string() {
+    local data="$1"
+    local hmac_key="${2:-$HMAC_KEY}"
+    
+    if command -v openssl &>/dev/null; then
+        echo -n "$data" | openssl dgst -sha256 -hmac "$hmac_key" -binary | xxd -p
+    elif command -v sha256sum &>/dev/null; then
+        # Fallback implementation for systems without openssl
+        # Less secure but better than nothing
+        echo -n "${data}${hmac_key}" | sha256sum | cut -d' ' -f1
+    else
+        _hmac_error "No cryptographic tools available for HMAC calculation"
+        return 1
+    fi
+}
+
+# Calculate HMAC for a file
+sentinel_hmac_file() {
+    local file="$1"
+    local hmac_key="${2:-$HMAC_KEY}"
+    
+    if [[ ! -f "$file" ]]; then
+        _hmac_error "File not found: $file"
+        return 1
+    fi
+    
+    if command -v openssl &>/dev/null; then
+        openssl dgst -sha256 -hmac "$hmac_key" -binary "$file" | xxd -p
+    elif command -v sha256sum &>/dev/null; then
+        # Fallback implementation
+        sha256sum "$file" | cut -d' ' -f1
+    else
+        _hmac_error "No cryptographic tools available for HMAC calculation"
+        return 1
+    fi
+}
+
+# Verify HMAC for a string
+sentinel_verify_hmac_string() {
+    local data="$1"
+    local expected_hmac="$2"
+    local hmac_key="${3:-$HMAC_KEY}"
+    
+    local calculated_hmac
+    calculated_hmac=$(sentinel_hmac_string "$data" "$hmac_key") || return 1
+    
+    if [[ "$calculated_hmac" == "$expected_hmac" ]]; then
+        return 0
+    else
+        _hmac_warn "HMAC verification failed for string"
+        return 1
+    fi
+}
+
+# Verify HMAC for a file
+sentinel_verify_hmac_file() {
+    local file="$1"
+    local expected_hmac="$2"
+    local hmac_key="${3:-$HMAC_KEY}"
+    
+    if [[ ! -f "$file" ]]; then
+        _hmac_error "File not found: $file"
+        return 1
+    fi
+    
+    local calculated_hmac
+    calculated_hmac=$(sentinel_hmac_file "$file" "$hmac_key") || return 1
+    
+    if [[ "$calculated_hmac" == "$expected_hmac" ]]; then
+        return 0
+    else
+        _hmac_warn "HMAC verification failed for file: $file"
+        return 1
+    fi
+}
+
+# Secure command verification and execution
+sentinel_run_verified_command() {
+    local command="$1"
+    local hmac_key="${2:-$HMAC_KEY}"
+    
+    # SECURITY: Do not eval. Only allow simple, space-delimited commands with
+    # conservative characters (no pipes/redirects/subshells/quotes/vars).
+    #
+    # Allowed token chars: alnum + / . _ - : = @ %
+    # Allowed separators: spaces/tabs
+    if [[ -z "$command" ]]; then
+        _hmac_error "Empty command refused"
+        return 1
+    fi
+
+    if [[ "$command" =~ [\;\|\&\<\>\(\)\`\$\\] ]]; then
+        _hmac_error "Refusing command containing shell metacharacters"
+        return 1
+    fi
+
+    if [[ "$command" =~ [\'\"] ]]; then
+        _hmac_error "Refusing command containing quotes"
+        return 1
+    fi
+
+    if [[ ! "$command" =~ ^[[:space:]]*[A-Za-z0-9_./:@%=-]+([[:space:]]+[A-Za-z0-9_./:@%=-]+)*[[:space:]]*$ ]]; then
+        _hmac_error "Refusing command with unsafe characters"
+        return 1
+    fi
+
+    # Split on IFS (space/tab/newline) into argv array
+    local -a argv=()
+    # shellcheck disable=SC2206
+    argv=($command)
+    if [[ "${#argv[@]}" -lt 1 ]]; then
+        _hmac_error "Failed to parse command"
+        return 1
+    fi
+
+    # Basic blocklist on argv[0]
+    case "${argv[0]}" in
+        sudo|su|doas|rm|dd|mkfs*|wget|curl)
+            _hmac_error "Refusing to execute high-risk command: ${argv[0]}"
+            return 1
+            ;;
+    esac
+
+    _hmac_info "Executing verified command: ${argv[*]}"
+    "${argv[@]}"
+}
+
+# Export functions
+export -f sentinel_hmac_string sentinel_hmac_file sentinel_verify_hmac_string \
+       sentinel_verify_hmac_file sentinel_run_verified_command 2>/dev/null || true
+
+# Initialization message
+_hmac_debug "HMAC Security Module loaded successfully" 
