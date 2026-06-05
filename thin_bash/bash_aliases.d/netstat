@@ -1,0 +1,5 @@
+# Show all TCP and UDP connections with verbose info, processes, and the UID's that own them
+alias netstatf='netstat -tupven'
+
+# Show all listening TCP and UDP sockets with verbose info, processes, and the UID's that own them
+alias netstatl='netstat -tupvenl'

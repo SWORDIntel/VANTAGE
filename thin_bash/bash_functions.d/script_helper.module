@@ -1,0 +1,75 @@
+#!/usr/bin/env bash
+# SENTINEL - Script Helper Module
+# Version: 1.0.0
+# Description: Automatically makes scripts executable after creation or editing.
+# Dependencies: logging
+
+# --- Module Metadata ---
+SENTINEL_MODULE_NAME="script_helper"
+SENTINEL_MODULE_DESCRIPTION="Automatically makes scripts executable"
+SENTINEL_MODULE_VERSION="1.0.0"
+SENTINEL_MODULE_DEPENDENCIES="logging"
+
+# --- Prevent double loading ---
+if [[ -n "${_SENTINEL_SCRIPT_HELPER_LOADED}" ]]; then
+    return 0
+fi
+export _SENTINEL_SCRIPT_HELPER_LOADED=1
+
+# --- Core Logic ---
+
+# Check if a file is a script and make it executable.
+# Usage: _make_script_executable <file_path>
+_make_script_executable() {
+    local file_path="$1"
+
+    # Check if the file exists and is a regular file
+    if [[ -f "$file_path" ]]; then
+        # Check if the file has a shebang
+        if grep -qE '^#!/' "$file_path"; then
+            # Check if the file is already executable
+            if [[ ! -x "$file_path" ]]; then
+                chmod +x "$file_path"
+                sentinel_log_info "script_helper" "Made script executable: $file_path"
+            fi
+        fi
+    fi
+}
+
+# --- Editor Wrappers ---
+
+# Generic editor wrapper
+_editor_wrapper() {
+    local editor_command="$1"
+    shift
+
+    # Run the editor
+    "$editor_command" "$@"
+
+    # Check each file that was edited
+    for file in "$@"; do
+        _make_script_executable "$file"
+    done
+}
+
+# --- Aliases ---
+alias vim='_editor_wrapper vim'
+alias nano='_editor_wrapper nano'
+alias code='_editor_wrapper code'
+alias emacs='_editor_wrapper emacs'
+
+# --- File Operation Wrappers ---
+
+# Wrapper for the cp command
+cp() {
+    command cp "$@"
+    _make_script_executable "${@: -1}"
+}
+
+# Wrapper for the mv command
+mv() {
+    command mv "$@"
+    _make_script_executable "${@: -1}"
+}
+
+true # Ensure the module sources correctly

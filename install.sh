@@ -38,7 +38,9 @@ if [[ ! -L ~/.config/sentinel/thin_bashrc ]]; then
     ln -sfn "${PROJECT_ROOT}/thin_bash/thin_bashrc" ~/.config/sentinel/thin_bashrc
 fi
 # Ensure directories exist
-mkdir -p ~/.config/sentinel/{bash_aliases.d,bash_functions.d,completions.d}
+ln -sfn "${PROJECT_ROOT}/thin_bash/bash_aliases.d" ~/.config/sentinel/bash_aliases.d
+ln -sfn "${PROJECT_ROOT}/thin_bash/bash_functions.d" ~/.config/sentinel/bash_functions.d
+ln -sfn "${PROJECT_ROOT}/thin_bash/completions.d" ~/.config/sentinel/completions.d
 
 # 4. Patch .bashrc to source thin_bashrc if not already there
 if ! grep -q "sentinel/thin_bashrc" ~/.bashrc; then

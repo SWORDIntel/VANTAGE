@@ -1,0 +1,163 @@
+#!/usr/bin/env bash
+# SENTINEL Text Formatting Aliases
+# Enhanced text formatting and manipulation utilities for command line operations
+# Based on original work by Jason Thistlethwaite (2013)
+# Enhanced for SENTINEL (2023)
+
+# CSV Processing
+# -------------
+# Format CSV data for human-readable display (removes quotes and replaces commas with spaces)
+alias dcsv='sed -e "s/,/ /g" -e "s/\"//g"'
+
+# Format CSV with proper column alignment (requires column command)
+alias csvview='column -s, -t'
+
+# Format CSV with headers preserved and colored
+alias csvsmart='awk -F, "NR==1 {print \"\\033[1;32m\" \ \"\\033[0m\"; next} {print}" | column -s, -t'
+
+# Format CSV with alternating row colors for readability
+alias csvcolor='awk -F, "{if(NR%2==0) printf \"\\033[48;5;236m\"; printf \"\\033[0m\n\"}" | column -t -s,'
+
+# Text Transformations
+# -------------------
+# Convert text to uppercase
+alias upper='tr "[:lower:]" "[:upper:]"'
+
+# Convert text to lowercase
+alias lower='tr "[:upper:]" "[:lower:]"'
+
+# Convert first character of each word to uppercase (title case)
+alias titlecase='sed "s/\b\(.\)/\u\1/g"'
+
+# Format JSON nicely with colors (requires python)
+alias jsonpp='python3 -m json.tool | pygmentize -l json 2>/dev/null || python3 -m json.tool'
+alias jsonfmt='python3 -m json.tool'
+
+# Format XML nicely with colors (requires xmllint and pygmentize)
+alias xmlpp='xmllint --format - | pygmentize -l xml 2>/dev/null || xmllint --format -'
+
+# Text Filtering
+# -------------
+# Strip all ANSI color codes from text
+alias nocolor='sed -r "s/\x1B\[([0-9]{1,3}(;[0-9]{1,3})*)?[mGK]//g"'
+
+# Remove empty lines
+alias noempty='grep -v "^[[:space:]]*$"'
+
+# Remove duplicate lines while maintaining original order
+alias uniqo='awk "!seen[\]++"'
+
+# Remove lines with comments (# style)
+alias nocomments='grep -v "^[[:space:]]*#"'
+
+# Remove leading and trailing whitespace
+alias trim='sed -e "s/^[[:space:]]*//" -e "s/[[:space:]]*$//"'
+
+# Text Statistics
+# --------------
+# Count words, lines, and characters
+alias wc-stats='wc -lwm'
+
+# Advanced word frequency counter
+alias wordfreq='tr -s "[:space:]" "\n" | tr "[:upper:]" "[:lower:]" | sort | uniq -c | sort -nr | head -20'
+
+# Count unique lines
+alias countuniq='sort | uniq -c | sort -nr'
+
+# Data Extraction
+# --------------
+# Extract IP addresses from text
+alias extractip='grep -oE "\b([0-9]{1,3}\.){3}[0-9]{1,3}\b"'
+
+# Extract email addresses from text
+alias extractemail='grep -oE "\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,6}\b"'
+
+# Extract URLs from text
+alias extracturl='grep -oE "(https?|ftp|file)://[-A-Za-z0-9+&@#/%?=~_|!:,.;]*[-A-Za-z0-9+&@#/%=~_|]"'
+
+# Extract MD5 hashes
+alias extractmd5='grep -oE "\b[a-fA-F0-9]{32}\b"'
+
+# Extract SHA1 hashes
+alias extractsha1='grep -oE "\b[a-fA-F0-9]{40}\b"'
+
+# Extract SHA256 hashes
+alias extractsha256='grep -oE "\b[a-fA-F0-9]{64}\b"'
+
+# Code Formatters
+# --------------
+# Format shell scripts and use syntax highlighting if available
+alias bashfmt='shfmt -i 2 -bn -ci -sr -kp | pygmentize -l bash 2>/dev/null || shfmt -i 2 -bn -ci -sr -kp'
+
+# Table Display Functions
+# ---------------------
+# Show data as ASCII table with custom headers
+# Usage: table_display "header1,header2,header3" "data1,data2,data3" "data4,data5,data6"
+function table_display() {
+    local headers="$1"
+    shift
+    local tmp_file="/tmp/table_data_$$.csv"
+    echo "$headers" > "$tmp_file"
+    for line in "$@"; do
+        echo "$line" >> "$tmp_file"
+    done
+    column -t -s, "$tmp_file"
+    rm "$tmp_file"
+}
+
+# Advanced Diff with Color
+# ----------------------
+# Show differences between two files with line numbers and colors
+alias diffpretty='diff --color=always --side-by-side --line-numbers'
+
+# Grep with Context and Colors
+# --------------------------
+# Search with pretty output
+alias grepc='grep --color=always -n -A 2 -B 2'
+
+# Text Encoding/Decoding
+# --------------------
+# URL encode a string
+function urlencode() {
+    python3 -c "import sys, urllib.parse; print(urllib.parse.quote(sys.stdin.read().strip() if not sys.argv[1:] else ' '.join(sys.argv[1:])))" "$@"
+}
+
+# URL decode a string
+function urldecode() {
+    python3 -c "import sys, urllib.parse; print(urllib.parse.unquote(sys.stdin.read().strip() if not sys.argv[1:] else ' '.join(sys.argv[1:])))" "$@"
+}
+
+# Base64 encode a string
+alias b64encode='base64'
+
+# Base64 decode a string
+alias b64decode='base64 -d'
+
+# Hex encode a string
+alias hexencode='xxd -p'
+
+# Hex decode a string
+alias hexdecode='xxd -p -r'
+
+# Check for required commands and provide installation instructions if missing
+for cmd in shfmt pygmentize column xxd; do
+    if ! command -v "$cmd" >/dev/null 2>&1; then
+        echo "Warning: $cmd is not installed. Some text_formatting aliases may not work properly."
+        case "$cmd" in
+            shfmt)
+                echo "  Install with: go get -u mvdan.cc/sh/cmd/shfmt"
+                ;;
+            pygmentize)
+                echo "  Install with: pip install pygments"
+                ;;
+            column)
+                echo "  Install with: sudo apt install bsdmainutils  # Debian/Ubuntu"
+                echo "  Install with: sudo yum install util-linux     # RHEL/CentOS"
+                ;;
+            xxd)
+                echo "  Install with: sudo apt install vim-common    # Debian/Ubuntu"
+                echo "  Install with: sudo yum install vim-common    # RHEL/CentOS"
+                ;;
+        esac
+    fi
+done

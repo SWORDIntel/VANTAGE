@@ -1,0 +1,138 @@
+#!/usr/bin/env bash
+
+# SENTINEL - Auto Install Module
+# Description: Automatically installs missing common tools like fzf and ccache.
+# Dependencies: logging (optional)
+
+# Module dependencies
+SENTINEL_MODULE_DEPENDENCIES="logging"
+
+# Prevent multiple loading
+[[ -n "${_SENTINEL_AUTO_INSTALL_LOADED}" ]] && return 0
+export _SENTINEL_AUTO_INSTALL_LOADED=1
+
+# --- Configuration ---
+: "${SENTINEL_AUTO_INSTALL_ENABLED:=1}"
+: "${SENTINEL_VERBOSE:=0}" # Assuming SENTINEL_VERBOSE might be used elsewhere
+
+# --- Colors (if not already defined) ---
+if ! type -t _sentinel_color_yellow &>/dev/null; then # Check if a color function/alias exists
+    export YELLOW='\033[1;33m'
+    export GREEN='\033[0;32m'
+    export RED='\033[0;31m'
+    export NC='\033[0m' # No Color
+fi
+
+# --- Logging function (basic fallback if full logging module not present) ---
+_auto_install_log() {
+    local level="$1"
+    local message="$2"
+    local color="$NC"
+    case "$level" in
+        INFO) color="$GREEN" ;;
+        WARN) color="$YELLOW" ;;
+        ERROR) color="$RED" ;;
+    esac
+    if command -v sentinel_log_info &>/dev/null && [[ "$level" == "INFO" ]]; then
+        sentinel_log_info "auto_install" "$message"
+    elif command -v sentinel_log_warning &>/dev/null && [[ "$level" == "WARN" ]]; then
+        sentinel_log_warning "auto_install" "$message"
+    elif command -v sentinel_log_error &>/dev/null && [[ "$level" == "ERROR" ]]; then
+        sentinel_log_error "auto_install" "$message"
+    else
+        echo -e "${color}[AutoInstall] ${level}: ${message}${NC}" >&2
+    fi
+}
+
+# --- Check if module is enabled ---
+if [[ "${SENTINEL_AUTO_INSTALL_ENABLED:-0}" != "1" ]]; then
+    if [[ "${SENTINEL_VERBOSE:-0}" == "1" ]]; then
+        _auto_install_log "INFO" "Module disabled by SENTINEL_AUTO_INSTALL_ENABLED."
+    fi
+    return 0 2>/dev/null || true # Silently exit if disabled
+fi
+
+_auto_install_log "INFO" "Module started."
+
+# --- Helper function to attempt installation ---
+_try_install() {
+    local package_name="$1"
+    local install_command=""
+    local sudo_prefix=""
+
+    if [[ "$(id -u)" -ne 0 ]]; then
+        if command -v sudo &>/dev/null; then
+            sudo_prefix="sudo "
+        else
+            _auto_install_log "WARN" "sudo not found. Cannot install $package_name without root privileges."
+            return 0
+        fi
+    fi
+
+    if command -v apt-get &>/dev/null; then
+        _auto_install_log "INFO" "Attempting to install $package_name using apt-get..."
+        ${sudo_prefix}apt-get update -yqq && ${sudo_prefix}apt-get install -yqq "$package_name"
+    elif command -v yum &>/dev/null; then
+        _auto_install_log "INFO" "Attempting to install $package_name using yum..."
+        ${sudo_prefix}yum install -y "$package_name"
+    elif command -v dnf &>/dev/null; then
+        _auto_install_log "INFO" "Attempting to install $package_name using dnf..."
+        ${sudo_prefix}dnf install -y "$package_name"
+    elif command -v brew &>/dev/null; then
+        _auto_install_log "INFO" "Attempting to install $package_name using brew..."
+        brew install "$package_name"
+    elif command -v pacman &>/dev/null; then
+        _auto_install_log "INFO" "Attempting to install $package_name using pacman..."
+        ${sudo_prefix}pacman -Syu --noconfirm "$package_name"
+    else
+        _auto_install_log "WARN" "No supported package manager (apt, yum, dnf, brew, pacman) found. Cannot install $package_name."
+        return 0
+    fi
+
+    if command -v "$package_name" &>/dev/null; then
+        _auto_install_log "INFO" "$package_name installed successfully."
+        return 0
+    else
+        _auto_install_log "ERROR" "Failed to install $package_name."
+        return 0
+    fi
+}
+
+# --- Check and install fzf ---
+if ! command -v fzf &>/dev/null; then
+    _auto_install_log "WARN" "fzf not found."
+    if _try_install "fzf"; then
+        # Additional fzf setup if needed (e.g., keybindings, completion)
+        # This might typically be handled by fzf's own install script or a separate module.
+        # For now, we'll just ensure it's installed.
+        if [[ -f ~/.fzf.bash ]]; then
+            _auto_install_log "INFO" "Sourcing ~/.fzf.bash for keybindings and completion."
+            # Source with error protection
+            { source ~/.fzf.bash; } 2>/dev/null || _auto_install_log "WARN" "Failed to source ~/.fzf.bash"
+        elif [[ -f /usr/share/doc/fzf/examples/key-bindings.bash ]]; then
+             _auto_install_log "INFO" "Sourcing /usr/share/doc/fzf/examples/key-bindings.bash for keybindings."
+            { source /usr/share/doc/fzf/examples/key-bindings.bash; } 2>/dev/null || _auto_install_log "WARN" "Failed to source key-bindings.bash"
+        fi
+    fi
+else
+    if [[ "${SENTINEL_VERBOSE:-0}" == "1" ]]; then
+        _auto_install_log "INFO" "fzf is already installed."
+    fi
+fi
+
+# --- Check and install ccache ---
+if ! command -v ccache &>/dev/null; then
+    _auto_install_log "WARN" "ccache not found."
+    _try_install "ccache"
+else
+    if [[ "${SENTINEL_VERBOSE:-0}" == "1" ]]; then
+        _auto_install_log "INFO" "ccache is already installed."
+    fi
+fi
+
+_auto_install_log "INFO" "Module finished."
+
+# --- Security: Ensure only user can read/modify this file (optional, good practice) ---
+{ chmod 600 "${BASH_SOURCE[0]}"; } 2>/dev/null || true
+
+return 0 2>/dev/null || true # Ensure script always exits successfully for sourcing

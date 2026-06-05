@@ -1,0 +1,395 @@
+#!/usr/bin/env bash
+# SENTINEL - Fallback Registry Module
+# Version: 1.0.0
+# Description: Provides fallback implementations for critical SENTINEL modules
+# Dependencies: error_recovery logging
+# Maintainer: SENTINEL Team
+
+# Module metadata
+SENTINEL_MODULE_DESCRIPTION="Fallback implementations for critical modules"
+SENTINEL_MODULE_VERSION="1.0.0"
+SENTINEL_MODULE_DEPENDENCIES="error_recovery logging"
+
+# Prevent double loading
+[[ -n "${_SENTINEL_FALLBACK_REGISTRY_LOADED}" ]] && return 0
+export _SENTINEL_FALLBACK_REGISTRY_LOADED=1
+
+# === FZF Module Fallback ===
+fzf_module_fallback() {
+    [[ -n "$(type -t sentinel_log_warning)" ]] && \
+        sentinel_log_warning "fallback_registry" "FZF unavailable, using basic file selection"
+    
+    # Basic file selector without FZF
+    select_file() {
+        local prompt="${1:-Select file:}"
+        local dir="${2:-.}"
+        
+        echo "$prompt" >&2
+        select file in $(find "$dir" -type f 2>/dev/null | head -20) "Cancel"; do
+            if [[ "$file" == "Cancel" ]]; then
+                return 1
+            elif [[ -n "$file" ]]; then
+                echo "$file"
+                return 0
+            fi
+        done
+    }
+    
+    # Basic command history search
+    search_history() {
+        local query="${1:-}"
+        if [[ -n "$query" ]]; then
+            history | grep -i "$query" | tail -20
+        else
+            history | tail -20
+        fi
+    }
+    
+    # Export fallback functions
+    export -f select_file
+    export -f search_history
+    
+    # Set aliases
+    alias fzf_files='select_file "Select a file:"'
+    alias fzf_history='search_history'
+}
+
+# === Autocomplete Module Fallback ===
+autocomplete_module_fallback() {
+    [[ -n "$(type -t sentinel_log_warning)" ]] && \
+        sentinel_log_warning "fallback_registry" "Advanced autocomplete unavailable, using basic completion"
+    
+    # Basic completion function
+    _basic_completion() {
+        local cur="${COMP_WORDS[COMP_CWORD]}"
+        local prev="${COMP_WORDS[COMP_CWORD-1]}"
+        
+        # File completion by default
+        COMPREPLY=( $(compgen -f -- "$cur") )
+        
+        # Add directory marker
+        for i in "${!COMPREPLY[@]}"; do
+            if [[ -d "${COMPREPLY[$i]}" ]]; then
+                COMPREPLY[$i]="${COMPREPLY[$i]}/"
+            fi
+        done
+    }
+    
+    # Apply basic completion
+    complete -F _basic_completion -D
+    
+    # Common command completions
+    complete -F _basic_completion cd ls cat vim nano
+}
+
+# === ML Module Fallback ===
+sentinel_ml_fallback() {
+    [[ -n "$(type -t sentinel_log_warning)" ]] && \
+        sentinel_log_warning "fallback_registry" "ML features unavailable, using history-based suggestions"
+    
+    # History-based command suggestion
+    suggest_command() {
+        local context="${1:-}"
+        echo "Recent commands matching '$context':" >&2
+        history | grep -i "$context" | tail -5 | cut -c 8-
+    }
+    
+    # Frequency-based prediction
+    predict_next_command() {
+        echo "Frequently used commands:" >&2
+        history | awk '{print $2}' | sort | uniq -c | sort -rn | head -5 | awk '{print $2}'
+    }
+    
+    export -f suggest_command
+    export -f predict_next_command
+}
+
+# === Chat Module Fallback ===
+sentinel_chat_fallback() {
+    [[ -n "$(type -t sentinel_log_warning)" ]] && \
+        sentinel_log_warning "fallback_registry" "Chat AI unavailable, using help system"
+    
+    # Basic help system
+    sentinel_chat() {
+        local query="$*"
+        
+        echo "AI Chat unavailable. Showing help for: $query" >&2
+        echo "" >&2
+        
+        # Try man page
+        if man -k "$query" 2>/dev/null | head -5; then
+            echo "" >&2
+            echo "Use 'man <command>' for details" >&2
+        else
+            echo "No help found. Try 'apropos $query' or check online docs." >&2
+        fi
+    }
+    
+    export -f sentinel_chat
+}
+
+# === Cybersecurity ML Module Fallback ===
+sentinel_cybersec_ml_fallback() {
+    [[ -n "$(type -t sentinel_log_warning)" ]] && \
+        sentinel_log_warning "fallback_registry" "Cybersecurity ML unavailable, using rule-based detection"
+    
+    # Basic anomaly detection
+    detect_anomalies() {
+        echo "ML-based anomaly detection unavailable" >&2
+        echo "Checking basic security rules..." >&2
+        
+        # Check for suspicious patterns in history
+        history | tail -100 | grep -E "(rm -rf|chmod 777|sudo su -|nc -l)" | tail -5
+        
+        # Check for unusual network connections
+        netstat -an 2>/dev/null | grep ESTABLISHED | grep -E ":(4444|1337|31337|6666)" | head -5
+    }
+    
+    export -f detect_anomalies
+}
+
+# === GitStar Module Fallback ===
+sentinel_gitstar_fallback() {
+    [[ -n "$(type -t sentinel_log_warning)" ]] && \
+        sentinel_log_warning "fallback_registry" "GitStar unavailable, using basic repository search"
+    
+    # Basic GitHub search
+    search_github() {
+        local query="$*"
+        echo "GitStar unavailable. Opening GitHub search in browser..." >&2
+        
+        # Try to open browser
+        local url="https://github.com/search?q=${query// /+}&type=repositories"
+        if command -v xdg-open &>/dev/null; then
+            xdg-open "$url" 2>/dev/null
+        elif command -v open &>/dev/null; then
+            open "$url" 2>/dev/null
+        else
+            echo "Visit: $url" >&2
+        fi
+    }
+    
+    export -f search_github
+    alias gitstar='search_github'
+}
+
+# === OSINT Module Fallback ===
+sentinel_osint_fallback() {
+    [[ -n "$(type -t sentinel_log_warning)" ]] && \
+        sentinel_log_warning "fallback_registry" "OSINT tools unavailable, using basic lookups"
+    
+    # Basic OSINT lookups
+    osint_lookup() {
+        local target="$1"
+        local type="${2:-auto}"
+        
+        echo "Advanced OSINT unavailable. Using basic lookups..." >&2
+        
+        # Auto-detect type
+        if [[ "$type" == "auto" ]]; then
+            if [[ "$target" =~ ^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$ ]]; then
+                type="ip"
+            elif [[ "$target" =~ ^[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$ ]]; then
+                type="domain"
+            fi
+        fi
+        
+        case "$type" in
+            ip)
+                echo "IP Lookup: $target" >&2
+                host "$target" 2>/dev/null || nslookup "$target" 2>/dev/null
+                ;;
+            domain)
+                echo "Domain Lookup: $target" >&2
+                host "$target" 2>/dev/null || nslookup "$target" 2>/dev/null
+                whois "$target" 2>/dev/null | head -20
+                ;;
+            *)
+                echo "Unknown target type" >&2
+                ;;
+        esac
+    }
+    
+    export -f osint_lookup
+}
+
+# === Logging Module Fallback ===
+logging_module_fallback() {
+    # Super basic logging when main logging fails
+    echo "[FALLBACK] Setting up emergency logging" >&2
+    
+    # Emergency log function
+    emergency_log() {
+        local level="$1"
+        local component="$2"
+        local message="$3"
+        
+        echo "[$(date '+%Y-%m-%d %H:%M:%S')] [$level] [$component] $message" >&2
+    }
+    
+    # Create wrapper functions
+    sentinel_log() { emergency_log "LOG" "$@"; }
+    sentinel_log_debug() { [[ "${DEBUG:-0}" == "1" ]] && emergency_log "DEBUG" "$@"; }
+    sentinel_log_info() { emergency_log "INFO" "$@"; }
+    sentinel_log_warning() { emergency_log "WARN" "$@"; }
+    sentinel_log_error() { emergency_log "ERROR" "$@"; }
+    sentinel_log_critical() { emergency_log "CRIT" "$@"; }
+    
+    export -f emergency_log sentinel_log sentinel_log_debug sentinel_log_info
+    export -f sentinel_log_warning sentinel_log_error sentinel_log_critical
+}
+
+# === Config Cache Module Fallback ===
+config_cache_fallback() {
+    [[ -n "$(type -t sentinel_log_warning)" ]] && \
+        sentinel_log_warning "fallback_registry" "Config cache unavailable, using direct sourcing"
+    
+    # Direct config loading without cache
+    config_cache_load() {
+        local config_file="$1"
+        
+        if [[ -f "$config_file" ]]; then
+            source "$config_file"
+        else
+            echo "Config file not found: $config_file" >&2
+            return 1
+        fi
+    }
+    
+    export -f config_cache_load
+}
+
+# === HMAC Module Fallback ===
+hmac_module_fallback() {
+    [[ -n "$(type -t sentinel_log_warning)" ]] && \
+        sentinel_log_warning "fallback_registry" "HMAC verification unavailable, using checksums"
+    
+    # Basic checksum verification
+    verify_integrity() {
+        local file="$1"
+        local checksum_file="${file}.sha256"
+        
+        if [[ -f "$checksum_file" ]]; then
+            sha256sum -c "$checksum_file" 2>/dev/null
+        else
+            echo "Warning: No checksum available for $file" >&2
+            return 0  # Don't fail, just warn
+        fi
+    }
+    
+    export -f verify_integrity
+}
+
+# === Shell Security Module Fallback ===
+shell_security_fallback() {
+    [[ -n "$(type -t sentinel_log_warning)" ]] && \
+        sentinel_log_warning "fallback_registry" "Advanced shell security unavailable, using basic protections"
+    
+    # Basic security settings
+    set -o noclobber  # Prevent accidental file overwrites
+    
+    # Simple command filter
+    command_filter() {
+        local cmd="$1"
+        
+        # Block obviously dangerous commands
+        if [[ "$cmd" =~ (rm[[:space:]]+-rf[[:space:]]+/) ]]; then
+            echo "Dangerous command blocked: $cmd" >&2
+            return 1
+        fi
+        
+        return 0
+    }
+    
+    export -f command_filter
+}
+
+# Register all fallbacks with error recovery system
+register_all_fallbacks() {
+    local modules=(
+        "fzf:fzf_module_fallback"
+        "autocomplete:autocomplete_module_fallback"
+        "sentinel_ml:sentinel_ml_fallback"
+        "sentinel_chat:sentinel_chat_fallback"
+        "sentinel_cybersec_ml:sentinel_cybersec_ml_fallback"
+        "sentinel_gitstar:sentinel_gitstar_fallback"
+        "sentinel_osint:sentinel_osint_fallback"
+        "logging:logging_module_fallback"
+        "config_cache:config_cache_fallback"
+        "hmac:hmac_module_fallback"
+        "shell_security:shell_security_fallback"
+    )
+    
+    for module_pair in "${modules[@]}"; do
+        local module="${module_pair%:*}"
+        local fallback="${module_pair#*:}"
+        
+        if type sentinel_register_fallback &>/dev/null; then
+            sentinel_register_fallback "$module" "$fallback"
+        fi
+    done
+    
+    [[ -n "$(type -t sentinel_log_info)" ]] && \
+        sentinel_log_info "fallback_registry" "Registered ${#modules[@]} module fallbacks"
+}
+
+# Test fallback system
+test_fallback_system() {
+    echo "=== Testing Fallback System ==="
+    
+    # Save current state
+    local original_mode="$SENTINEL_FALLBACK_MODE"
+    
+    # Test each fallback
+    echo "Testing FZF fallback..."
+    fzf_module_fallback
+    type select_file &>/dev/null && echo "✓ FZF fallback OK" || echo "✗ FZF fallback FAILED"
+    
+    echo "Testing ML fallback..."
+    sentinel_ml_fallback
+    type suggest_command &>/dev/null && echo "✓ ML fallback OK" || echo "✗ ML fallback FAILED"
+    
+    echo "Testing logging fallback..."
+    logging_module_fallback
+    sentinel_log_info "test" "Logging fallback test" && echo "✓ Logging fallback OK" || echo "✗ Logging fallback FAILED"
+    
+    # Restore state
+    sentinel_set_degradation_mode "$original_mode" 2>/dev/null
+    
+    echo "=== Fallback System Test Complete ==="
+}
+
+# Initialize fallback registry
+init_fallback_registry() {
+    # Register all fallbacks
+    register_all_fallbacks
+    
+    # Set up automatic fallback for critical modules
+    for module in logging config_cache; do
+        if ! type "${module}_init" &>/dev/null; then
+            # Module not loaded, use fallback immediately
+            local fallback="${module}_module_fallback"
+            if type "$fallback" &>/dev/null; then
+                "$fallback"
+            fi
+        fi
+    done
+}
+
+# Export functions
+export -f fzf_module_fallback
+export -f autocomplete_module_fallback
+export -f sentinel_ml_fallback
+export -f sentinel_chat_fallback
+export -f sentinel_cybersec_ml_fallback
+export -f sentinel_gitstar_fallback
+export -f sentinel_osint_fallback
+export -f logging_module_fallback
+export -f config_cache_fallback
+export -f hmac_module_fallback
+export -f shell_security_fallback
+export -f register_all_fallbacks
+export -f test_fallback_system
+
+# Initialize on load
+init_fallback_registry

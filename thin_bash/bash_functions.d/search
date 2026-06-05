@@ -1,0 +1,30 @@
+#!/usr/bin/env bash
+# Functions and aliases for searching the filesystem
+# Last edit: 07/01/2013
+#
+# (c) 2013 Jason Thistlethwaite
+# Recursively search current directory for files and directories containing <arg> in
+# their name
+function ff() {
+    find . -iname "*$1*"
+}
+
+# Find directories with name matching pattern
+function fd() {
+    find . -type d -name "*$1*"
+}
+
+# Find files by extension
+function fext() {
+    find . -type f -name "*.$1"
+}
+
+# Find and grep - search file contents
+function fgrep() {
+    find . -type f -name "*$1*" -exec grep -l "$2" {} \;
+}
+
+# Find recently modified files
+function frecent() {
+    find . -type f -mtime -"${1:-7}" -ls
+}

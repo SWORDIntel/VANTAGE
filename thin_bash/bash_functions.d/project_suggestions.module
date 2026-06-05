@@ -1,0 +1,515 @@
+@ -1,498 +0,0 @@
+#!/usr/bin/env bash
+# SENTINEL - Project-Specific Suggestions Module
+# Version: 2.0.0
+# Description: Provides context-aware suggestions based on project type detection
+# Dependencies: ble.sh (optional, enhances functionality), hmac.module
+# Maintainer: SENTINEL Team
+
+# Prevent double loading
+[[ -n "${_SENTINEL_PROJECT_SUGGESTIONS_LOADED}" ]] && return 0
+export _SENTINEL_PROJECT_SUGGESTIONS_LOADED=1
+
+# Make sure we have color variables defined to prevent crashes
+RED="\033[0;31m" 2>/dev/null || RED=""
+GREEN="\033[0;32m" 2>/dev/null || GREEN=""
+YELLOW="\033[0;33m" 2>/dev/null || YELLOW=""
+BLUE="\033[0;34m" 2>/dev/null || BLUE=""
+NC="\033[0m" 2>/dev/null || NC=""
+
+# Don't use strict error handling as it can cause terminal crashes
+# set -o pipefail
+
+# FEATURE: Project-Specific Suggestions
+# Detects project types and provides contextually relevant suggestions
+_sentinel_project_suggestions() {
+    # Add error handling to prevent terminal crashes
+    local current_dir=$(pwd 2>/dev/null) || local current_dir="$HOME"
+    local project_root="$current_dir"
+    local project_type=""
+    local project_subtypes=()
+    
+    # Advanced project type detection
+    # Check for various project indicators in the current directory and parents
+    
+    # Node.js detection
+    if [[ -f "$current_dir/package.json" ]]; then
+        project_type="nodejs"
+        project_root=$(dirname $(find "$current_dir" -maxdepth 3 -name "package.json" -type f -not -path "*/node_modules/*" | head -1))
+        
+        # Detect specific Node.js frameworks
+        if grep -q '"react"' "$project_root/package.json" 2>/dev/null; then
+            project_subtypes+=("react")
+        fi
+        if grep -q '"next"' "$project_root/package.json" 2>/dev/null; then
+            project_subtypes+=("nextjs")
+        fi
+        if grep -q '"vue"' "$project_root/package.json" 2>/dev/null; then
+            project_subtypes+=("vue")
+        fi
+        if grep -q '"angular"' "$project_root/package.json" 2>/dev/null; then
+            project_subtypes+=("angular")
+        fi
+        if grep -q '"express"' "$project_root/package.json" 2>/dev/null; then
+            project_subtypes+=("express")
+        fi
+    fi
+    
+    # Python detection
+    if [[ -z "$project_type" && (-f "$current_dir/requirements.txt" || -f "$current_dir/setup.py" || -f "$current_dir/pyproject.toml") ]]; then
+        project_type="python"
+        project_root=$(dirname $(find "$current_dir" -maxdepth 3 -name "requirements.txt" -o -name "setup.py" -o -name "pyproject.toml" -type f | head -1))
+        
+        # Detect specific Python frameworks
+        if [[ -f "$project_root/manage.py" ]]; then
+            project_subtypes+=("django")
+        fi
+        if grep -q "flask" "$project_root/requirements.txt" 2>/dev/null; then
+            project_subtypes+=("flask")
+        fi
+        if grep -q "fastapi" "$project_root/requirements.txt" 2>/dev/null; then
+            project_subtypes+=("fastapi")
+        fi
+        if [[ -d "$project_root/.dvc" ]]; then
+            project_subtypes+=("dvc")
+        fi
+        if grep -q "torch\|tensorflow\|keras\|scikit-learn" "$project_root/requirements.txt" 2>/dev/null; then
+            project_subtypes+=("ml")
+        fi
+    fi
+    
+    # Rust detection
+    if [[ -z "$project_type" && -f "$current_dir/Cargo.toml" ]]; then
+        project_type="rust"
+        project_root=$(dirname $(find "$current_dir" -maxdepth 3 -name "Cargo.toml" -type f | head -1))
+        
+        # Check for workspace
+        if grep -q "\[workspace\]" "$project_root/Cargo.toml" 2>/dev/null; then
+            project_subtypes+=("workspace")
+        fi
+        
+        # Check for wasm target
+        if grep -q "wasm" "$project_root/Cargo.toml" 2>/dev/null; then
+            project_subtypes+=("wasm")
+        fi
+        
+        # Check for binary vs library
+        if grep -q "\[\[bin\]\]" "$project_root/Cargo.toml" 2>/dev/null; then
+            project_subtypes+=("binary")
+        elif [[ -d "$project_root/src/lib.rs" ]]; then
+            project_subtypes+=("library")
+        fi
+    fi
+    
+    # Go detection
+    if [[ -z "$project_type" && (-f "$current_dir/go.mod" || -f "$current_dir/go.sum") ]]; then
+        project_type="go"
+        project_root=$(dirname $(find "$current_dir" -maxdepth 3 -name "go.mod" -type f | head -1))
+        
+        # Detect go web frameworks
+        if grep -q "gin-gonic\|echo\|fiber" "$project_root/go.mod" 2>/dev/null; then
+            project_subtypes+=("web")
+        fi
+    fi
+    
+    # C/C++ detection
+    if [[ -z "$project_type" && (-f "$current_dir/Makefile" || -f "$current_dir/CMakeLists.txt" || -f "$current_dir/configure.ac" || -f "$current_dir/meson.build") ]]; then
+        project_type="c_cpp"
+        
+        # Find root based on the build system
+        if [[ -f "$current_dir/Makefile" ]]; then
+            project_root=$(dirname $(find "$current_dir" -maxdepth 3 -name "Makefile" -type f | head -1))
+            project_subtypes+=("make")
+        elif [[ -f "$current_dir/CMakeLists.txt" ]]; then
+            project_root=$(dirname $(find "$current_dir" -maxdepth 3 -name "CMakeLists.txt" -type f | head -1))
+            project_subtypes+=("cmake")
+        elif [[ -f "$current_dir/configure.ac" ]]; then
+            project_root=$(dirname $(find "$current_dir" -maxdepth 3 -name "configure.ac" -type f | head -1))
+            project_subtypes+=("autotools")
+        elif [[ -f "$current_dir/meson.build" ]]; then
+            project_root=$(dirname $(find "$current_dir" -maxdepth 3 -name "meson.build" -type f | head -1))
+            project_subtypes+=("meson")
+        fi
+        
+        # Check for C vs C++
+        if find "$project_root" -maxdepth 3 -name "*.cpp" -o -name "*.hpp" -o -name "*.cc" | grep -q .; then
+            project_subtypes+=("cpp")
+        else
+            project_subtypes+=("c")
+        fi
+    fi
+    
+    # Java/Kotlin detection
+    if [[ -z "$project_type" && (-f "$current_dir/pom.xml" || -f "$current_dir/build.gradle" || -f "$current_dir/build.gradle.kts") ]]; then
+        if [[ -f "$current_dir/pom.xml" ]]; then
+            project_type="java"
+            project_root=$(dirname $(find "$current_dir" -maxdepth 3 -name "pom.xml" -type f | head -1))
+            project_subtypes+=("maven")
+        elif [[ -f "$current_dir/build.gradle" ]]; then
+            project_root=$(dirname $(find "$current_dir" -maxdepth 3 -name "build.gradle" -type f | head -1))
+            project_subtypes+=("gradle")
+            
+            # Check for Kotlin
+            if grep -q "kotlin" "$project_root/build.gradle" 2>/dev/null; then
+                project_type="kotlin"
+            else
+                project_type="java"
+            fi
+        elif [[ -f "$current_dir/build.gradle.kts" ]]; then
+            project_type="kotlin"
+            project_root=$(dirname $(find "$current_dir" -maxdepth 3 -name "build.gradle.kts" -type f | head -1))
+            project_subtypes+=("gradle")
+        fi
+        
+        # Check for Spring
+        if grep -q "spring-boot\|springframework" "$project_root/pom.xml" 2>/dev/null ||
+           grep -q "spring-boot\|springframework" "$project_root/build.gradle" 2>/dev/null; then
+            project_subtypes+=("spring")
+        fi
+    fi
+    
+    # Docker project detection
+    if [[ -z "$project_type" && (-f "$current_dir/Dockerfile" || -f "$current_dir/docker-compose.yml") ]]; then
+        project_type="docker"
+        project_root=$(dirname $(find "$current_dir" -maxdepth 3 -name "Dockerfile" -o -name "docker-compose.yml" -type f | head -1))
+        
+        # Check for docker-compose
+        if [[ -f "$project_root/docker-compose.yml" ]]; then
+            project_subtypes+=("compose")
+        fi
+    fi
+    
+    # Git fallback
+    if [[ -z "$project_type" ]] && git rev-parse --is-inside-work-tree &>/dev/null; then
+        project_type="git"
+        project_root=$(git rev-parse --show-toplevel)
+    fi
+    
+    # Skip if no project detected
+    [[ -z "$project_type" ]] && return
+    
+    # Create project settings file if it doesn't exist
+    local project_file=~/.sentinel/autocomplete/projects/$(echo "$project_root" | tr '/' '_').project
+    
+    if [[ ! -f "$project_file" ]]; then
+        {
+            echo "project_type=$project_type"
+            echo "project_root=$project_root"
+            echo "project_subtypes=${project_subtypes[*]}"
+            echo "last_used=$(date +%s)"
+            echo "commands="
+        } > "$project_file"
+    else
+        # Update timestamp and subtypes
+        sed -i "s/project_subtypes=.*/project_subtypes=${project_subtypes[*]}/" "$project_file"
+        sed -i "s/last_used=.*/last_used=$(date +%s)/" "$project_file"
+    fi
+    
+    # Check if ble.sh is available for enhanced suggestions - with error handling
+    if ! type -t ble-sabbrev &>/dev/null; then
+        { _projects_log_warning "BLE.sh not available - project suggestions will be limited"; } 2>/dev/null || true
+        return 0
+    fi
+    
+    # Project-specific suggestions based on type and subtypes
+    case "$project_type" in
+        nodejs)
+            # Add base Node.js commands
+            ble-sabbrev "npm:start=npm start"
+            ble-sabbrev "npm:dev=npm run dev"
+            ble-sabbrev "npm:test=npm test"
+            ble-sabbrev "npm:build=npm run build"
+            ble-sabbrev "npm:i=npm install"
+            
+            # Extract scripts from package.json
+            if [[ -f "$project_root/package.json" ]]; then
+                local scripts=$(jq -r '.scripts | keys[]' "$project_root/package.json" 2>/dev/null)
+                for script in $scripts; do
+                    ble-sabbrev "npm:$script=npm run $script"
+                done
+            fi
+            
+            # Add framework-specific commands
+            for subtype in "${project_subtypes[@]}"; do
+                case "$subtype" in
+                    react)
+                        ble-sabbrev "react:dev=npm run start"
+                        ble-sabbrev "react:build=npm run build"
+                        ble-sabbrev "react:test=npm run test"
+                        ble-sabbrev "react:eject=npm run eject"
+                        ;;
+                    nextjs)
+                        ble-sabbrev "next:dev=npm run dev"
+                        ble-sabbrev "next:build=npm run build"
+                        ble-sabbrev "next:start=npm run start"
+                        ble-sabbrev "next:lint=npm run lint"
+                        ;;
+                    express)
+                        ble-sabbrev "express:dev=npm run dev"
+                        ble-sabbrev "express:start=npm run start"
+                        ble-sabbrev "express:debug=DEBUG=* npm run dev"
+                        ;;
+                esac
+            done
+            ;;
+            
+        python)
+            # Base Python commands
+            ble-sabbrev "py:venv=source venv/bin/activate"
+            ble-sabbrev "py:install=pip install -r requirements.txt"
+            ble-sabbrev "py:test=pytest"
+            ble-sabbrev "py:lint=flake8"
+            
+            # Framework-specific commands
+            for subtype in "${project_subtypes[@]}"; do
+                case "$subtype" in
+                    django)
+                        ble-sabbrev "django:=python manage.py"
+                        ble-sabbrev "django:run=python manage.py runserver"
+                        ble-sabbrev "django:migrate=python manage.py migrate"
+                        ble-sabbrev "django:shell=python manage.py shell"
+                        ble-sabbrev "django:makemigrations=python manage.py makemigrations"
+                        ble-sabbrev "django:createsuperuser=python manage.py createsuperuser"
+                        ;;
+                    flask)
+                        ble-sabbrev "flask:run=flask run --debug"
+                        ble-sabbrev "flask:shell=flask shell"
+                        ble-sabbrev "flask:routes=flask routes"
+                        ;;
+                    fastapi)
+                        ble-sabbrev "fastapi:run=uvicorn main:app --reload"
+                        ble-sabbrev "fastapi:docs=echo 'API docs available at: http://localhost:8000/docs'"
+                        ;;
+                    ml)
+                        ble-sabbrev "ml:notebook=jupyter notebook"
+                        ble-sabbrev "ml:lab=jupyter lab"
+                        ble-sabbrev "ml:train=python train.py"
+                        ble-sabbrev "ml:eval=python evaluate.py"
+                        ;;
+                    dvc)
+                        ble-sabbrev "dvc:pull=dvc pull"
+                        ble-sabbrev "dvc:push=dvc push"
+                        ble-sabbrev "dvc:repro=dvc repro"
+                        ble-sabbrev "dvc:dag=dvc dag"
+                        ;;
+                esac
+            done
+            ;;
+            
+        rust)
+            # Base Rust commands
+            ble-sabbrev "cargo:build=cargo build"
+            ble-sabbrev "cargo:run=cargo run"
+            ble-sabbrev "cargo:test=cargo test"
+            ble-sabbrev "cargo:check=cargo check"
+            ble-sabbrev "cargo:clippy=cargo clippy"
+            ble-sabbrev "cargo:fmt=cargo fmt"
+            ble-sabbrev "cargo:doc=cargo doc --open"
+            
+            # Subtype-specific commands
+            for subtype in "${project_subtypes[@]}"; do
+                case "$subtype" in
+                    wasm)
+                        ble-sabbrev "wasm:build=wasm-pack build"
+                        ble-sabbrev "wasm:test=wasm-pack test --chrome"
+                        ;;
+                    workspace)
+                        ble-sabbrev "cargo:ws=cargo workspace"
+                        ble-sabbrev "cargo:all=cargo build --all"
+                        ;;
+                esac
+            done
+            ;;
+            
+        go)
+            # Base Go commands
+            ble-sabbrev "go:run=go run ."
+            ble-sabbrev "go:build=go build ."
+            ble-sabbrev "go:test=go test ./..."
+            ble-sabbrev "go:fmt=go fmt ./..."
+            ble-sabbrev "go:mod=go mod tidy"
+            ble-sabbrev "go:get=go get"
+            
+            # Subtype-specific commands
+            for subtype in "${project_subtypes[@]}"; do
+                case "$subtype" in
+                    web)
+                        ble-sabbrev "go:dev=go run main.go"
+                        ble-sabbrev "go:hot=air -c .air.toml"
+                        ;;
+                esac
+            done
+            ;;
+            
+        c_cpp)
+            # Base C/C++ commands based on build system
+            for subtype in "${project_subtypes[@]}"; do
+                case "$subtype" in
+                    make)
+                        ble-sabbrev "make:=make"
+                        ble-sabbrev "make:all=make all"
+                        ble-sabbrev "make:clean=make clean"
+                        ble-sabbrev "make:install=make install"
+                        ble-sabbrev "make:check=make check"
+                        ;;
+                    cmake)
+                        ble-sabbrev "cmake:build=mkdir -p build && cd build && cmake .. && make"
+                        ble-sabbrev "cmake:clean=rm -rf build/"
+                        ble-sabbrev "cmake:install=cd build && make install"
+                        ble-sabbrev "cmake:rebuild=rm -rf build/ && mkdir -p build && cd build && cmake .. && make"
+                        ;;
+                    autotools)
+                        ble-sabbrev "auto:config=./configure"
+                        ble-sabbrev "auto:make=make"
+                        ble-sabbrev "auto:install=make install"
+                        ble-sabbrev "auto:bootstrap=autoreconf -i && ./configure && make"
+                        ;;
+                    meson)
+                        ble-sabbrev "meson:build=meson setup build && meson compile -C build"
+                        ble-sabbrev "meson:test=meson test -C build"
+                        ble-sabbrev "meson:clean=rm -rf build/"
+                        ;;
+                esac
+            done
+            ;;
+            
+        java|kotlin)
+            # Base Java/Kotlin commands based on build system
+            for subtype in "${project_subtypes[@]}"; do
+                case "$subtype" in
+                    maven)
+                        ble-sabbrev "mvn:build=mvn clean install"
+                        ble-sabbrev "mvn:test=mvn test"
+                        ble-sabbrev "mvn:package=mvn package"
+                        ble-sabbrev "mvn:run=mvn exec:java"
+                        ble-sabbrev "mvn:spring=mvn spring-boot:run"
+                        ;;
+                    gradle)
+                        ble-sabbrev "gradle:build=./gradlew build"
+                        ble-sabbrev "gradle:test=./gradlew test"
+                        ble-sabbrev "gradle:run=./gradlew run"
+                        ble-sabbrev "gradle:clean=./gradlew clean"
+                        if [[ " ${project_subtypes[*]} " == *" spring "* ]]; then
+                            ble-sabbrev "gradle:boot=./gradlew bootRun"
+                        fi
+                        ;;
+                esac
+            done
+            ;;
+            
+        docker)
+            # Docker commands
+            ble-sabbrev "docker:build=docker build -t $(basename "$project_root"):latest ."
+            ble-sabbrev "docker:run=docker run -it $(basename "$project_root"):latest"
+            
+            # Docker-compose specific
+            if [[ " ${project_subtypes[*]} " == *" compose "* ]]; then
+                ble-sabbrev "compose:up=docker-compose up"
+                ble-sabbrev "compose:down=docker-compose down"
+                ble-sabbrev "compose:logs=docker-compose logs -f"
+                ble-sabbrev "compose:build=docker-compose build"
+                ble-sabbrev "compose:restart=docker-compose restart"
+            fi
+            ;;
+            
+        git)
+            # Basic git commands
+            ble-sabbrev "git:s=git status"
+            ble-sabbrev "git:commit=git commit -m \"\""
+            ble-sabbrev "git:push=git push origin $(git branch --show-current 2>/dev/null || echo 'main')"
+            ble-sabbrev "git:pull=git pull origin $(git branch --show-current 2>/dev/null || echo 'main')"
+            ble-sabbrev "git:checkout=git checkout -b "
+            ble-sabbrev "git:log=git log --oneline --graph --decorate"
+            ble-sabbrev "git:amend=git commit --amend --no-edit"
+            ;;
+    esac
+    
+    # Collect recently used commands for this project
+    local project_history_file=~/.sentinel/autocomplete/projects/$(echo "$project_root" | tr '/' '_').history
+    if [[ ! -f "$project_history_file" ]]; then
+        # Create empty history file
+        touch "$project_history_file"
+    fi
+    
+    # Update project history with last command
+    local last_cmd=$(HISTTIMEFORMAT= history 1 | sed 's/^[ 0-9]\+[ ]\+//')
+    if [[ -n "$last_cmd" && "$last_cmd" != "cd "* ]]; then
+        echo "$last_cmd" >> "$project_history_file"
+        # Keep history file to reasonable size (100 entries)
+        tail -100 "$project_history_file" > "$project_history_file.tmp"
+        mv "$project_history_file.tmp" "$project_history_file"
+    fi
+    
+    # Add project-specific frequent commands to suggestions
+    if [[ -f "$project_history_file" ]]; then
+        sort "$project_history_file" | uniq -c | sort -nr | head -5 | 
+        while read -r count cmd; do
+            if [[ $count -gt 1 ]]; then
+                local cmd_shortname=$(echo "$cmd" | cut -d' ' -f1)
+                ble-sabbrev "project:$cmd_shortname=$cmd"
+            fi
+        done
+    fi
+}
+
+# Logging functions with error handling
+_projects_log_error() {
+    local msg="$1"
+    { mkdir -p ~/.sentinel/logs; } 2>/dev/null || return 0
+    { echo "[$(date '+%Y-%m-%d %H:%M:%S' 2>/dev/null || echo 'unknown')] ERROR: $msg" >> ~/.sentinel/logs/errors-$(date +%Y%m%d 2>/dev/null || echo 'unknown').log; } 2>/dev/null || true
+    return 0
+}
+
+_projects_log_warning() {
+    local msg="$1"
+    { mkdir -p ~/.sentinel/logs; } 2>/dev/null || return 0
+    { echo "[$(date '+%Y-%m-%d %H:%M:%S' 2>/dev/null || echo 'unknown')] WARNING: $msg" >> ~/.sentinel/logs/warnings-$(date +%Y%m%d 2>/dev/null || echo 'unknown').log; } 2>/dev/null || true
+    return 0
+}
+
+# Register project hook with ble.sh if available - with robust error handling
+_register_project_hook() {
+    # Try to register with ble.sh first if available
+    if type -t blehook &>/dev/null; then
+        # Check if hook exists first with proper error handling
+        local hook_exists=0
+        { blehook ATTACH_LINE_END 2>/dev/null | grep -q _sentinel_project_suggestions && hook_exists=1; } 2>/dev/null || true
+        
+        if [[ $hook_exists -eq 0 ]]; then
+            { blehook ATTACH_LINE_END+=_sentinel_project_suggestions; } 2>/dev/null || true
+        fi
+    else
+        # Fallback to PROMPT_COMMAND if ble.sh not available - with error handling
+        if [[ ! "${PROMPT_COMMAND:-}" =~ _sentinel_project_suggestions ]]; then
+            PROMPT_COMMAND="_sentinel_project_suggestions 2>/dev/null || true;${PROMPT_COMMAND:-:}"
+        fi
+    fi
+    
+    return 0
+}
+
+# Initialize the project suggestion system with robust error handling
+sentinel_init_project_suggestions() {
+    # Skip if not in interactive shell
+    [[ $- != *i* ]] && return 0
+    
+    # Create required directories with error handling
+    { mkdir -p ~/.sentinel/autocomplete/projects; } 2>/dev/null || true
+    
+    # Register with the appropriate hook system
+    { _register_project_hook; } 2>/dev/null || true
+    
+    # Create initial project detection in background with proper isolation
+    ( { _sentinel_project_suggestions; } &>/dev/null & ) 2>/dev/null || true
+    
+    # Log startup with error handling
+    { _projects_log_warning "Project suggestion system initialized"; } 2>/dev/null || true
+    
+    return 0
+}
+
+# Run initialization with error handling to prevent terminal crashes
+{ sentinel_init_project_suggestions; } 2>/dev/null || true
+
+# Always return success to prevent terminal crashes
+return 0

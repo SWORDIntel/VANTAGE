@@ -1,0 +1,162 @@
+#!/usr/bin/env bash
+
+# SENTINEL - Virtual Environment Helper Functions
+# Description: Provides functions for creating and managing Python virtual environments.
+
+# --- Colors (if not already defined) ---
+if ! type -t _sentinel_color_yellow &>/dev/null; then # Check if a color function/alias exists
+    export YELLOW='\033[1;33m'
+    export GREEN='\033[0;32m'
+    export RED='\033[0;31m'
+    export NC='\033[0m' # No Color
+fi
+
+# --- Logging function (basic fallback if full logging module not present) ---
+# Using a different name to avoid conflicts if this file is sourced independently
+_venv_helper_log() {
+    local level="$1"
+    local message="$2"
+    local color="$NC"
+    case "$level" in
+        INFO) color="$GREEN" ;;
+        WARN) color="$YELLOW" ;;
+        ERROR) color="$RED" ;;
+    esac
+    # Check for sentinel logging functions if available
+    if command -v sentinel_log_info &>/dev/null && [[ "$level" == "INFO" ]]; then
+        sentinel_log_info "venv_helper" "$message"
+    elif command -v sentinel_log_warning &>/dev/null && [[ "$level" == "WARN" ]]; then
+        sentinel_log_warning "venv_helper" "$message"
+    elif command -v sentinel_log_error &>/dev/null && [[ "$level" == "ERROR" ]]; then
+        sentinel_log_error "venv_helper" "$message"
+    else
+        echo -e "${color}[VenvHelper] ${level}: ${message}${NC}" >&2
+    fi
+}
+
+# --- mkvenv function ---
+# Creates a Python virtual environment and installs a predefined set of packages.
+# Usage: mkvenv [directory_name]
+mkvenv() {
+    local venv_dir="${1:-.venv}"
+    local python_executable="python3" # Default to python3
+
+    _venv_helper_log "INFO" "Starting mkvenv process for directory: $venv_dir"
+
+    # Check if Python is available
+    if ! command -v $python_executable &>/dev/null; then
+        _venv_helper_log "WARN" "$python_executable not found. Trying 'python'."
+        python_executable="python"
+        if ! command -v $python_executable &>/dev/null; then
+            _venv_helper_log "ERROR" "Python (python3 or python) is not installed or not in PATH. Cannot create virtual environment."
+            return 1
+        fi
+    fi
+    _venv_helper_log "INFO" "Using Python executable: $($python_executable --version 2>&1)"
+
+
+    # Check if the target directory already exists and is a non-empty directory
+    if [[ -d "$venv_dir" && -n "$(ls -A "$venv_dir")" ]]; then
+        _venv_helper_log "WARN" "Directory '$venv_dir' already exists and is not empty."
+        read -r -p "Do you want to remove it and continue? (y/N): " response
+        if [[ "$response" =~ ^([yY][eE][sS]|[yY])$ ]]; then
+            _venv_helper_log "INFO" "Removing existing directory: $venv_dir"
+            rm -rf "$venv_dir"
+            if [[ $? -ne 0 ]]; then
+                _venv_helper_log "ERROR" "Failed to remove directory '$venv_dir'."
+                return 1
+            fi
+        else
+            _venv_helper_log "INFO" "Aborting mkvenv. Directory '$venv_dir' was not modified."
+            return 0 # User chose not to proceed
+        fi
+    elif [[ -f "$venv_dir" ]]; then
+         _venv_helper_log "ERROR" "'$venv_dir' exists and is a file, not a directory. Please remove it or choose a different name."
+         return 1
+    fi
+
+
+    # 1. Create the virtual environment
+    _venv_helper_log "INFO" "Creating virtual environment in '$venv_dir'..."
+    if $python_executable -I -m venv "$venv_dir"; then
+        _venv_helper_log "INFO" "Virtual environment created successfully."
+    else
+        _venv_helper_log "ERROR" "Failed to create virtual environment."
+        return 1
+    fi
+
+    # 2. Activate the virtual environment (for the current shell and subsequent commands)
+    # Check for activate script in common locations
+    local activate_script=""
+    if [[ -f "$venv_dir/bin/activate" ]]; then
+        activate_script="$venv_dir/bin/activate"
+    elif [[ -f "$venv_dir/Scripts/activate" ]]; then # For Windows Git Bash / MSYS
+        activate_script="$venv_dir/Scripts/activate"
+    else
+        _venv_helper_log "ERROR" "Could not find activate script in $venv_dir/bin/ or $venv_dir/Scripts/."
+        return 1
+    fi
+
+    _venv_helper_log "INFO" "Activating virtual environment: $activate_script"
+    # shellcheck source=/dev/null
+    source "$activate_script"
+    if [[ -z "$VIRTUAL_ENV" ]]; then
+        _venv_helper_log "ERROR" "Failed to activate virtual environment. VIRTUAL_ENV not set."
+        return 1
+    fi
+
+    if [[ "${SENTINEL_MKVENV_SKIP_PACKAGES:-0}" == "1" ]]; then
+        _venv_helper_log "INFO" "Skipping package installation (SENTINEL_MKVENV_SKIP_PACKAGES=1)."
+    else
+        # 3. Upgrade pip
+        _venv_helper_log "INFO" "Upgrading pip..."
+        if pip install --upgrade pip; then
+            _venv_helper_log "INFO" "pip upgraded successfully."
+        else
+            _venv_helper_log "WARN" "Failed to upgrade pip. Continuing with existing version."
+        fi
+
+        # 4. Install predefined packages
+        local packages_to_install=(
+            "wheel"
+            "numpy"
+            "requests"
+            "aiohttp"
+            "jupyter"
+            # PyQt5/PySide2 are handled separately due to potential complexities
+        )
+
+        _venv_helper_log "INFO" "Installing core packages: ${packages_to_install[*]}"
+        if pip install "${packages_to_install[@]}"; then
+            _venv_helper_log "INFO" "Core packages installed successfully."
+        else
+            _venv_helper_log "ERROR" "Failed to install one or more core packages. Please check the output above."
+            # Optionally, you might want to deactivate and offer to clean up here.
+            # For now, we'll leave the venv as is for inspection.
+        fi
+
+        # Install GUI toolkit (PyQt5 or PySide2)
+        _venv_helper_log "INFO" "Attempting to install GUI toolkit (PyQt5 or PySide2)..."
+        if pip install PyQt5; then
+            _venv_helper_log "INFO" "PyQt5 installed successfully."
+        else
+            _venv_helper_log "WARN" "Failed to install PyQt5. Attempting PySide2..."
+            if pip install PySide2; then
+                _venv_helper_log "INFO" "PySide2 installed successfully."
+            else
+                _venv_helper_log "WARN" "Failed to install PySide2. Skipping GUI toolkit installation."
+            fi
+        fi
+    fi
+
+    _venv_helper_log "INFO" "Virtual environment '$venv_dir' setup complete."
+    _venv_helper_log "INFO" "To deactivate, run: deactivate"
+
+    # Ensure the function returns a success status
+    return 0
+}
+
+# Export the function so it's available in the shell
+export -f mkvenv
+
+_venv_helper_log "INFO" "venv_helpers functions loaded. Use 'mkvenv [dir_name]' to create a new virtual environment."

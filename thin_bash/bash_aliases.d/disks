@@ -1,0 +1,9 @@
+# Aliases for work on disks and filesystems
+#
+# Last edit: 06/18/2013
+
+# Show the total size of a directory
+alias dirsize="du -h -c --max-depth=1"
+
+# Show all files in a directory being accessed and what is accessing them
+alias lused="lsof +D"

@@ -1,0 +1,10 @@
+PYTHON=$(which python)
+if [ $? == 0 ]; then
+#only load these if we can find python
+
+	servdir() {
+		local port=${1:-"8080"}
+		python -m SimpleHTTPServer $port
+	}
+
+fi

@@ -1,0 +1,310 @@
+#!/usr/bin/env bash
+#-----------------------------------------------------------------------------
+# SENTINEL  ⟩  autocomplete.module (Unified Manager & Core)
+# Unified autocomplete manager, BLE.sh integration, and snippet engine
+# Version : 3.0.0          (2025-05-16)
+# Author  : SENTINEL Team
+# License : MIT
+#-----------------------------------------------------------------------------
+# DO NOT use strict error handling as it can cause terminal crashes
+# set -euo pipefail
+
+# Module dependencies
+SENTINEL_MODULE_DEPENDENCIES=""
+
+# Prevent multiple loading
+[[ -n "${_SENTINEL_AUTOCOMPLETE_LOADED}" ]] && return 0
+export _SENTINEL_AUTOCOMPLETE_LOADED=1
+
+# Make sure we have color variables defined to prevent crashes
+RED="\033[0;31m" 2>/dev/null || RED=""
+GREEN="\033[0;32m" 2>/dev/null || GREEN=""
+YELLOW="\033[0;33m" 2>/dev/null || YELLOW=""
+BLUE="\033[0;34m" 2>/dev/null || BLUE=""
+NC="\033[0m" 2>/dev/null || NC=""
+
+###############################################################################
+# 0.  Metadata
+###############################################################################
+SENTINEL_AUTOCOMPLETE_VERSION="3.0.0"
+SENTINEL_AUTOCOMPLETE_DESCRIPTION="Unified autocomplete manager, BLE.sh, and snippet engine"
+SENTINEL_AUTOCOMPLETE_AUTHOR="SENTINEL Team"
+
+###############################################################################
+# 1.  Logging (secure, robust)
+###############################################################################
+SENTINEL_LOG_DIR="${HOME}/logs"
+# Create directory with error handling
+{ mkdir -p "$SENTINEL_LOG_DIR"; } 2>/dev/null || true
+_sentinel_log() {
+    # Exit early if no arguments to prevent crashes
+    [[ $# -lt 1 ]] && return 0
+    
+    local level="$1"; shift
+    # Use protected commands with error handling
+    { 
+        echo "[$(date '+%Y-%m-%d %H:%M:%S' 2>/dev/null || echo 'unknown')] $level: $*" >> "$SENTINEL_LOG_DIR/autocomplete-$(date +%Y%m%d 2>/dev/null || echo 'unknown').log"; 
+    } 2>/dev/null || true
+    
+    # Always return success
+    return 0
+}
+_sentinel_log_info()    { _sentinel_log "INFO"    "$@"; }
+_sentinel_log_warning() { _sentinel_log "WARNING" "$@"; }
+_sentinel_log_error()   { _sentinel_log "ERROR"   "$@"; }
+
+###############################################################################
+# 2.  Module Registry
+###############################################################################
+declare -A SENTINEL_AUTOCOMPLETE_MODULES
+declare -A SENTINEL_AUTOCOMPLETE_MODULE_PATHS
+
+sentinel_autocomplete_register_module() {
+    local module_name="$1" module_version="$2" module_path="$3"
+    SENTINEL_AUTOCOMPLETE_MODULES["$module_name"]="$module_version"
+    SENTINEL_AUTOCOMPLETE_MODULE_PATHS["$module_name"]="$module_path"
+    _sentinel_log_info "Registered module: $module_name v$module_version at $module_path"
+}
+
+###############################################################################
+# 3.  BLE.sh Integration
+###############################################################################
+# SENTINEL_BLESH_LOADER="${HOME}/blesh_loader.sh" # BLE.sh is being removed
+sentinel_check_blesh() {
+    { _sentinel_log_info "BLE.sh check skipped as it is being removed."; } 2>/dev/null || true
+    # Always return success to prevent terminal crashes
+    return 0
+}
+
+sentinel_blesh_status() {
+    echo "BLE.sh       : Functionality removed."
+}
+
+###############################################################################
+# 4.  Snippet Engine (Depends on BLE.sh - will be disabled)
+###############################################################################
+SENTINEL_SNIPPET_DIR="${HOME}/autocomplete/snippets"
+_sentinel_snippet_import_all() {
+    # [[ -d $SENTINEL_SNIPPET_DIR ]] || return 0
+    # sentinel_check_blesh || return 0 # BLE.sh dependency
+    # for f in "$SENTINEL_SNIPPET_DIR"/*.snippet; do
+    #     [[ -f $f ]] || continue
+    #     local name="${f##*/}"; name="${name%.snippet}"
+    #     local cmd; cmd="$(sed ':a;N;$!ba;s/\n/\\n/g' "$f")"
+    #     ble-sabbrev -m "$name=$cmd" # BLE.sh command
+    # done
+    { _sentinel_log_info "Snippet import skipped (BLE.sh dependency removed)."; } 2>/dev/null || true
+    echo "Snippet engine disabled (dependency on BLE.sh removed)." >&2
+}
+sentinel_snippet_add() {
+    # local name="$1" cmd="$2"
+    # [[ -z $name || -z $cmd ]] && { echo "Usage: sentinel_snippet_add <n> <command...>" >&2; return 0; }
+    # mkdir -p "$SENTINEL_SNIPPET_DIR"
+    # printf '%s\n' "$cmd" > "$SENTINEL_SNIPPET_DIR/$name.snippet"
+    # _sentinel_log_info "snippet $name added"
+    # _sentinel_snippet_import_all
+    echo "Snippet engine disabled (dependency on BLE.sh removed)." >&2
+}
+sentinel_snippet_list() {
+    # [[ -d $SENTINEL_SNIPPET_DIR ]] || { echo "No snippets."; return; }
+    # for f in "$SENTINEL_SNIPPET_DIR"/*.snippet; do
+    #     [[ -f $f ]] || continue
+    #     printf '%-20s %s\n' "${f##*/}" "$(head -n1 "$f")"
+    # done | column -t
+    echo "Snippet engine disabled (dependency on BLE.sh removed)." >&2
+}
+
+###############################################################################
+# 5.  Command Routing & User Interface
+###############################################################################
+@autocomplete() { sentinel_autocomplete_command "$@"; }
+sentinel_autocomplete_command() {
+    local cmd="${1:-}"; shift || true
+    case "$cmd" in
+        help|--help|-h|"") sentinel_autocomplete_help ;;
+        status|--status|-s) sentinel_autocomplete_status ;;
+        fix|--fix|-f) sentinel_autocomplete_fix ;; # Will be modified
+        reload|--reload|-r) sentinel_autocomplete_reload ;;
+        install|--install|-i) sentinel_autocomplete_install ;; # Will be modified
+        modules|--modules|-m) sentinel_autocomplete_list_modules ;;
+        *)
+            if [[ "$cmd" == *":"* ]]; then
+                local module_name="${cmd%%:*}"
+                local module_cmd="${cmd#*:}"
+                local module_func="sentinel_${module_name}_${module_cmd}"
+                if type -t "$module_func" &>/dev/null; then
+                    "$module_func" "$@"
+                else
+                    echo "Unknown module command: $cmd"
+                    echo "Available modules: $(sentinel_autocomplete_list_modules_names)"
+                fi
+            else
+                echo "Unknown command: $cmd"
+                echo "Available commands: help, status, fix, reload, install, modules"
+                echo "Or use module:command format for module-specific commands"
+            fi
+            ;;
+    esac
+}
+sentinel_autocomplete_help() {
+    echo -e "\033[1;32mSENTINEL Autocomplete Commands:\033[0m"
+    echo -e "  \033[1;34m@autocomplete\033[0m                   - Show this help"
+    echo -e "  \033[1;34m@autocomplete status\033[0m            - Check autocomplete status"
+    echo -e "  \033[1;34m@autocomplete fix\033[0m               - Fix common issues"
+    echo -e "  \033[1;34m@autocomplete reload\033[0m            - Reload autocomplete system"
+    echo -e "  \033[1;34m@autocomplete install\033[0m           - Force reinstall"
+    echo -e "  \033[1;34m@autocomplete modules\033[0m           - List loaded modules"
+    echo -e "\nSnippets: sentinel_snippet_add <n> <command>"
+    echo -e "\n\033[1;32mUsage:\033[0m"
+    echo -e "  - Press \033[1;34mTab\033[0m to see suggestions"
+    echo -e "  - Press \033[1;34mRight Arrow\033[0m to accept suggestion"
+    echo -e "\n\033[1;32mTroubleshooting:\033[0m"
+    echo -e "  If autocomplete isn't working, try:"
+    echo -e "  1. Run '@autocomplete fix'"
+    echo -e "  2. Close and reopen your terminal"
+    echo -e "  3. If still not working, run '@autocomplete install'"
+}
+sentinel_autocomplete_status() {
+    echo -e "\033[1;32mSENTINEL Autocomplete Status:\033[0m"
+    _sentinel_log_info "Checking autocomplete status"
+    echo -e "\n\033[1;32mLoaded Modules:\033[0m"
+    for module in "${!SENTINEL_AUTOCOMPLETE_MODULES[@]}"; do
+        local version="${SENTINEL_AUTOCOMPLETE_MODULES[$module]}"
+        echo -e "  \033[1;34m$module\033[0m v$version"
+    done
+    # Remove BLE.sh status check
+    echo -e "\n\033[1;33mBLE.sh integration has been removed.\033[0m"
+    echo -e "\n\033[1;32mDirectories:\033[0m"
+    for dir in ${HOME}/autocomplete ${HOME}/logs ~/.cache/blesh; do
+        echo -n "  $dir: "
+        [[ -d "$dir" ]] && echo -e "\033[1;32mExists\033[0m" || echo -e "\033[1;31mMissing\033[0m"
+    done
+    _sentinel_log_info "Autocomplete status check completed"
+}
+sentinel_autocomplete_fix() {
+    echo "Fixing autocomplete issues..."
+    _sentinel_log_info "Running autocomplete fix procedure" 2>/dev/null || true
+    
+    # Create required directories with correct permissions, with error handling
+    mkdir -p ${HOME}/autocomplete/{snippets,context,projects,params} ${HOME}/logs 2>/dev/null || {
+        echo "Creating autocomplete directories manually..."
+        mkdir -p "${HOME}/autocomplete" 2>/dev/null || true
+        mkdir -p "${HOME}/autocomplete/snippets" 2>/dev/null || true
+        mkdir -p "${HOME}/autocomplete/context" 2>/dev/null || true
+        mkdir -p "${HOME}/autocomplete/projects" 2>/dev/null || true
+        mkdir -p "${HOME}/autocomplete/params" 2>/dev/null || true
+        mkdir -p "${HOME}/logs" 2>/dev/null || true
+    }
+    
+    # Ensure directories have correct permissions
+    chmod 755 "${HOME}/autocomplete" 2>/dev/null || true
+    chmod 755 "${HOME}/logs" 2>/dev/null || true
+    find "${HOME}/autocomplete" -type d -exec chmod 755 {} \; 2>/dev/null || true
+    
+    echo "Checking BLE.sh installation..."
+    
+    # Ensure cache directory exists with proper permissions
+    mkdir -p "${HOME}/.cache/blesh" 2>/dev/null || true
+    chmod 700 "${HOME}/.cache/blesh" 2>/dev/null || true
+    
+    # BLE.sh loader update removed.
+    # Ensure standard bash completion is sourced if needed
+    if ! type _filedir &>/dev/null; then # A common bash-completion function
+        if [[ -f /usr/share/bash-completion/bash_completion ]]; then
+            source /usr/share/bash-completion/bash_completion
+            echo "Standard bash-completion sourced."
+        elif [[ -f /etc/bash_completion ]]; then
+            source /etc/bash_completion
+            echo "Standard bash-completion sourced."
+        else
+            echo "Warning: Standard bash-completion script not found."
+        fi
+    fi
+    
+    # Always return success to prevent terminal crashes
+    echo -e "\nRepair completed. Please \033[1;32mclose and reopen your terminal\033[0m for changes to take full effect."
+    echo "Note: BLE.sh specific fixes are no longer applicable."
+    return 0
+}
+sentinel_autocomplete_reload() {
+    echo "Reloading autocomplete system..."
+    _sentinel_log_info "Reloading autocomplete system"
+    # _sentinel_snippet_import_all # Snippet engine disabled
+    # Source the new sentinel completion script if it exists
+    if [[ -f "$HOME/.bash_completion.d/sentinel-completion.bash" ]]; then
+        source "$HOME/.bash_completion.d/sentinel-completion.bash"
+        echo "Sourced sentinel-completion.bash"
+    elif [[ -f "/etc/bash_completion.d/sentinel" ]]; then # Example system path
+        source "/etc/bash_completion.d/sentinel"
+        echo "Sourced system sentinel completion"
+    else
+        echo "New sentinel completion script not found to source."
+    fi
+    echo "Autocomplete system reload attempted."
+    _sentinel_log_info "Autocomplete system reload attempt completed"
+}
+sentinel_autocomplete_install() {
+    echo "Installing autocomplete system (now standard bash-completion)."
+    _sentinel_log_info "Installing new autocomplete system"
+    # sentinel_check_blesh # BLE.sh check removed
+    echo "Ensure 'sentinel-completion.bash' is in your bash_completion.d directory and your .bashrc sources bash_completion."
+    echo "For Python autocompletion, ensure 'argcomplete' is installed (pip install argcomplete)."
+    echo "Installation instructions updated. Please restart your terminal."
+    _sentinel_log_info "Autocomplete system installation instructions provided"
+}
+sentinel_autocomplete_list_modules() {
+    echo -e "\033[1;32mLoaded Autocomplete Modules:\033[0m"
+    for module in "${!SENTINEL_AUTOCOMPLETE_MODULES[@]}"; do
+        echo -e "  \033[1;34m$module\033[0m v${SENTINEL_AUTOCOMPLETE_MODULES[$module]}"
+    done
+}
+sentinel_autocomplete_list_modules_names() {
+    local names=""
+    for module in "${!SENTINEL_AUTOCOMPLETE_MODULES[@]}"; do
+        names+=" $module"
+    done
+    echo "$names"
+}
+
+###############################################################################
+# 6.  Initialization
+###############################################################################
+sentinel_autocomplete_init() {
+    # Skip if not in interactive shell
+    [[ $- != *i* ]] && return 0
+    
+    # Create all necessary directories first to prevent crashes
+    {
+        # Create the full set of required directories with error handling
+        mkdir -p "${HOME}/autocomplete" 2>/dev/null || true
+        mkdir -p "${HOME}/autocomplete/snippets" 2>/dev/null || true
+        mkdir -p "${HOME}/autocomplete/context" 2>/dev/null || true
+        mkdir -p "${HOME}/autocomplete/projects" 2>/dev/null || true
+        mkdir -p "${HOME}/autocomplete/params" 2>/dev/null || true
+        mkdir -p "${HOME}/logs" 2>/dev/null || true
+        mkdir -p "${HOME}/.cache/blesh" 2>/dev/null || true
+    } 2>/dev/null || true
+    
+    # Initialize with robust error handling
+    { _sentinel_log_info "Initializing autocomplete system"; } 2>/dev/null || true
+    { sentinel_autocomplete_register_module "manager" "$SENTINEL_AUTOCOMPLETE_VERSION" "${BASH_SOURCE[0]}"; } 2>/dev/null || true
+    { _sentinel_snippet_import_all; } 2>/dev/null || true
+    
+    # Output only if in verbose mode
+    [[ "${SENTINEL_VERBOSE:-0}" == "1" ]] && { echo "SENTINEL Autocomplete v${SENTINEL_AUTOCOMPLETE_VERSION} loaded"; } 2>/dev/null || true
+    
+    # Always return success
+    return 0
+}
+sentinel_autocomplete_init
+
+###############################################################################
+# 7.  Export for shell use
+###############################################################################
+export -f sentinel_autocomplete_command
+export -f @autocomplete
+export -f sentinel_snippet_add
+export -f sentinel_snippet_list
+
+# Optionally, add a shell alias for user convenience:
+alias @autocomplete='sentinel_autocomplete_command'

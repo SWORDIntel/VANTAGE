@@ -1,0 +1,131 @@
+#!/usr/bin/env bash
+# SENTINEL - Auto Case Correction Module
+# Version: 1.0.0
+# Description: Automatically corrects accidental capitalizations in commands
+# Example: GIT PULL -> git pull, DOCKER PS -> docker ps
+# Dependencies: none
+# Maintainer: SENTINEL Team
+# Works with: Both kitty and non-kitty pathways
+
+# Prevent multiple loading
+[[ -n "${_SENTINEL_AUTO_CASE_CORRECTION_LOADED}" ]] && return 0
+export _SENTINEL_AUTO_CASE_CORRECTION_LOADED=1
+
+# Check if module is enabled (enabled by default)
+if [[ "${SENTINEL_AUTO_CASE_CORRECTION_ENABLED:-1}" != "1" ]]; then
+    return 0
+fi
+
+# Only enable in interactive shells
+[[ $- != *i* ]] && return 0
+
+# Function to check if a command exists (case-insensitive)
+_command_exists_lowercase() {
+    local cmd="$1"
+    local lower_cmd="${cmd,,}"
+    command -v "$lower_cmd" >/dev/null 2>&1
+}
+
+# Function to get lowercase version of command if it exists
+_get_lowercase_command() {
+    local cmd="$1"
+    local lower_cmd="${cmd,,}"
+    
+    # Check if lowercase version exists
+    if command -v "$lower_cmd" >/dev/null 2>&1; then
+        echo "$lower_cmd"
+        return 0
+    fi
+    
+    # Return original if no lowercase version found
+    echo "$cmd"
+    return 1
+}
+
+# Function to check if command is accidentally capitalized
+_is_accidentally_capitalized() {
+    local cmd="$1"
+    
+    # Skip if already lowercase or mixed case (likely intentional)
+    if [[ "$cmd" =~ ^[a-z] ]]; then
+        return 1
+    fi
+    
+    # Check if it's all uppercase (likely accidental)
+    if [[ "$cmd" == "${cmd^^}" ]] && [[ "$cmd" =~ [A-Z] ]]; then
+        # Check if lowercase version exists
+        if _command_exists_lowercase "$cmd"; then
+            return 0
+        fi
+    fi
+    
+    return 1
+}
+
+# Command not found handler - intercepts commands that don't exist
+_sentinel_command_not_found_handler() {
+    local cmd="$1"
+    shift
+    local args="$*"
+    
+    # Check if command is accidentally capitalized
+    if _is_accidentally_capitalized "$cmd"; then
+        local corrected="$(_get_lowercase_command "$cmd")"
+        
+        if [[ "$corrected" != "$cmd" ]] && command -v "$corrected" >/dev/null 2>&1; then
+            # Execute the corrected command with arguments
+            if [[ -n "$args" ]]; then
+                eval "$corrected $args"
+            else
+                eval "$corrected"
+            fi
+            return $?
+        fi
+    fi
+    
+    # If we have an original handler, try it
+    if declare -f original_command_not_found_handle >/dev/null 2>&1; then
+        original_command_not_found_handle "$cmd" "$@"
+        return $?
+    fi
+    
+    # Default error message
+    echo "bash: $cmd: command not found" >&2
+    return 127
+}
+
+# Note: We use command_not_found_handle which is cleaner and safer than DEBUG trap
+# The DEBUG trap approach can interfere with command execution, so we avoid it
+
+# Initialize the module
+_sentinel_init_case_correction() {
+    # Only enable in interactive shells
+    [[ $- != *i* ]] && return 0
+    
+    # Save original command_not_found_handle if it exists
+    if declare -f command_not_found_handle >/dev/null 2>&1; then
+        eval "original_command_not_found_handle() { $(declare -f command_not_found_handle | tail -n +2); }"
+    fi
+    
+    # Set our command_not_found_handle (bash 4.0+)
+    # This will catch commands that don't exist and check if lowercase version exists
+    command_not_found_handle() {
+        _sentinel_command_not_found_handler "$@"
+    }
+    
+    # Note: For commands that exist but are wrong case (e.g., "GIT" when "git" exists),
+    # bash will execute the wrong-case command. However, most commands are case-sensitive
+    # and will fail, triggering command_not_found_handle. For commands that aren't
+    # case-sensitive, the behavior is system-dependent and we rely on command_not_found_handle.
+    
+    # Log initialization only in debug mode
+    [[ "${SENTINEL_DEBUG:-0}" == "1" ]] && echo "[SENTINEL] Auto case correction enabled" >&2
+}
+
+# Export helper functions
+export -f _get_lowercase_command
+export -f _is_accidentally_capitalized
+export -f _command_exists_lowercase
+
+# Initialize
+_sentinel_init_case_correction

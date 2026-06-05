@@ -1,0 +1,87 @@
+#!/usr/bin/env bash
+ 
+# Prevent multiple loading
+[[ -n "${_SENTINEL_FZF_LOADED}" ]] && return 0
+export _SENTINEL_FZF_LOADED=1
+
+# Check if module is enabled via environment variable with robust error handling
+# and silent status check that doesn't print messages
+if [[ "${SENTINEL_FZF_ENABLED:-0}" != "1" ]]; then
+    # Module is disabled but won't echo about it
+    # This line would return, preventing the module from loading
+    # when the environment variable is not set
+    return 0 2>/dev/null || true
+fi
+
+# Continue with the rest of the file, starting after the original check
+
+# --- Security: Ensure only user can read/modify this file ---
+{ chmod 600 "${BASH_SOURCE[0]}"; } 2>/dev/null || true
+
+# --- Check for fzf with safe error handling ---
+if ! command -v fzf &>/dev/null; then
+    { echo "${YELLOW}Warning: fzf not found. FZF integration disabled.${NC}"; } 2>/dev/null || true
+    return 0  # Return success even when fzf is missing to prevent terminal crashes
+fi
+
+# --- Kitty integration for FZF ---
+# Optimize FZF for kitty's GPU acceleration when available
+if type sentinel_is_kitty &>/dev/null && sentinel_is_kitty; then
+    # Enable kitty-specific FZF optimizations
+    export FZF_DEFAULT_OPTS="${FZF_DEFAULT_OPTS} --color=bg+:#0d1117,bg:#0d1117,spinner:#30a14e,hl:#30a14e --preview-window=border-sharp"
+    
+    # Use kitty's image preview if available
+    if [[ -n "${KITTY_WINDOW_ID:-}" ]]; then
+        # Kitty image preview for file previews
+        export FZF_DEFAULT_OPTS="${FZF_DEFAULT_OPTS} --preview='if [[ -f {} ]]; then kitty +kitten icat --clear --transfer-mode=memory --stdin=no {} 2>/dev/null || cat {}; else cat {}; fi'"
+    fi
+fi
+
+# --- FZF Integration Scripts (BLE.sh dependent - being phased out) ---
+# Since BLE.sh is being removed, we'll skip trying to load its FZF integration
+# scripts to avoid warnings and errors.
+{
+    # Only attempt BLE.sh FZF integration if BLE.sh is actually loaded and verbose mode
+    if type -t bleopt &>/dev/null && [[ "${SENTINEL_VERBOSE:-0}" == "1" ]]; then
+        FZF_INIT=~/.local/share/blesh/contrib/integration/fzf-initialize.bash
+        if [[ -f "$FZF_INIT" ]]; then
+            # Source with comprehensive error handling
+            { source "$FZF_INIT"; } 2>/dev/null || {
+                # Try alternative sourcing if the first fails
+                { . "$FZF_INIT"; } 2>/dev/null || true
+            }
+            
+            # Only show success message if verbose mode is enabled
+            { echo "${GREEN}FZF integration loaded via BLE.sh${NC}"; } 2>/dev/null || true
+        fi
+    fi
+    # No warnings about missing BLE.sh integration since it's being removed
+} 2>/dev/null || true
+
+# --- Environment Customization with error protection ---
+{
+    export FZF_DEFAULT_COMMAND='fd --type f || find . -type f' 2>/dev/null || true
+    
+    # Base FZF options - kitty optimizations added above if in kitty
+    if [[ -z "${FZF_DEFAULT_OPTS:-}" ]] || [[ "${FZF_DEFAULT_OPTS}" != *"--color=bg+:#0d1117"* ]]; then
+        export FZF_DEFAULT_OPTS='--height 40% --layout=reverse --border' 2>/dev/null || true
+    fi
+    
+    export FZF_CTRL_T_COMMAND="$FZF_DEFAULT_COMMAND" 2>/dev/null || true
+} 2>/dev/null || true
+
+# --- Logging (only if logger is available) ---
+{
+    if command -v logger &>/dev/null; then
+        # Get version info safely
+        local fzf_version="$(fzf --version 2>/dev/null || echo 'unknown')"
+        
+        # Log only if logger command exists
+        { logger -t SENTINEL "[INFO] FZF module loaded (version: $fzf_version)"; } 2>/dev/null || true
+    fi
+} 2>/dev/null || true
+
+# --- Security Note ---
+# Ensure this module and all integration scripts are not world-writable.
+
+# --- End of fzf.module --- 

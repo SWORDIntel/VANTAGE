@@ -1,0 +1,195 @@
+#!/usr/bin/env bash
+# SENTINEL - Fuzzy Command Correction Module
+# Version: 2.0.0
+# Description: Provides intelligent command correction for mistyped commands
+# Dependencies: ble.sh (optional, enhances functionality), hmac.module
+# Maintainer: SENTINEL Team
+
+[ -n "$BASH_VERSION" ] || { echo "This script requires bash"; return 0; }
+if [ -n "${_SENTINEL_FUZZY_CORRECTION_LOADED}" ]; then
+    [[ "${SENTINEL_DEBUG:-0}" == "1" ]] && echo "DEBUG: fuzzy_correction already loaded"
+    return 0
+fi
+export _SENTINEL_FUZZY_CORRECTION_LOADED=1
+
+# Simplified logging that won't crash the terminal
+sentinel_log_info() { logger -t SENTINEL "[INFO] $*" 2>/dev/null || true; }
+sentinel_log_warning() { logger -t SENTINEL "[WARN] $*" 2>/dev/null || true; }
+sentinel_log_error() { logger -t SENTINEL "[ERROR] $*" 2>/dev/null || true; }
+
+# Removed strict error handling (set -o pipefail) to prevent terminal crashes
+
+# FEATURE: Fuzzy Command Correction
+# Provides intelligent suggestions for mistyped commands
+_sentinel_fuzzy_command_correction() {
+    local last_command="$1"
+    local exit_code="$2"
+    
+    # Skip processing for successful commands, common error codes, or empty commands
+    [[ $exit_code -eq 0 || $exit_code -eq 130 || $exit_code -eq 127 || -z "$last_command" ]] && return 0
+    
+    # Extract the main command (first word)
+    local main_cmd=$(echo "$last_command" | awk '{print $1}')
+    
+    local special_chars="[|><;&]"
+    if [[ "$last_command" =~ $special_chars ]] || type "$main_cmd" &>/dev/null; then
+        return 0
+    fi
+    
+    # Find closest matches using levenshtein distance
+    local suggestions=""
+    local threshold=3  # Maximum edit distance to consider
+    local available_cmds=$(compgen -c | sort -u)
+    
+    # Use best available method for fuzzy matching
+    if command -v agrep &>/dev/null; then
+        # Use agrep for faster fuzzy matching if available
+        suggestions=$(echo "$available_cmds" | agrep -${threshold} "^$main_cmd$" 2>/dev/null | head -5)
+    else
+        # Fallback to prefix + levenshtein distance for matching
+        local prefix_matches=$(echo "$available_cmds" | grep -E "^${main_cmd:0:2}" 2>/dev/null)
+        if [[ -n "$prefix_matches" ]]; then
+            suggestions=$(echo "$prefix_matches" | awk -v cmd="$main_cmd" '
+                function min(a, b) { return a < b ? a : b; }
+                function levenshtein(s1, s2) {
+                    m = length(s1); n = length(s2);
+                    for (i = 0; i <= m; i++) d[i, 0] = i;
+                    for (j = 0; j <= n; j++) d[0, j] = j;
+                    for (i = 1; i <= m; i++) {
+                        for (j = 1; j <= n; j++) {
+                            cost = substr(s1, i, 1) == substr(s2, j, 1) ? 0 : 1;
+                            d[i, j] = min(d[i-1, j] + 1, min(d[i, j-1] + 1, d[i-1, j-1] + cost));
+                        }
+                    }
+                    return d[m, n];
+                }
+                {
+                    distance = levenshtein(cmd, $0);
+                    if (distance <= '"$threshold"') print $0 "|" distance;
+                }' | sort -t'|' -k2,2n | cut -d'|' -f1 | head -5)
+        fi
+    fi
+    
+    # Skip if no suggestions found
+    [[ -z "$suggestions" ]] && return 0
+    
+    # Display suggestions to user
+    echo -e "\033[1;33mCommand not found: $main_cmd\033[0m"
+    echo -e "\033[1;32mDid you mean:\033[0m"
+    
+    # Process and display each suggestion
+    local first_suggestion=""
+    while IFS= read -r suggestion; do
+        # Store first suggestion for later use
+        [[ -z "$first_suggestion" ]] && first_suggestion="$suggestion"
+        
+        # Create corrected command by replacing the command portion
+        local corrected_cmd="${last_command/$main_cmd/$suggestion}"
+        
+        # Check if suggestion is a valid command
+        if type "$suggestion" &>/dev/null; then
+            # Calculate similarity for display (simple approximation)
+            local similarity=$((100 - $(echo "$main_cmd" | wc -c) * 20))
+            similarity=$([[ $similarity -lt 0 ]] && echo 0 || echo $similarity)
+            
+            # Format output based on similarity score
+            if [[ $similarity -gt 50 ]]; then
+                echo -e "  \033[1;34m$suggestion\033[0m ($similarity% match) → \033[1m$corrected_cmd\033[0m"
+                # Add high-confidence suggestions to history for easy access
+                history -s "$corrected_cmd"
+            else
+                echo -e "  \033[1;34m$suggestion\033[0m → \033[1m$corrected_cmd\033[0m"
+            fi
+        else
+            echo -e "  \033[1;34m$suggestion\033[0m"
+        fi
+    done <<< "$suggestions"
+    
+    # Add usage tips
+    echo -e "\033[0;90mTip: Press Up ↑ to access the corrected command\033[0m"
+    
+    # Create quick correction snippet for first suggestion
+    if [[ -n "$first_suggestion" ]]; then
+        local corrected_cmd="${last_command/$main_cmd/$first_suggestion}"
+        
+        # Check if ble.sh is available for enhanced functionality
+        if type -t ble-sabbrev &>/dev/null; then
+            # Register secure snippet for correction using HMAC verification
+            ble-sabbrev "!!:fix=_sentinel_run_corrected_command '$corrected_cmd'"
+            echo -e "\033[0;90mOr type '!!:fix' to run: $corrected_cmd\033[0m"
+        else
+            # Fallback for when ble.sh is not available
+            alias "!!:fix"="_sentinel_run_corrected_command '$corrected_cmd'"
+            echo -e "\033[0;90mOr type '!!:fix' to run: $corrected_cmd\033[0m"
+        fi
+    fi
+}
+
+# Securely run a corrected command with HMAC verification
+_sentinel_run_corrected_command() {
+    local cmd="$1"
+    
+    # Use the HMAC module for secure command execution
+    sentinel_run_verified_command "$cmd"
+}
+
+# Register the prompt command to check for failed commands
+_sentinel_register_fuzzy_correction() {
+    # Avoid duplicate registrations
+    if [[ ! "$PROMPT_COMMAND" =~ _sentinel_store_last_command ]]; then
+        PROMPT_COMMAND="_sentinel_store_last_command \$? \$(HISTTIMEFORMAT= history 1 | sed 's/^[ 0-9]\\+[ ]\\+//');${PROMPT_COMMAND:-:}"
+    fi
+}
+
+# Store and process the last command
+_sentinel_store_last_command() {
+    local exit_code="$1"
+    local last_cmd="$2"
+    
+    # Skip empty commands
+    [[ -z "$last_cmd" ]] && return 0
+    
+    # Only process failed commands
+    [[ $exit_code -ne 0 ]] && _sentinel_fuzzy_command_correction "$last_cmd" "$exit_code"
+}
+
+# Initialize the fuzzy correction system
+sentinel_init_fuzzy_correction() {
+    # Skip if not in interactive shell
+    [[ $- != *i* ]] && return 0
+    
+    # Set up error handling
+    set -o pipefail
+    
+    # Register the fuzzy correction
+    _sentinel_register_fuzzy_correction
+    
+    # Check for ble.sh enhancements
+    if type -t ble-bind &>/dev/null; then
+        _fuzzy_log_warning "BLE.sh detected - enabling enhanced fuzzy correction features"
+    else
+        _fuzzy_log_warning "BLE.sh not detected - using basic fuzzy correction features"
+    fi
+    
+    return 0
+}
+
+# Run initialization
+sentinel_init_fuzzy_correction 
+
+# Helper function to safely bind keys only if widget exists
+_sentinel_safe_ble_bind() {
+    local mode="$1"
+    local key="$2"
+    local widget="$3"
+    if ble-bind -l | grep -q "^$widget$"; then
+        ble-bind -m "$mode" -f "$key" "$widget" 2>/dev/null || true
+    else
+        sentinel_log_warning "fuzzy_correction" "BLE.sh widget not found: $widget (skipping keybind for $key in $mode)"
+    fi
+}
+
+# After creating any log file:
+chmod 600 ~/.sentinel/logs/errors-$(date +%Y%m%d).log 2>/dev/null || true
+chmod 600 ~/.sentinel/logs/warnings-$(date +%Y%m%d).log 2>/dev/null || true
+# SECURITY NOTE: Log files may contain sensitive data; rotate and protect accordingly. 

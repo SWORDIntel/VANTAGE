@@ -1,0 +1,315 @@
+#!/usr/bin/env bash
+# SENTINEL Filesystem Search Functions
+# Enhanced search capabilities for finding large files and directories
+# Last Update: 2023-10-15
+# Find large files in a directory
+# Searches for files larger than the specified size in MB
+# Usage: findlarge [dir] [size in MB]
+function findlarge() {
+    # Validate input parameters
+    if [ -z "$1" ]; then
+        echo "Usage: findlarge [dir] [size in MB]"
+        echo "Example: findlarge /home 100"
+        return 1
+    fi
+    
+    local dir="${1:-.}"
+    local size="${2:-100}"
+    
+    # Check if Python 3 is available
+    if command -v python3 &>/dev/null; then
+        python3 - "$dir" "$size" <<'ENDPYTHON'
+#!/usr/bin/env python3
+import os
+import sys
+import subprocess
+import time
+import curses
+import math
+from collections import defaultdict
+
+def format_size(size):
+    """Format size in human-readable format"""
+    for unit in ['B', 'KB', 'MB', 'GB', 'TB']:
+        if size < 1024.0:
+            return f"{size:.2f} {unit}"
+        size /= 1024.0
+
+def find_large_files(directory, min_size_mb):
+    """Find files larger than min_size_mb in directory"""
+    cmd = ["find", directory, "-type", "f", "-size", f"+{min_size_mb}M", "-exec", "ls", "-l", "{}", ";"]
+    try:
+        result = subprocess.run(cmd, capture_output=True, text=True)
+        files = []
+        for line in result.stdout.splitlines():
+            parts = line.split()
+            if len(parts) >= 8:
+                size_str = parts[4]
+                path = ' '.join(parts[8:])
+                try:
+                    size = int(size_str)
+                    files.append((size, path))
+                except ValueError:
+                    continue
+        return sorted(files, reverse=True)
+    except Exception as e:
+        return []
+
+def draw_histogram(stdscr, files, start_y, width):
+    """Draw histogram of file sizes"""
+    if not files:
+        return start_y
+    
+    max_size = files[0][0]
+    min_size = files[-1][0]
+    size_range = max_size - min_size
+    
+    # Group files by size ranges
+    num_bins = min(10, len(files))
+    bins = defaultdict(int)
+    
+    if size_range == 0:
+        bin_size = 1
+    else:
+        bin_size = size_range / num_bins
+    
+    for size, _ in files:
+        if bin_size == 0:
+            bin_idx = 0
+        else:
+            bin_idx = min(int((size - min_size) / bin_size), num_bins - 1)
+        bins[bin_idx] += 1
+    
+    # Draw histogram
+    max_count = max(bins.values()) if bins else 0
+    if max_count == 0:
+        return start_y
+    
+    y = start_y
+    stdscr.addstr(y, 0, "File Size Distribution:", curses.A_BOLD)
+    y += 1
+    
+    for i in range(num_bins):
+        count = bins.get(i, 0)
+        bin_start = min_size + i * bin_size
+        bin_end = min_size + (i + 1) * bin_size
+        bar_len = int((count / max_count) * (width - 40))
+        size_label = f"{format_size(bin_start)} - {format_size(bin_end)}"
+        bar = "█" * bar_len
+        stdscr.addstr(y, 0, f"{size_label:<25} {count:3} {bar}")
+        y += 1
+    
+    return y + 1
+
+def draw_pie_chart(stdscr, files, start_y, width):
+    """Draw ASCII pie chart of file types"""
+    if not files:
+        return start_y
+    
+    # Group by extension
+    extensions = defaultdict(int)
+    total_size = sum(size for size, _ in files)
+    
+    for size, path in files:
+        ext = os.path.splitext(path)[1].lower() or "no-ext"
+        extensions[ext] += size
+    
+    # Sort by size
+    ext_sorted = sorted(extensions.items(), key=lambda x: x[1], reverse=True)
+    top_exts = ext_sorted[:5]
+    other_size = sum(size for ext, size in ext_sorted[5:])
+    if other_size > 0:
+        top_exts.append(("other", other_size))
+    
+    y = start_y
+    stdscr.addstr(y, 0, "File Types by Size:", curses.A_BOLD)
+    y += 1
+    
+    # Draw pie chart segments
+    colors = ["|", "\\", "/", "-", "+", "*"]
+    for i, (ext, size) in enumerate(top_exts):
+        percentage = (size / total_size) * 100
+        bar_len = int((size / total_size) * (width - 25))
+        symbol = colors[i % len(colors)]
+        bar = symbol * bar_len
+        stdscr.addstr(y, 0, f"{ext:<10} {percentage:5.1f}% {bar}")
+        y += 1
+    
+    return y + 1
+
+def main():
+    if len(sys.argv) < 3:
+        print("Usage: script.py <directory> <min_size_mb>")
+        return
+    
+    directory = sys.argv[1]
+    min_size_mb = int(sys.argv[2])
+    
+    # Initialize curses
+    stdscr = curses.initscr()
+    curses.start_color()
+    curses.use_default_colors()
+    curses.init_pair(1, curses.COLOR_GREEN, -1)
+    curses.init_pair(2, curses.COLOR_CYAN, -1)
+    curses.init_pair(3, curses.COLOR_YELLOW, -1)
+    curses.cbreak()
+    curses.noecho()
+    stdscr.keypad(True)
+    
+    try:
+        height, width = stdscr.getmaxyx()
+        
+        # Draw header
+        stdscr.clear()
+        stdscr.addstr(0, 0, f"SENTINEL File Search - Finding files larger than {min_size_mb}MB in {directory}", curses.A_BOLD | curses.color_pair(1))
+        stdscr.addstr(1, 0, "Searching, please wait...")
+        stdscr.refresh()
+        
+        # Find files
+        files = find_large_files(directory, min_size_mb)
+        
+        # Draw results
+        stdscr.clear()
+        stdscr.addstr(0, 0, f"SENTINEL File Search - Found {len(files)} files larger than {min_size_mb}MB in {directory}", curses.A_BOLD | curses.color_pair(1))
+        stdscr.addstr(1, 0, "Press 'q' to exit", curses.color_pair(2))
+        
+        y = 3
+        
+        # Draw visualizations
+        y = draw_histogram(stdscr, files, y, width)
+        y = draw_pie_chart(stdscr, files, y, width)
+        
+        # List largest files
+        stdscr.addstr(y, 0, "Largest Files:", curses.A_BOLD)
+        y += 1
+        
+        for i, (size, path) in enumerate(files[:min(10, len(files))]):
+            size_str = format_size(size)
+            try:
+                stdscr.addstr(y, 0, f"{size_str:>10}  {path[:width-15]}", curses.color_pair(3))
+                y += 1
+                if y >= height - 2:
+                    break
+            except:
+                break
+        
+        y += 1
+        total_size = sum(size for size, _ in files)
+        stdscr.addstr(y, 0, f"Total size: {format_size(total_size)}", curses.A_BOLD)
+        
+        # Refresh and wait for input
+        stdscr.refresh()
+        while True:
+            c = stdscr.getch()
+            if c == ord('q'):
+                break
+    
+    finally:
+        # Clean up curses
+        curses.nocbreak()
+        stdscr.keypad(False)
+        curses.echo()
+        curses.endwin()
+
+if __name__ == "__main__":
+    main()
+ENDPYTHON
+    else
+        # Fallback to original function if Python is not available
+        echo "Searching for files larger than ${size}MB in ${dir}..."
+        echo "This may take some time depending on the directory size..."
+        
+        # Use secure temporary file for progress tracking
+        local tmp_file=$(mktemp)
+        trap "rm -f $tmp_file" EXIT
+        
+        # Implementation with progress indication
+        {
+            find "${dir}" -type f -size +"${size}"M -exec ls -lh {} \; 2>/dev/null |
+             sort -rn -k 5 |
+             awk '{printf "%-10s %s\n", $5, $9}'
+        } > "$tmp_file" &
+        
+        local pid=$!
+        
+        # Show spinner while searching
+        local spin='-\|/'
+        local i=0
+        while kill -0 $pid 2>/dev/null; do
+            i=$(( (i+1) % 4 ))
+            printf "\r[%c] Searching..." "${spin:$i:1}"
+            sleep 0.1
+        done
+        
+        # Display results with size in human-readable format
+        printf "\r\033[K" # Clear the spinner line
+        
+        if [ -s "$tmp_file" ]; then
+            echo "Found $(wc -l < "$tmp_file") files larger than ${size}MB:"
+            echo "------------------------------------------"
+            echo "Size      File Path"
+            echo "------------------------------------------"
+            cat "$tmp_file"
+        else
+            echo "No files larger than ${size}MB found in ${dir}"
+        fi
+        
+        # Clean up
+        rm -f "$tmp_file"
+    fi
+}
+# Find directories consuming the most disk space
+# Lists top N directories by disk usage
+# Usage: find_big_dirs [dir] [top_n]
+function find_big_dirs() {
+    local dir="${1:-.}"
+    local top_n="${2:-10}"
+    
+    echo "Finding top ${top_n} largest directories in ${dir}..."
+    echo "This may take some time for large directory structures..."
+    
+    # Implementation with progress tracking
+    {
+        du -h --max-depth=2 "${dir}" 2>/dev/null |
+         grep -v "^0" |
+         sort -rh |
+         head -n "${top_n}"
+    } &
+    
+    local pid=$!
+    
+    # Show spinner while processing
+    local spin='-\|/'
+    local i=0
+    while kill -0 $pid 2>/dev/null; do
+        i=$(( (i+1) % 4 ))
+        printf "\r[%c] Analyzing disk usage..." "${spin:$i:1}"
+        sleep 0.1
+    done
+    
+    printf "\r\033[K" # Clear the spinner line
+}
+# Find files modified within the last N days
+# Usage: find_recent [dir] [days]
+function find_recent() {
+    local dir="${1:-.}"
+    local days="${2:-7}"
+    
+    echo "Finding files modified in the last ${days} days in ${dir}..."
+    
+    find "${dir}" -type f -mtime -"${days}" -ls 2>/dev/null |
+     sort -k 11 |
+     awk '{printf "%s %s %s\n", $8, $9, $11}'
+}
+# Find files by extension and size
+# Usage: find_by_ext [dir] [extension] [min_size_kb]
+function find_by_ext() {
+    local dir="${1:-.}"
+    local ext="${2:-log}"
+    local min_size="${3:-100}"
+    
+    echo "Finding ${ext} files larger than ${min_size}KB in ${dir}..."
+    
+    find "${dir}" -type f -name "*.${ext}" -size +"${min_size}"k -exec ls -lhS {} \; 2>/dev/null |
+     awk '{printf "%-10s %s\n", $5, $9}'
+} 

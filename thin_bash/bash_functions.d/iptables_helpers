@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+# (c) 2013 Jason Thistlethwaite
+#
+# Functions and aliased to make working with iptables and networking
+# easier.
+
+alias "iptlist"="iptables -nv --line-numbers -L"
+alias "ip6tlist"="ip6tables -nv --line-numbers -L"
+
+alias "iptables"="iptables -n -v --line-numbers"
+alias "ip6tables"="iptables -n -v --line-numbers"

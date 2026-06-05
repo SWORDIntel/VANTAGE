@@ -1,0 +1,17 @@
+# Monero unified wallet
+export MONERO_WALLET="$HOME/Monero/wallets/MyWallet/MyWallet"
+alias monero-gui="~/Programs/monero-gui/monero-wallet-gui"
+alias monero-cli="~/Programs/monero-cli/monero-wallet-cli --wallet-file $MONERO_WALLET"
+alias monerod="~/Programs/monero-cli/monerod --prune-blockchain"
+
+# Monero shortcuts with full paths
+alias monero='/home/john/monero-launcher.sh'
+alias monerod-start='/home/john/monero-daemon.sh start'
+alias monerod-stop='/home/john/monero-daemon.sh stop'
+alias monerod-status='/home/john/monero-daemon.sh status'
+alias monerod-log='/home/john/monero-daemon.sh log'
+
+# Direct program aliases
+alias monero-gui='/home/john/Programs/monero-gui/monero-wallet-gui'
+alias monero-cli='/home/john/Programs/monero-cli/monero-wallet-cli'
+alias monerod='/home/john/Programs/monero-cli/monerod'
