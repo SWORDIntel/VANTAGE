@@ -1,4 +1,4 @@
-# SENTINEL Test Scripts
+# VANTAGE Test Scripts
 
 This repository includes shell and Python regression coverage for the installer, module system, Python bridge, and optional Markov path.
 
@@ -36,4 +36,4 @@ bash tests/test_markov_generator.sh
 
 - Prefer the `make` targets for normal validation.
 - Use direct shell scripts when iterating on one subsystem.
-- Install `requirements-markov.txt` before expecting the optional Markov lane to run.
+- Install `requirements.txt` before expecting the optional Markov lane to run.

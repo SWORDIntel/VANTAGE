@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 
-# SENTINEL - Virtual Environment Helper Functions
+# VANTAGE - Virtual Environment Helper Functions
 # Description: Provides functions for creating and managing Python virtual environments.
 
 # --- Colors (if not already defined) ---
-if ! type -t _sentinel_color_yellow &>/dev/null; then # Check if a color function/alias exists
+if ! type -t _vantage_color_yellow &>/dev/null; then # Check if a color function/alias exists
     export YELLOW='\033[1;33m'
     export GREEN='\033[0;32m'
     export RED='\033[0;31m'
@@ -22,13 +22,13 @@ _venv_helper_log() {
         WARN) color="$YELLOW" ;;
         ERROR) color="$RED" ;;
     esac
-    # Check for sentinel logging functions if available
-    if command -v sentinel_log_info &>/dev/null && [[ "$level" == "INFO" ]]; then
-        sentinel_log_info "venv_helper" "$message"
-    elif command -v sentinel_log_warning &>/dev/null && [[ "$level" == "WARN" ]]; then
-        sentinel_log_warning "venv_helper" "$message"
-    elif command -v sentinel_log_error &>/dev/null && [[ "$level" == "ERROR" ]]; then
-        sentinel_log_error "venv_helper" "$message"
+    # Check for vantage logging functions if available
+    if command -v vantage_log_info &>/dev/null && [[ "$level" == "INFO" ]]; then
+        vantage_log_info "venv_helper" "$message"
+    elif command -v vantage_log_warning &>/dev/null && [[ "$level" == "WARN" ]]; then
+        vantage_log_warning "venv_helper" "$message"
+    elif command -v vantage_log_error &>/dev/null && [[ "$level" == "ERROR" ]]; then
+        vantage_log_error "venv_helper" "$message"
     else
         echo -e "${color}[VenvHelper] ${level}: ${message}${NC}" >&2
     fi
@@ -105,8 +105,8 @@ mkvenv() {
         return 1
     fi
 
-    if [[ "${SENTINEL_MKVENV_SKIP_PACKAGES:-0}" == "1" ]]; then
-        _venv_helper_log "INFO" "Skipping package installation (SENTINEL_MKVENV_SKIP_PACKAGES=1)."
+    if [[ "${VANTAGE_MKVENV_SKIP_PACKAGES:-0}" == "1" ]]; then
+        _venv_helper_log "INFO" "Skipping package installation (VANTAGE_MKVENV_SKIP_PACKAGES=1)."
     else
         # 3. Upgrade pip
         _venv_helper_log "INFO" "Upgrading pip..."

@@ -11,7 +11,7 @@ function M.apply_to_config(config)
         key = 'S',
         mods = 'CTRL|SHIFT',
         action = wezterm.action.PromptInputLine {
-            description = 'Sentinel SSH (Enter Host):',
+            description = 'Vantage SSH (Enter Host):',
             action = wezterm.action_callback(function(window, pane, line)
                 if line and line ~= '' then
                     local cmd = string.format(

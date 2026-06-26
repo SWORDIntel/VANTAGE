@@ -16,12 +16,27 @@ VANTAGE provides an end-to-end Makefile to build the Rust core, the C indexer da
 
 ```bash
 cd VANTAGE
-make all
+git submodule update --init --recursive   # pull in QIHSE
+make all                                   # builds QIHSE for current silicon + Core + Indexer + eBPF
+```
+
+Or use the unified installer (interactive TUI with install/reinstall/uninstall/kitty pathways):
+
+```bash
+./install.sh              # interactive menu
+./install.sh install      # direct WezTerm install
+./install.sh kitty        # direct Kitty install
+./install.sh uninstall    # remove VANTAGE
 ```
 
 To run the full end-to-end integration benchmark:
 ```bash
 make bench
+```
+
+To check CPU silicon features detected by QIHSE:
+```bash
+./core/target/release/vantage-core --silicon
 ```
 
 ## ⌨️ Native Hotkeys

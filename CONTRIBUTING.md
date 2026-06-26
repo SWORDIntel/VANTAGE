@@ -1,8 +1,8 @@
-# Contributing to SENTINEL
+# Contributing to VANTAGE
 
 ## Before You Start
 
-- Search the existing issues: <https://github.com/SWORDIntel/SENTINEL/issues>
+- Search the existing issues: <https://github.com/SWORDIntel/VANTAGE/issues>
 - Open a new issue if you are reporting a bug or proposing a material change.
 - Keep changes focused. This repository mixes shell, installer, and Python integration code, so broad refactors are harder to review than targeted fixes.
 
@@ -12,7 +12,7 @@
 2. Create a descriptive branch.
 3. Make your changes.
 4. Run the relevant validation locally.
-5. Open a pull request against `SWORDIntel/SENTINEL`.
+5. Open a pull request against `SWORDIntel/VANTAGE`.
 
 Example branch creation:
 
@@ -49,13 +49,13 @@ Good pull requests in this repository usually include:
 
 Open your pull request here:
 
-- <https://github.com/SWORDIntel/SENTINEL/compare>
+- <https://github.com/SWORDIntel/VANTAGE/compare>
 
 ## Autocompletion Notes
 
-SENTINEL uses a hybrid completion model:
+VANTAGE uses a hybrid completion model:
 
-- [`sentinel-completion.bash`](sentinel-completion.bash) handles Bash-side completion for the main command surface.
+- [`vantage-completion.bash`](vantage-completion.bash) handles Bash-side completion for the main command surface.
 - Python-based tools can use `argcomplete` when appropriate.
 
 If you modify completions, validate the related install and integration paths instead of changing completion logic in isolation.

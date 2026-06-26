@@ -1,23 +1,23 @@
 #!/usr/bin/env bash
-# Test script for SENTINEL module lazy loading
+# Test script for VANTAGE module lazy loading
 
-echo "=== SENTINEL Module Lazy Loading Test ==="
+echo "=== VANTAGE Module Lazy Loading Test ==="
 echo
 
 # Source the module system
-export SENTINEL_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-source "${SENTINEL_ROOT}/bash_modules.d/module_manager.module"
-source "${SENTINEL_ROOT}/bash_modules"
+export VANTAGE_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+source "${VANTAGE_ROOT}/bash_modules.d/module_manager.module"
+source "${VANTAGE_ROOT}/bash_modules"
 _load_enabled_modules
 
 echo "1. Checking lazy loading configuration..."
-echo "   Lazy loading enabled: ${SENTINEL_LAZY_LOADING_ENABLED:-1}"
-echo "   Core modules: ${#SENTINEL_CORE_MODULES[@]}"
-echo "   Lazy modules: ${#SENTINEL_LAZY_LOAD_MODULES[@]}"
+echo "   Lazy loading enabled: ${VANTAGE_LAZY_LOADING_ENABLED:-1}"
+echo "   Core modules: ${#VANTAGE_CORE_MODULES[@]}"
+echo "   Lazy modules: ${#VANTAGE_LAZY_LOAD_MODULES[@]}"
 echo
 
 echo "2. Testing module classification..."
-for module in autocomplete sentinel_ml fzf sentinel_osint; do
+for module in autocomplete vantage_ml fzf vantage_osint; do
     if is_lazy_load_module "$module"; then
         echo "   [$module] -> LAZY"
     else
@@ -27,16 +27,16 @@ done
 echo
 
 echo "3. Checking loaded modules before any action..."
-echo "   Total loaded: ${#SENTINEL_LOADED_MODULES[@]}"
-for module in "${!SENTINEL_LOADED_MODULES[@]}"; do
-    echo "   - $module: ${SENTINEL_LOADED_MODULES[$module]}"
+echo "   Total loaded: ${#VANTAGE_LOADED_MODULES[@]}"
+for module in "${!VANTAGE_LOADED_MODULES[@]}"; do
+    echo "   - $module: ${VANTAGE_LOADED_MODULES[$module]}"
 done
 echo
 
 echo "4. Checking lazy module registry..."
-echo "   Total lazy: ${#SENTINEL_LAZY_MODULES[@]}"
-for module in "${!SENTINEL_LAZY_MODULES[@]}"; do
-    echo "   - $module: ${SENTINEL_LAZY_MODULES[$module]}"
+echo "   Total lazy: ${#VANTAGE_LAZY_MODULES[@]}"
+for module in "${!VANTAGE_LAZY_MODULES[@]}"; do
+    echo "   - $module: ${VANTAGE_LAZY_MODULES[$module]}"
 done
 echo
 
@@ -75,4 +75,4 @@ echo
 echo "To test actual lazy loading:"
 echo "  1. Open a new shell"
 echo "  2. Run: time bash -c 'source ~/.bashrc; exit'"
-echo "  3. Compare with: SENTINEL_LAZY_LOADING_ENABLED=0 time bash -c 'source ~/.bashrc; exit'"
+echo "  3. Compare with: VANTAGE_LAZY_LOADING_ENABLED=0 time bash -c 'source ~/.bashrc; exit'"

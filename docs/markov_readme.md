@@ -1,32 +1,32 @@
-# SENTINEL Markov Text Generator
+# VANTAGE Markov Text Generator
 
-A secure, high-performance Markov chain text generator integrated with the SENTINEL framework. This module uses advanced text analysis and probabilistic models to generate natural-looking text based on input sources.
+A secure, high-performance Markov chain text generator integrated with the VANTAGE framework. This module uses advanced text analysis and probabilistic models to generate natural-looking text based on input sources.
 
 ## Features
 
 - **Intelligent Generation**: Advanced state-based Markov chain text generation
 - **Corpus Management**: Add, list, and analyze corpus files
 - **Secure Processing**: Validation of inputs and secure file handling
-- **Terminal Integration**: Seamless integration with SENTINEL shell environment
+- **Terminal Integration**: Seamless integration with VANTAGE shell environment
 - **Command Suggestions**: Optional integration with command prediction system
 
 ## Installation
 
-The Markov generator is included with SENTINEL. To ensure all dependencies are installed:
+The Markov generator is included with VANTAGE. To ensure all dependencies are installed:
 
 ```bash
-# Activate the SENTINEL Python environment
+# Activate the VANTAGE Python environment
 source "$HOME/venv/bin/activate"
 
 # Install dependencies
 pip install markovify numpy tqdm unidecode
 ```
 
-Enable the module in SENTINEL:
+Enable the module in VANTAGE:
 
 ```bash
 # Add to your modules configuration
-echo "sentinel_markov" >> ~/.bash_modules
+echo "vantage_markov" >> ~/.bash_modules
 ```
 
 ## Usage
@@ -36,7 +36,7 @@ echo "sentinel_markov" >> ~/.bash_modules
 Generate text from an input file:
 
 ```bash
-sentinel_markov generate -i input.txt -o output.txt -s 3 -c 10
+vantage_markov generate -i input.txt -o output.txt -s 3 -c 10
 ```
 
 Where:
@@ -51,25 +51,25 @@ Where:
 Add a file to the corpus:
 
 ```bash
-sentinel_markov corpus ~/Documents/sample.txt
+vantage_markov corpus ~/Documents/sample.txt
 ```
 
 List all corpus files:
 
 ```bash
-sentinel_markov list
+vantage_markov list
 ```
 
 View corpus statistics:
 
 ```bash
-sentinel_markov corpus-stats
+vantage_markov corpus-stats
 ```
 
 Clean cached data:
 
 ```bash
-sentinel_markov clean
+vantage_markov clean
 ```
 
 ## Advanced Configuration
@@ -108,13 +108,13 @@ The generator uses a state-based Markov chain that:
 - ASCII conversion to prevent unicode-based issues
 - Permissioned file operations
 
-## Integration with SENTINEL
+## Integration with VANTAGE
 
-The Markov generator integrates with other SENTINEL features:
+The Markov generator integrates with other VANTAGE features:
 
 - **Command Prediction**: Can suggest commands based on Markov analysis of shell history
-- **Module System**: Respects SENTINEL's module dependency management
-- **Logging System**: Integrates with SENTINEL's logging infrastructure
+- **Module System**: Respects VANTAGE's module dependency management
+- **Logging System**: Integrates with VANTAGE's logging infrastructure
 
 ## Troubleshooting
 
@@ -130,8 +130,8 @@ cat ${HOME}/logs/markov_generator.log
 
 ## License
 
-This component is part of the SENTINEL project and is subject to the same license terms.
+This component is part of the VANTAGE project and is subject to the same license terms.
 
 ## Authors
 
-- SENTINEL Team
+- VANTAGE Team

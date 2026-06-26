@@ -1,0 +1,300 @@
+#!/usr/bin/env bash
+# VANTAGE Markov Module
+# Integrates a Markov chain text generator for automated text generation,
+# command suggestions, and documentation creation capabilities.
+
+# Prevent multiple loading
+[[ -n "${_VANTAGE_MARKOV_LOADED}" ]] && return 0
+export _VANTAGE_MARKOV_LOADED=1
+
+# Module metadata for dependency resolution
+VANTAGE_MODULE_DESCRIPTION="Markov text generation module"
+VANTAGE_MODULE_VERSION="1.0.0"
+VANTAGE_MODULE_DEPENDENCIES="logging config_cache"
+
+# Exit if Python is not available
+if ! command -v python3 &>/dev/null; then
+    echo "Warning: Python 3 not found. VANTAGE Markov features disabled."
+    return 0
+fi
+
+# HMAC security verification when loader available
+if declare -F vantage_verify_hmac >/dev/null; then
+    if ! vantage_verify_hmac "${BASH_SOURCE[0]}"; then
+        echo "ERROR: HMAC verification failed for ${BASH_SOURCE[0]}"
+        echo "Security breach detected. Refusing to load module."
+        return 0
+    fi
+fi
+
+# Log module loading if logging available
+if declare -F vantage_log >/dev/null; then
+    vantage_log "Loading Markov module..."
+fi
+
+# Define paths
+VANTAGE_MARKOV_ROOT="${VANTAGE_ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]}")"/.. && pwd)}"
+VANTAGE_MARKOV_DIR="${HOME}/markov"
+VANTAGE_MARKOV_SCRIPT="${VANTAGE_MARKOV_ROOT}/contrib/markov_generator.py"
+VANTAGE_MARKOV_CORPUS="${VANTAGE_MARKOV_DIR}/corpus"
+VANTAGE_MARKOV_CONFIG="${VANTAGE_MARKOV_DIR}/config.json"
+VANTAGE_MARKOV_CACHE="${VANTAGE_MARKOV_DIR}/cache"
+VANTAGE_MARKOV_OUTPUT="${VANTAGE_MARKOV_DIR}/output"
+
+# Ensure the directory structure exists
+function __vantage_markov_ensure_dirs() {
+    mkdir -p "${VANTAGE_MARKOV_DIR}/"{corpus,cache,output}
+    chmod 700 "${VANTAGE_MARKOV_DIR}"
+    chmod 700 "${VANTAGE_MARKOV_DIR}/"{corpus,cache,output}
+}
+
+# Initialize the environment
+function __vantage_markov_init() {
+    __vantage_markov_ensure_dirs
+    
+    # Check if markov generator script exists
+    if [[ ! -f "${VANTAGE_MARKOV_SCRIPT}" ]]; then
+        if declare -F vantage_log >/dev/null; then
+            vantage_log "ERROR: Markov generator script not found at ${VANTAGE_MARKOV_SCRIPT}"
+        else
+            echo "ERROR: Markov generator script not found at ${VANTAGE_MARKOV_SCRIPT}"
+        fi
+        return 1
+    fi
+    
+    # Ensure the script is executable
+    chmod +x "${VANTAGE_MARKOV_SCRIPT}"
+    
+    # Check required Python packages
+    if ! python3 -c "import importlib.util; print(all(importlib.util.find_spec(pkg) is not None for pkg in ['markovify', 'numpy', 'tqdm', 'unidecode']))" 2>/dev/null | grep -q "True"; then
+        if [[ "${VANTAGE_VERBOSE:-0}" == "1" ]] || [[ "${VANTAGE_DEBUG:-0}" == "1" ]]; then
+            if declare -F vantage_log >/dev/null; then
+                vantage_log "WARNING: Required Python packages not installed for Markov generator"
+                vantage_log "Run: pip install markovify numpy tqdm unidecode"
+            else
+                echo "WARNING: Required Python packages not installed for Markov generator"
+                echo "Run: pip install markovify numpy tqdm unidecode"
+            fi
+        fi
+    fi
+    
+    # Create initial config if it doesn't exist
+    if [[ ! -f "${VANTAGE_MARKOV_CONFIG}" ]]; then
+        cat > "${VANTAGE_MARKOV_CONFIG}" <<EOF
+{
+    "state_size": 2,
+    "default_count": 5,
+    "max_length": 280,
+    "retention_ratio": 1.0,
+    "extensions": [".txt", ".md", ".rst"],
+    "security": {
+        "max_file_size": 10485760,
+        "validate_input": true,
+        "log_level": "info"
+    }
+}
+EOF
+        chmod 600 "${VANTAGE_MARKOV_CONFIG}"
+    fi
+    
+    return 0
+}
+
+# Main function to generate text
+function vantage_markov() {
+    local subcommand="${1:-help}"
+    shift 2>/dev/null
+    
+    # Initialize the environment
+    __vantage_markov_init || return 1
+    
+    case "${subcommand}" in
+        generate|gen)
+            local input_file=""
+            local output_file=""
+            local state_size="2"
+            local count="5"
+            local max_length="280"
+            
+            # Parse options
+            while [[ $# -gt 0 ]]; do
+                case "$1" in
+                    -i|--input)
+                        input_file="$2"
+                        shift 2
+                        ;;
+                    -o|--output)
+                        output_file="$2"
+                        shift 2
+                        ;;
+                    -s|--state-size)
+                        state_size="$2"
+                        shift 2
+                        ;;
+                    -c|--count)
+                        count="$2"
+                        shift 2
+                        ;;
+                    -l|--max-length)
+                        max_length="$2"
+                        shift 2
+                        ;;
+                    *)
+                        echo "Unknown option: $1"
+                        return 1
+                        ;;
+                esac
+            done
+            
+            # Validate input
+            if [[ -z "${input_file}" ]]; then
+                echo "Error: Input file is required"
+                echo "Usage: vantage_markov generate -i input_file [-o output_file] [-s state_size] [-c count] [-l max_length]"
+                return 1
+            fi
+            
+            # Generate text
+            if [[ -z "${output_file}" ]]; then
+                output_file="${VANTAGE_MARKOV_OUTPUT}/$(basename "${input_file}" | cut -d. -f1)_$(date +%Y%m%d_%H%M%S).txt"
+            fi
+            
+            echo "Generating text from ${input_file} with state size ${state_size}, count ${count}, max length ${max_length}"
+            echo "Output will be written to ${output_file}"
+            
+            python3 "${VANTAGE_MARKOV_SCRIPT}" --input "${input_file}" --output "${output_file}" \
+                --state-size "${state_size}" --count "${count}" --max-length "${max_length}"
+            
+            if [[ $? -eq 0 ]]; then
+                echo "Text generation complete. Output saved to ${output_file}"
+                echo "---"
+                cat "${output_file}"
+                echo "---"
+            else
+                echo "Error generating text. Check logs for details."
+                    return 1
+            fi
+            ;;
+            
+        corpus|add)
+            local file="$1"
+            
+            if [[ -z "${file}" ]]; then
+                echo "Error: File path is required"
+                echo "Usage: vantage_markov corpus file_path"
+                return 1
+            fi
+            
+            # Check if file exists
+            if [[ ! -f "${file}" ]]; then
+                echo "Error: File not found: ${file}"
+                return 0
+            fi
+            
+            # Copy to corpus directory
+            local dest="${VANTAGE_MARKOV_CORPUS}/$(basename "${file}")"
+            cp "${file}" "${dest}"
+            chmod 600 "${dest}"
+            
+            echo "Added ${file} to Markov corpus"
+            echo "Total corpus files: $(find "${VANTAGE_MARKOV_CORPUS}" -type f | wc -l)"
+            ;;
+            
+        list)
+            echo "Corpus files:"
+            find "${VANTAGE_MARKOV_CORPUS}" -type f -name "*.txt" | sort | while read -r f; do
+                local size=$(du -h "$f" | cut -f1)
+                local lines=$(wc -l < "$f")
+                echo "- $(basename "$f") (${size}, ${lines} lines)"
+            done
+            ;;
+            
+        clean)
+            echo "Cleaning Markov cache and outputs..."
+            rm -f "${VANTAGE_MARKOV_CACHE}"/* "${VANTAGE_MARKOV_OUTPUT}"/*
+            echo "Cache and outputs cleaned"
+            ;;
+            
+        corpus-stats)
+            echo "Corpus statistics:"
+            local total_files=$(find "${VANTAGE_MARKOV_CORPUS}" -type f | wc -l)
+            local total_size=$(du -sh "${VANTAGE_MARKOV_CORPUS}" | cut -f1)
+            local total_lines=$(find "${VANTAGE_MARKOV_CORPUS}" -type f -exec cat {} \; | wc -l)
+            local total_words=$(find "${VANTAGE_MARKOV_CORPUS}" -type f -exec cat {} \; | wc -w)
+            
+            echo "Files: ${total_files}"
+            echo "Total size: ${total_size}"
+            echo "Lines: ${total_lines}"
+            echo "Words: ${total_words}"
+            ;;
+            
+        help|*)
+            echo "VANTAGE Markov Text Generator"
+            echo ""
+            echo "Usage: vantage_markov <command> [options]"
+            echo ""
+            echo "Commands:"
+            echo "  generate, gen      Generate text from input file"
+            echo "  corpus, add        Add a file to the corpus"
+            echo "  list               List corpus files"
+            echo "  clean              Clean cache and output files"
+            echo "  corpus-stats       Show corpus statistics"
+            echo "  help               Show this help message"
+            echo ""
+            echo "Generate Options:"
+            echo "  -i, --input        Input file path"
+            echo "  -o, --output       Output file path"
+            echo "  -s, --state-size   Markov chain state size (default: 2)"
+            echo "  -c, --count        Number of sentences to generate (default: 5)"
+            echo "  -l, --max-length   Maximum sentence length (default: 280)"
+            echo ""
+            echo "Examples:"
+            echo "  vantage_markov generate -i myfile.txt -s 3 -c 10"
+            echo "  vantage_markov corpus ~/Documents/sample.txt"
+            echo "  vantage_markov list"
+            ;;
+    esac
+    
+    return 0
+}
+
+# Integration with VANTAGE command prediction (if available)
+if declare -F vantage_predict >/dev/null; then
+    function __vantage_markov_predict() {
+        local current_command="$1"
+        local corpus_file="${VANTAGE_MARKOV_CORPUS}/commands.txt"
+        
+        # Ensure the command corpus exists
+        if [[ ! -f "${corpus_file}" ]]; then
+            # Create initial commands corpus from history
+            HISTTIMEFORMAT= history | cut -c 8- | grep -v "^vantage_markov" > "${corpus_file}"
+            chmod 600 "${corpus_file}"
+        fi
+        
+        # Generate suggestions
+        local suggestions=$(python3 "${VANTAGE_MARKOV_SCRIPT}" --input "${corpus_file}" \
+            --state-size 1 --count 3 --max-length 80 2>/dev/null)
+        
+        if [[ -n "${suggestions}" ]]; then
+            echo "Markov suggestions:"
+            echo "${suggestions}" | while read -r line; do
+                echo "  ${line}"
+            done
+        fi
+    }
+    
+    # Register with prediction system
+    vantage_predict_register_handler "__vantage_markov_predict"
+fi
+
+# Export the main function
+export -f vantage_markov
+
+# Add completion if available
+if declare -F __vantage_complete >/dev/null; then
+    __vantage_complete vantage_markov "generate gen corpus add list clean corpus-stats help"
+fi
+
+# Log successful load
+if declare -F vantage_log >/dev/null; then
+    vantage_log "Markov module loaded successfully"
+fi 

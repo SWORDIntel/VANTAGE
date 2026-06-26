@@ -1,8 +1,8 @@
-# SENTINEL Team 2 - Reliability Enhancement Project
+# VANTAGE Team 2 - Reliability Enhancement Project
 
 ## Overview
 
-This project implements comprehensive error recovery and graceful degradation for the SENTINEL system, ensuring core functionality remains available even during component failures.
+This project implements comprehensive error recovery and graceful degradation for the VANTAGE system, ensuring core functionality remains available even during component failures.
 
 ## Components Implemented
 
@@ -16,7 +16,7 @@ The core module providing:
 
 ### 2. Fallback Registry Module (`fallback_registry.module`)
 
-Provides fallback implementations for all critical SENTINEL modules:
+Provides fallback implementations for all critical VANTAGE modules:
 - FZF → Basic file selection
 - ML/AI → History-based suggestions
 - Chat → Help system lookup
@@ -73,13 +73,13 @@ source ~/.bash_modules.d/error_recovery.module
 source ~/.bash_modules.d/fallback_registry.module
 
 # Check system status
-sentinel_error_recovery_status
+vantage_error_recovery_status
 
 # Set degradation mode if needed
-sentinel_set_degradation_mode "minimal"
+vantage_set_degradation_mode "minimal"
 
 # Generate error report
-sentinel_generate_error_report
+vantage_generate_error_report
 ```
 
 ### For Module Developers
@@ -126,22 +126,22 @@ See [integration_example.md](integration_example.md) for detailed examples.
 Environment variables:
 ```bash
 # Circuit breaker settings
-export SENTINEL_CIRCUIT_BREAKER_THRESHOLD=5    # Failures before opening
-export SENTINEL_CIRCUIT_BREAKER_TIMEOUT=300    # Seconds before retry
+export VANTAGE_CIRCUIT_BREAKER_THRESHOLD=5    # Failures before opening
+export VANTAGE_CIRCUIT_BREAKER_TIMEOUT=300    # Seconds before retry
 
 # Degradation mode
-export SENTINEL_FALLBACK_MODE=graceful         # graceful|minimal|safe
+export VANTAGE_FALLBACK_MODE=graceful         # graceful|minimal|safe
 
 # Error recovery
-export SENTINEL_ERROR_CONTEXT_LINES=10         # History lines to capture
-export SENTINEL_ERROR_REPORT_ENABLED=1         # Auto-generate reports
+export VANTAGE_ERROR_CONTEXT_LINES=10         # History lines to capture
+export VANTAGE_ERROR_REPORT_ENABLED=1         # Auto-generate reports
 ```
 
 ## Testing
 
 Run the comprehensive test suite:
 ```bash
-/opt/github/SENTINEL/tests/test_error_recovery.sh
+/opt/github/VANTAGE/tests/test_error_recovery.sh
 ```
 
 Tests cover:
@@ -181,27 +181,27 @@ Potential improvements:
 ### Circuit Breaker Issues
 ```bash
 # Check states
-sentinel_error_recovery_status
+vantage_error_recovery_status
 
 # Manual reset if needed
-SENTINEL_CIRCUIT_BREAKERS["component"]="closed"
+VANTAGE_CIRCUIT_BREAKERS["component"]="closed"
 ```
 
 ### Feature Availability
 ```bash
 # Check current mode
-echo $SENTINEL_FALLBACK_MODE
+echo $VANTAGE_FALLBACK_MODE
 
 # Test feature availability
-sentinel_feature_available "feature_name" "criticality"
+vantage_feature_available "feature_name" "criticality"
 ```
 
 ### Generate Debug Report
 ```bash
-sentinel_generate_error_report /tmp/debug_report.txt
+vantage_generate_error_report /tmp/debug_report.txt
 cat /tmp/debug_report.txt
 ```
 
 ## Conclusion
 
-The SENTINEL error recovery and graceful degradation system ensures that users maintain access to core functionality even when advanced features fail. By implementing circuit breakers, fallbacks, and degradation modes, the system becomes significantly more resilient and user-friendly.
+The VANTAGE error recovery and graceful degradation system ensures that users maintain access to core functionality even when advanced features fail. By implementing circuit breakers, fallbacks, and degradation modes, the system becomes significantly more resilient and user-friendly.

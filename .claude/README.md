@@ -1,6 +1,6 @@
-# SENTINEL AI Assistant Context
+# VANTAGE AI Assistant Context
 
-This directory contains comprehensive context and knowledge for AI assistants and developers working on SENTINEL.
+This directory contains comprehensive context and knowledge for AI assistants and developers working on VANTAGE.
 
 ## Directory Structure
 
@@ -64,7 +64,7 @@ This directory contains comprehensive context and knowledge for AI assistants an
 - `install.sh` - Main installation script (be very careful with changes)
 - `bash_modules` - Core module loading system
 - `bashrc.postcustom` - Where user customizations are loaded
-- `sentinel_postinstall_check.sh` - Verification script (run after changes)
+- `scripts/vantage_postinstall_check.sh` - Verification script (run after changes)
 
 ## Development Workflow
 
@@ -72,10 +72,10 @@ This directory contains comprehensive context and knowledge for AI assistants an
 2. Make changes following the guides
 3. Test thoroughly using provided test scripts
 4. Update relevant documentation
-5. Run `sentinel_postinstall_check.sh` to verify
+5. Run `scripts/vantage_postinstall_check.sh` to verify
 
 ## Contact and Resources
 
-- Project: SENTINEL (Secure ENhanced Terminal INtelligent Layer)
+- Project: VANTAGE (Secure ENhanced Terminal INtelligent Layer)
 - Purpose: Comprehensive bash environment for cybersecurity professionals
 - Language: Primarily Bash with Python for ML/AI features

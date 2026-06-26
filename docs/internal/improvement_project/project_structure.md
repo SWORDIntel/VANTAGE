@@ -1,4 +1,4 @@
-# SENTINEL Improvement Project Structure
+# VANTAGE Improvement Project Structure
 
 ## Organizational Hierarchy
 

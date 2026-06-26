@@ -1,8 +1,8 @@
-# SENTINEL Module Health Check System
+# VANTAGE Module Health Check System
 
 ## Overview
 
-The Health Check module provides comprehensive monitoring, diagnostics, and automatic recovery capabilities for the SENTINEL module system. It continuously monitors module health, detects issues, and can automatically attempt recovery procedures to maintain system stability.
+The Health Check module provides comprehensive monitoring, diagnostics, and automatic recovery capabilities for the VANTAGE module system. It continuously monitors module health, detects issues, and can automatically attempt recovery procedures to maintain system stability.
 
 ## Features
 
@@ -27,14 +27,14 @@ The Health Check module provides comprehensive monitoring, diagnostics, and auto
 - `UNKNOWN` (4): Module not loaded or status unavailable
 
 ### 4. **Logging Integration**
-- All health events logged via SENTINEL logging system
+- All health events logged via VANTAGE logging system
 - Detailed issue tracking
 - Recovery attempt history
 - Performance metrics
 
 ## Installation
 
-1. The health check module is automatically installed with SENTINEL
+1. The health check module is automatically installed with VANTAGE
 2. To manually enable:
    ```bash
    module_enable health_check
@@ -46,25 +46,25 @@ The Health Check module provides comprehensive monitoring, diagnostics, and auto
 
 ```bash
 # Enable/disable health monitoring (default: 1)
-export SENTINEL_HEALTH_CHECK_ENABLED=1
+export VANTAGE_HEALTH_CHECK_ENABLED=1
 
 # Health check interval in seconds (default: 300)
-export SENTINEL_HEALTH_CHECK_INTERVAL=300
+export VANTAGE_HEALTH_CHECK_INTERVAL=300
 
 # Enable automatic recovery (default: 1)
-export SENTINEL_HEALTH_CHECK_AUTO_RECOVERY=1
+export VANTAGE_HEALTH_CHECK_AUTO_RECOVERY=1
 
 # Maximum recovery attempts (default: 3)
-export SENTINEL_HEALTH_CHECK_MAX_RETRIES=3
+export VANTAGE_HEALTH_CHECK_MAX_RETRIES=3
 
 # Memory threshold in KB (default: 100000)
-export SENTINEL_HEALTH_MEMORY_THRESHOLD=100000
+export VANTAGE_HEALTH_MEMORY_THRESHOLD=100000
 
 # Module load time threshold in ms (default: 5000)
-export SENTINEL_HEALTH_LOAD_TIME_THRESHOLD=5000
+export VANTAGE_HEALTH_LOAD_TIME_THRESHOLD=5000
 
 # Run health checks in background (default: 1)
-export SENTINEL_HEALTH_CHECK_BACKGROUND=1
+export VANTAGE_HEALTH_CHECK_BACKGROUND=1
 ```
 
 ## Usage
@@ -97,7 +97,7 @@ health_check clear module_name
 ### Example Output
 
 ```
-SENTINEL Module Health Status
+VANTAGE Module Health Status
 ============================
 
 Module                         Status     Last Check           Failures
@@ -106,10 +106,10 @@ autocomplete                   OK         23s ago              0
 config_cache                   OK         23s ago              0
 fuzzy_correction              WARNING     23s ago              1
 logging                       OK         23s ago              0
-sentinel_ml                   ERROR       23s ago              3
+vantage_ml                   ERROR       23s ago              3
 
 Recovery Attempts:
-  sentinel_ml: 2 attempts
+  vantage_ml: 2 attempts
 ```
 
 ## Module-Specific Health Checks
@@ -130,12 +130,12 @@ Recovery Attempts:
 
 ### ML Modules
 
-#### sentinel_ml
+#### vantage_ml
 - Python availability check
 - Model directory validation
 - Cache directory check
 
-#### sentinel_chat
+#### vantage_chat
 - API configuration validation
 - Function availability check
 
@@ -214,7 +214,7 @@ health_check status
 health_check enable
 
 # Check logs periodically
-tail -f ~/.cache/sentinel/health/health_$(date +%Y%m%d).log
+tail -f ~/.cache/vantage/health/health_$(date +%Y%m%d).log
 ```
 
 ### 3. Recovery Procedures
@@ -222,7 +222,7 @@ tail -f ~/.cache/sentinel/health/health_$(date +%Y%m%d).log
 For modules in quarantine:
 1. Check the quarantine reason:
    ```bash
-   cat ~/.cache/sentinel/health/quarantine_module_name
+   cat ~/.cache/vantage/health/quarantine_module_name
    ```
 
 2. Fix underlying issues
@@ -242,7 +242,7 @@ For modules in quarantine:
 ### Common Issues
 
 #### High Memory Usage
-- Check `SENTINEL_HEALTH_MEMORY_THRESHOLD`
+- Check `VANTAGE_HEALTH_MEMORY_THRESHOLD`
 - Clear module caches
 - Restart shell session
 
@@ -260,8 +260,8 @@ For modules in quarantine:
 
 Enable detailed logging:
 ```bash
-export SENTINEL_DEBUG_MODULES=1
-export SENTINEL_LOG_LEVEL=0
+export VANTAGE_DEBUG_MODULES=1
+export VANTAGE_LOG_LEVEL=0
 ```
 
 ## Performance Impact
@@ -327,9 +327,9 @@ Register a custom health check.
 
 ### Variables
 
-- `SENTINEL_MODULE_HEALTH_STATUS`: Associative array of module health states
-- `SENTINEL_MODULE_FAILURE_COUNT`: Failure counts per module
-- `SENTINEL_MODULE_RECOVERY_ATTEMPTS`: Recovery attempt counts
+- `VANTAGE_MODULE_HEALTH_STATUS`: Associative array of module health states
+- `VANTAGE_MODULE_FAILURE_COUNT`: Failure counts per module
+- `VANTAGE_MODULE_RECOVERY_ATTEMPTS`: Recovery attempt counts
 
 ## Changelog
 

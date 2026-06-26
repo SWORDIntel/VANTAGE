@@ -1,27 +1,27 @@
 #!/usr/bin/env bash
-# SENTINEL - Fuzzy Command Correction Module
+# VANTAGE - Fuzzy Command Correction Module
 # Version: 2.0.0
 # Description: Provides intelligent command correction for mistyped commands
 # Dependencies: ble.sh (optional, enhances functionality), hmac.module
-# Maintainer: SENTINEL Team
+# Maintainer: VANTAGE Team
 
 [ -n "$BASH_VERSION" ] || { echo "This script requires bash"; return 0; }
-if [ -n "${_SENTINEL_FUZZY_CORRECTION_LOADED}" ]; then
-    [[ "${SENTINEL_DEBUG:-0}" == "1" ]] && echo "DEBUG: fuzzy_correction already loaded"
+if [ -n "${_VANTAGE_FUZZY_CORRECTION_LOADED}" ]; then
+    [[ "${VANTAGE_DEBUG:-0}" == "1" ]] && echo "DEBUG: fuzzy_correction already loaded"
     return 0
 fi
-export _SENTINEL_FUZZY_CORRECTION_LOADED=1
+export _VANTAGE_FUZZY_CORRECTION_LOADED=1
 
 # Simplified logging that won't crash the terminal
-sentinel_log_info() { logger -t SENTINEL "[INFO] $*" 2>/dev/null || true; }
-sentinel_log_warning() { logger -t SENTINEL "[WARN] $*" 2>/dev/null || true; }
-sentinel_log_error() { logger -t SENTINEL "[ERROR] $*" 2>/dev/null || true; }
+vantage_log_info() { logger -t VANTAGE "[INFO] $*" 2>/dev/null || true; }
+vantage_log_warning() { logger -t VANTAGE "[WARN] $*" 2>/dev/null || true; }
+vantage_log_error() { logger -t VANTAGE "[ERROR] $*" 2>/dev/null || true; }
 
 # Removed strict error handling (set -o pipefail) to prevent terminal crashes
 
 # FEATURE: Fuzzy Command Correction
 # Provides intelligent suggestions for mistyped commands
-_sentinel_fuzzy_command_correction() {
+_vantage_fuzzy_command_correction() {
     local last_command="$1"
     local exit_code="$2"
     
@@ -115,34 +115,34 @@ _sentinel_fuzzy_command_correction() {
         # Check if ble.sh is available for enhanced functionality
         if type -t ble-sabbrev &>/dev/null; then
             # Register secure snippet for correction using HMAC verification
-            ble-sabbrev "!!:fix=_sentinel_run_corrected_command '$corrected_cmd'"
+            ble-sabbrev "!!:fix=_vantage_run_corrected_command '$corrected_cmd'"
             echo -e "\033[0;90mOr type '!!:fix' to run: $corrected_cmd\033[0m"
         else
             # Fallback for when ble.sh is not available
-            alias "!!:fix"="_sentinel_run_corrected_command '$corrected_cmd'"
+            alias "!!:fix"="_vantage_run_corrected_command '$corrected_cmd'"
             echo -e "\033[0;90mOr type '!!:fix' to run: $corrected_cmd\033[0m"
         fi
     fi
 }
 
 # Securely run a corrected command with HMAC verification
-_sentinel_run_corrected_command() {
+_vantage_run_corrected_command() {
     local cmd="$1"
     
     # Use the HMAC module for secure command execution
-    sentinel_run_verified_command "$cmd"
+    vantage_run_verified_command "$cmd"
 }
 
 # Register the prompt command to check for failed commands
-_sentinel_register_fuzzy_correction() {
+_vantage_register_fuzzy_correction() {
     # Avoid duplicate registrations
-    if [[ ! "$PROMPT_COMMAND" =~ _sentinel_store_last_command ]]; then
-        PROMPT_COMMAND="_sentinel_store_last_command \$? \$(HISTTIMEFORMAT= history 1 | sed 's/^[ 0-9]\\+[ ]\\+//');${PROMPT_COMMAND:-:}"
+    if [[ ! "$PROMPT_COMMAND" =~ _vantage_store_last_command ]]; then
+        PROMPT_COMMAND="_vantage_store_last_command \$? \$(HISTTIMEFORMAT= history 1 | sed 's/^[ 0-9]\\+[ ]\\+//');${PROMPT_COMMAND:-:}"
     fi
 }
 
 # Store and process the last command
-_sentinel_store_last_command() {
+_vantage_store_last_command() {
     local exit_code="$1"
     local last_cmd="$2"
     
@@ -150,11 +150,11 @@ _sentinel_store_last_command() {
     [[ -z "$last_cmd" ]] && return 0
     
     # Only process failed commands
-    [[ $exit_code -ne 0 ]] && _sentinel_fuzzy_command_correction "$last_cmd" "$exit_code"
+    [[ $exit_code -ne 0 ]] && _vantage_fuzzy_command_correction "$last_cmd" "$exit_code"
 }
 
 # Initialize the fuzzy correction system
-sentinel_init_fuzzy_correction() {
+vantage_init_fuzzy_correction() {
     # Skip if not in interactive shell
     [[ $- != *i* ]] && return 0
     
@@ -162,7 +162,7 @@ sentinel_init_fuzzy_correction() {
     set -o pipefail
     
     # Register the fuzzy correction
-    _sentinel_register_fuzzy_correction
+    _vantage_register_fuzzy_correction
     
     # Check for ble.sh enhancements
     if type -t ble-bind &>/dev/null; then
@@ -173,21 +173,21 @@ sentinel_init_fuzzy_correction() {
 }
 
 # Run initialization
-sentinel_init_fuzzy_correction 
+vantage_init_fuzzy_correction 
 
 # Helper function to safely bind keys only if widget exists
-_sentinel_safe_ble_bind() {
+_vantage_safe_ble_bind() {
     local mode="$1"
     local key="$2"
     local widget="$3"
     if ble-bind -l | grep -q "^$widget$"; then
         ble-bind -m "$mode" -f "$key" "$widget" 2>/dev/null || true
     else
-        sentinel_log_warning "fuzzy_correction" "BLE.sh widget not found: $widget (skipping keybind for $key in $mode)"
+        vantage_log_warning "fuzzy_correction" "BLE.sh widget not found: $widget (skipping keybind for $key in $mode)"
     fi
 }
 
 # After creating any log file:
-chmod 600 ~/.sentinel/logs/errors-$(date +%Y%m%d).log 2>/dev/null || true
-chmod 600 ~/.sentinel/logs/warnings-$(date +%Y%m%d).log 2>/dev/null || true
+chmod 600 ~/.vantage/logs/errors-$(date +%Y%m%d).log 2>/dev/null || true
+chmod 600 ~/.vantage/logs/warnings-$(date +%Y%m%d).log 2>/dev/null || true
 # SECURITY NOTE: Log files may contain sensitive data; rotate and protect accordingly. 

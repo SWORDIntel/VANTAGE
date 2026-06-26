@@ -1,67 +1,67 @@
 #!/usr/bin/env bash
-# SENTINEL - Error Recovery Module
+# VANTAGE - Error Recovery Module
 # Version: 1.0.0
 # Description: Enhanced error recovery with circuit breaker patterns and graceful degradation
 # Dependencies: logging
-# Maintainer: SENTINEL Team
+# Maintainer: VANTAGE Team
 
 # Module metadata for dependency resolution
-SENTINEL_MODULE_DESCRIPTION="Enhanced error recovery with circuit breaker and graceful degradation"
-SENTINEL_MODULE_VERSION="1.0.0"
-SENTINEL_MODULE_DEPENDENCIES="logging"
+VANTAGE_MODULE_DESCRIPTION="Enhanced error recovery with circuit breaker and graceful degradation"
+VANTAGE_MODULE_VERSION="1.0.0"
+VANTAGE_MODULE_DEPENDENCIES="logging"
 
 # Prevent double loading
-[[ -n "${_SENTINEL_ERROR_RECOVERY_LOADED}" ]] && return 0
-export _SENTINEL_ERROR_RECOVERY_LOADED=1
+[[ -n "${_VANTAGE_ERROR_RECOVERY_LOADED}" ]] && return 0
+export _VANTAGE_ERROR_RECOVERY_LOADED=1
 
 # Error recovery configuration
-: "${SENTINEL_ERROR_RECOVERY_DIR:=$HOME/.sentinel/error_recovery}"
-: "${SENTINEL_CIRCUIT_BREAKER_THRESHOLD:=5}"
-: "${SENTINEL_CIRCUIT_BREAKER_TIMEOUT:=300}"  # 5 minutes
-: "${SENTINEL_ERROR_CONTEXT_LINES:=10}"
-: "${SENTINEL_ERROR_REPORT_ENABLED:=1}"
-: "${SENTINEL_FALLBACK_MODE:=graceful}"  # graceful, minimal, safe
+: "${VANTAGE_ERROR_RECOVERY_DIR:=$HOME/.vantage/error_recovery}"
+: "${VANTAGE_CIRCUIT_BREAKER_THRESHOLD:=5}"
+: "${VANTAGE_CIRCUIT_BREAKER_TIMEOUT:=300}"  # 5 minutes
+: "${VANTAGE_ERROR_CONTEXT_LINES:=10}"
+: "${VANTAGE_ERROR_REPORT_ENABLED:=1}"
+: "${VANTAGE_FALLBACK_MODE:=graceful}"  # graceful, minimal, safe
 
 # Create error recovery directory
-mkdir -p "$SENTINEL_ERROR_RECOVERY_DIR"
+mkdir -p "$VANTAGE_ERROR_RECOVERY_DIR"
 
 # Circuit breaker states
-declare -gA SENTINEL_CIRCUIT_BREAKERS
-declare -gA SENTINEL_CIRCUIT_BREAKER_FAILURES
-declare -gA SENTINEL_CIRCUIT_BREAKER_LAST_FAILURE
-declare -gA SENTINEL_CIRCUIT_BREAKER_THRESHOLDS
-declare -gA SENTINEL_CIRCUIT_BREAKER_TIMEOUTS
-declare -gA SENTINEL_MODULE_FALLBACKS
+declare -gA VANTAGE_CIRCUIT_BREAKERS
+declare -gA VANTAGE_CIRCUIT_BREAKER_FAILURES
+declare -gA VANTAGE_CIRCUIT_BREAKER_LAST_FAILURE
+declare -gA VANTAGE_CIRCUIT_BREAKER_THRESHOLDS
+declare -gA VANTAGE_CIRCUIT_BREAKER_TIMEOUTS
+declare -gA VANTAGE_MODULE_FALLBACKS
 
 # Error context storage
-declare -gA SENTINEL_ERROR_CONTEXTS
-declare -ga SENTINEL_ERROR_STACK
+declare -gA VANTAGE_ERROR_CONTEXTS
+declare -ga VANTAGE_ERROR_STACK
 
 # Initialize circuit breaker for a component
-# Usage: sentinel_circuit_breaker_init <component> [threshold] [timeout]
-sentinel_circuit_breaker_init() {
+# Usage: vantage_circuit_breaker_init <component> [threshold] [timeout]
+vantage_circuit_breaker_init() {
     local component="${1:?Component name required}"
-    local threshold="${2:-$SENTINEL_CIRCUIT_BREAKER_THRESHOLD}"
-    local timeout="${3:-$SENTINEL_CIRCUIT_BREAKER_TIMEOUT}"
+    local threshold="${2:-$VANTAGE_CIRCUIT_BREAKER_THRESHOLD}"
+    local timeout="${3:-$VANTAGE_CIRCUIT_BREAKER_TIMEOUT}"
     
-    SENTINEL_CIRCUIT_BREAKERS["$component"]="closed"
-    SENTINEL_CIRCUIT_BREAKER_FAILURES["$component"]=0
-    SENTINEL_CIRCUIT_BREAKER_LAST_FAILURE["$component"]=0
-    SENTINEL_CIRCUIT_BREAKER_THRESHOLDS["$component"]="$threshold"
-    SENTINEL_CIRCUIT_BREAKER_TIMEOUTS["$component"]="$timeout"
+    VANTAGE_CIRCUIT_BREAKERS["$component"]="closed"
+    VANTAGE_CIRCUIT_BREAKER_FAILURES["$component"]=0
+    VANTAGE_CIRCUIT_BREAKER_LAST_FAILURE["$component"]=0
+    VANTAGE_CIRCUIT_BREAKER_THRESHOLDS["$component"]="$threshold"
+    VANTAGE_CIRCUIT_BREAKER_TIMEOUTS["$component"]="$timeout"
     
-    [[ -n "$(type -t sentinel_log_debug)" ]] && \
-        sentinel_log_debug "error_recovery" "Circuit breaker initialized for $component (threshold=$threshold, timeout=$timeout)"
+    [[ -n "$(type -t vantage_log_debug)" ]] && \
+        vantage_log_debug "error_recovery" "Circuit breaker initialized for $component (threshold=$threshold, timeout=$timeout)"
 }
 
 # Check circuit breaker state
-# Usage: sentinel_circuit_breaker_check <component>
+# Usage: vantage_circuit_breaker_check <component>
 # Returns: 0 if closed/half-open (can proceed), 1 if open (should fail fast)
-sentinel_circuit_breaker_check() {
+vantage_circuit_breaker_check() {
     local component="${1:?Component name required}"
-    local state="${SENTINEL_CIRCUIT_BREAKERS[$component]:-closed}"
-    local last_failure="${SENTINEL_CIRCUIT_BREAKER_LAST_FAILURE[$component]:-0}"
-    local timeout="${SENTINEL_CIRCUIT_BREAKER_TIMEOUTS[$component]:-$SENTINEL_CIRCUIT_BREAKER_TIMEOUT}"
+    local state="${VANTAGE_CIRCUIT_BREAKERS[$component]:-closed}"
+    local last_failure="${VANTAGE_CIRCUIT_BREAKER_LAST_FAILURE[$component]:-0}"
+    local timeout="${VANTAGE_CIRCUIT_BREAKER_TIMEOUTS[$component]:-$VANTAGE_CIRCUIT_BREAKER_TIMEOUT}"
     local current_time=$(date +%s)
     
     case "$state" in
@@ -72,9 +72,9 @@ sentinel_circuit_breaker_check() {
             # Check if timeout has passed
             if (( current_time - last_failure >= timeout )); then
                 # Move to half-open state
-                SENTINEL_CIRCUIT_BREAKERS["$component"]="half-open"
-                [[ -n "$(type -t sentinel_log_info)" ]] && \
-                    sentinel_log_info "error_recovery" "Circuit breaker for $component moved to half-open state"
+                VANTAGE_CIRCUIT_BREAKERS["$component"]="half-open"
+                [[ -n "$(type -t vantage_log_info)" ]] && \
+                    vantage_log_info "error_recovery" "Circuit breaker for $component moved to half-open state"
                 return 0
             else
                 return 1
@@ -87,62 +87,62 @@ sentinel_circuit_breaker_check() {
 }
 
 # Record success for circuit breaker
-# Usage: sentinel_circuit_breaker_success <component>
-sentinel_circuit_breaker_success() {
+# Usage: vantage_circuit_breaker_success <component>
+vantage_circuit_breaker_success() {
     local component="${1:?Component name required}"
-    local state="${SENTINEL_CIRCUIT_BREAKERS[$component]:-closed}"
+    local state="${VANTAGE_CIRCUIT_BREAKERS[$component]:-closed}"
     
     if [[ "$state" == "half-open" ]]; then
         # Reset to closed state
-        SENTINEL_CIRCUIT_BREAKERS["$component"]="closed"
-        SENTINEL_CIRCUIT_BREAKER_FAILURES["$component"]=0
-        [[ -n "$(type -t sentinel_log_info)" ]] && \
-            sentinel_log_info "error_recovery" "Circuit breaker for $component reset to closed state"
+        VANTAGE_CIRCUIT_BREAKERS["$component"]="closed"
+        VANTAGE_CIRCUIT_BREAKER_FAILURES["$component"]=0
+        [[ -n "$(type -t vantage_log_info)" ]] && \
+            vantage_log_info "error_recovery" "Circuit breaker for $component reset to closed state"
     fi
 }
 
 # Record failure for circuit breaker
-# Usage: sentinel_circuit_breaker_failure <component> [error_message]
-sentinel_circuit_breaker_failure() {
+# Usage: vantage_circuit_breaker_failure <component> [error_message]
+vantage_circuit_breaker_failure() {
     local component="${1:?Component name required}"
     local error_message="${2:-Unknown error}"
-    local failures="${SENTINEL_CIRCUIT_BREAKER_FAILURES[$component]:-0}"
-    local threshold="${SENTINEL_CIRCUIT_BREAKER_THRESHOLDS[$component]:-$SENTINEL_CIRCUIT_BREAKER_THRESHOLD}"
+    local failures="${VANTAGE_CIRCUIT_BREAKER_FAILURES[$component]:-0}"
+    local threshold="${VANTAGE_CIRCUIT_BREAKER_THRESHOLDS[$component]:-$VANTAGE_CIRCUIT_BREAKER_THRESHOLD}"
     local current_time=$(date +%s)
     
     # Increment failure count
     ((failures++))
-    SENTINEL_CIRCUIT_BREAKER_FAILURES["$component"]=$failures
-    SENTINEL_CIRCUIT_BREAKER_LAST_FAILURE["$component"]=$current_time
+    VANTAGE_CIRCUIT_BREAKER_FAILURES["$component"]=$failures
+    VANTAGE_CIRCUIT_BREAKER_LAST_FAILURE["$component"]=$current_time
     
     # Check if threshold reached
     if (( failures >= threshold )); then
-        SENTINEL_CIRCUIT_BREAKERS["$component"]="open"
-        [[ -n "$(type -t sentinel_log_error)" ]] && \
-            sentinel_log_error "error_recovery" "Circuit breaker for $component opened after $failures failures: $error_message"
+        VANTAGE_CIRCUIT_BREAKERS["$component"]="open"
+        [[ -n "$(type -t vantage_log_error)" ]] && \
+            vantage_log_error "error_recovery" "Circuit breaker for $component opened after $failures failures: $error_message"
         
         # Trigger fallback if available
-        sentinel_trigger_fallback "$component"
+        vantage_trigger_fallback "$component"
     else
-        [[ -n "$(type -t sentinel_log_warning)" ]] && \
-            sentinel_log_warning "error_recovery" "Component $component failure $failures/$threshold: $error_message"
+        [[ -n "$(type -t vantage_log_warning)" ]] && \
+            vantage_log_warning "error_recovery" "Component $component failure $failures/$threshold: $error_message"
     fi
 }
 
 # Execute with circuit breaker protection
-# Usage: sentinel_with_circuit_breaker <component> <command> [args...]
-sentinel_with_circuit_breaker() {
+# Usage: vantage_with_circuit_breaker <component> <command> [args...]
+vantage_with_circuit_breaker() {
     local component="${1:?Component name required}"
     shift
     local command=("$@")
     
     # Initialize circuit breaker if not exists
-    [[ -z "${SENTINEL_CIRCUIT_BREAKERS[$component]}" ]] && sentinel_circuit_breaker_init "$component"
+    [[ -z "${VANTAGE_CIRCUIT_BREAKERS[$component]}" ]] && vantage_circuit_breaker_init "$component"
     
     # Check circuit breaker state
-    if ! sentinel_circuit_breaker_check "$component"; then
-        [[ -n "$(type -t sentinel_log_warning)" ]] && \
-            sentinel_log_warning "error_recovery" "Circuit breaker open for $component, failing fast"
+    if ! vantage_circuit_breaker_check "$component"; then
+        [[ -n "$(type -t vantage_log_warning)" ]] && \
+            vantage_log_warning "error_recovery" "Circuit breaker open for $component, failing fast"
         return 1
     fi
     
@@ -151,72 +151,72 @@ sentinel_with_circuit_breaker() {
     local exit_code=0
     
     # Capture error context
-    sentinel_capture_error_context "$component" "pre-execution"
+    vantage_capture_error_context "$component" "pre-execution"
     
     # Execute command
     if "${command[@]}"; then
-        sentinel_circuit_breaker_success "$component"
+        vantage_circuit_breaker_success "$component"
     else
         exit_code=$?
-        sentinel_circuit_breaker_failure "$component" "Command failed with exit code $exit_code"
-        sentinel_capture_error_context "$component" "post-failure"
+        vantage_circuit_breaker_failure "$component" "Command failed with exit code $exit_code"
+        vantage_capture_error_context "$component" "post-failure"
     fi
     
     # Record execution time
     local end_time=$(date +%s%N)
     local duration=$(( (end_time - start_time) / 1000000 ))  # Convert to milliseconds
     
-    [[ -n "$(type -t sentinel_log_debug)" ]] && \
-        sentinel_log_debug "error_recovery" "Component $component executed in ${duration}ms (exit code: $exit_code)"
+    [[ -n "$(type -t vantage_log_debug)" ]] && \
+        vantage_log_debug "error_recovery" "Component $component executed in ${duration}ms (exit code: $exit_code)"
     
     return $exit_code
 }
 
 # Register fallback for a module/component
-# Usage: sentinel_register_fallback <component> <fallback_function>
-sentinel_register_fallback() {
+# Usage: vantage_register_fallback <component> <fallback_function>
+vantage_register_fallback() {
     local component="${1:?Component name required}"
     local fallback_function="${2:?Fallback function required}"
     
-    SENTINEL_MODULE_FALLBACKS["$component"]="$fallback_function"
+    VANTAGE_MODULE_FALLBACKS["$component"]="$fallback_function"
     
-    [[ -n "$(type -t sentinel_log_debug)" ]] && \
-        sentinel_log_debug "error_recovery" "Registered fallback $fallback_function for $component"
+    [[ -n "$(type -t vantage_log_debug)" ]] && \
+        vantage_log_debug "error_recovery" "Registered fallback $fallback_function for $component"
 }
 
 # Trigger fallback for a component
-# Usage: sentinel_trigger_fallback <component>
-sentinel_trigger_fallback() {
+# Usage: vantage_trigger_fallback <component>
+vantage_trigger_fallback() {
     local component="${1:?Component name required}"
-    local fallback="${SENTINEL_MODULE_FALLBACKS[$component]}"
+    local fallback="${VANTAGE_MODULE_FALLBACKS[$component]}"
     
     if [[ -n "$fallback" ]] && [[ -n "$(type -t "$fallback")" ]]; then
-        [[ -n "$(type -t sentinel_log_info)" ]] && \
-            sentinel_log_info "error_recovery" "Triggering fallback $fallback for $component"
+        [[ -n "$(type -t vantage_log_info)" ]] && \
+            vantage_log_info "error_recovery" "Triggering fallback $fallback for $component"
         
         # Execute fallback
         if "$fallback"; then
-            [[ -n "$(type -t sentinel_log_info)" ]] && \
-                sentinel_log_info "error_recovery" "Fallback $fallback succeeded for $component"
+            [[ -n "$(type -t vantage_log_info)" ]] && \
+                vantage_log_info "error_recovery" "Fallback $fallback succeeded for $component"
         else
-            [[ -n "$(type -t sentinel_log_error)" ]] && \
-                sentinel_log_error "error_recovery" "Fallback $fallback failed for $component"
+            [[ -n "$(type -t vantage_log_error)" ]] && \
+                vantage_log_error "error_recovery" "Fallback $fallback failed for $component"
         fi
     else
-        [[ -n "$(type -t sentinel_log_warning)" ]] && \
-            sentinel_log_warning "error_recovery" "No fallback registered for $component"
+        [[ -n "$(type -t vantage_log_warning)" ]] && \
+            vantage_log_warning "error_recovery" "No fallback registered for $component"
     fi
 }
 
 # Capture error context for debugging
-# Usage: sentinel_capture_error_context <component> <phase>
-sentinel_capture_error_context() {
+# Usage: vantage_capture_error_context <component> <phase>
+vantage_capture_error_context() {
     local component="${1:?Component name required}"
     local phase="${2:-unknown}"
     local timestamp=$(date +"%Y-%m-%d %H:%M:%S")
     
     # Create context entry
-    local context_file="$SENTINEL_ERROR_RECOVERY_DIR/${component}_${phase}_$(date +%s).context"
+    local context_file="$VANTAGE_ERROR_RECOVERY_DIR/${component}_${phase}_$(date +%s).context"
     
     {
         echo "=== Error Context ==="
@@ -237,79 +237,79 @@ sentinel_capture_error_context() {
         done
         echo ""
         echo "=== Recent Commands ==="
-        fc -l -${SENTINEL_ERROR_CONTEXT_LINES} 2>/dev/null || echo "Command history not available"
+        fc -l -${VANTAGE_ERROR_CONTEXT_LINES} 2>/dev/null || echo "Command history not available"
         echo ""
         echo "=== Module States ==="
-        set | grep "^_SENTINEL_.*_LOADED=" | sort
+        set | grep "^_VANTAGE_.*_LOADED=" | sort
         echo ""
         echo "=== Circuit Breaker States ==="
-        for cb in "${!SENTINEL_CIRCUIT_BREAKERS[@]}"; do
-            echo "$cb: ${SENTINEL_CIRCUIT_BREAKERS[$cb]} (failures: ${SENTINEL_CIRCUIT_BREAKER_FAILURES[$cb]:-0})"
+        for cb in "${!VANTAGE_CIRCUIT_BREAKERS[@]}"; do
+            echo "$cb: ${VANTAGE_CIRCUIT_BREAKERS[$cb]} (failures: ${VANTAGE_CIRCUIT_BREAKER_FAILURES[$cb]:-0})"
         done
     } > "$context_file" 2>/dev/null
     
     # Store in memory for quick access
-    SENTINEL_ERROR_CONTEXTS["$component"]="$context_file"
+    VANTAGE_ERROR_CONTEXTS["$component"]="$context_file"
 }
 
 # Safe module load with fallback
-# Usage: sentinel_safe_module_load <module_name> [fallback_function]
-sentinel_safe_module_load() {
+# Usage: vantage_safe_module_load <module_name> [fallback_function]
+vantage_safe_module_load() {
     local module_name="${1:?Module name required}"
     local fallback_function="${2}"
     
     # Register fallback if provided
-    [[ -n "$fallback_function" ]] && sentinel_register_fallback "$module_name" "$fallback_function"
+    [[ -n "$fallback_function" ]] && vantage_register_fallback "$module_name" "$fallback_function"
     
     # Try to load module with circuit breaker protection
-    sentinel_with_circuit_breaker "$module_name" smart_module_load "$module_name" || {
+    vantage_with_circuit_breaker "$module_name" smart_module_load "$module_name" || {
         local exit_code=$?
-        [[ -n "$(type -t sentinel_log_error)" ]] && \
-            sentinel_log_error "error_recovery" "Failed to load module $module_name, attempting recovery"
+        [[ -n "$(type -t vantage_log_error)" ]] && \
+            vantage_log_error "error_recovery" "Failed to load module $module_name, attempting recovery"
         
         # Try fallback
-        sentinel_trigger_fallback "$module_name"
+        vantage_trigger_fallback "$module_name"
         return $exit_code
     }
 }
 
 # Graceful degradation mode manager
-# Usage: sentinel_set_degradation_mode <mode>
-sentinel_set_degradation_mode() {
+# Usage: vantage_set_degradation_mode <mode>
+vantage_set_degradation_mode() {
     local mode="${1:-graceful}"
     
     case "$mode" in
         "graceful")
-            export SENTINEL_FALLBACK_MODE="graceful"
-            [[ -n "$(type -t sentinel_log_info)" ]] && \
-                sentinel_log_info "error_recovery" "Set degradation mode to graceful - non-critical features may be disabled"
+            export VANTAGE_FALLBACK_MODE="graceful"
+            [[ -n "$(type -t vantage_log_info)" ]] && \
+                vantage_log_info "error_recovery" "Set degradation mode to graceful - non-critical features may be disabled"
             ;;
         "minimal")
-            export SENTINEL_FALLBACK_MODE="minimal"
-            [[ -n "$(type -t sentinel_log_warning)" ]] && \
-                sentinel_log_warning "error_recovery" "Set degradation mode to minimal - only core features enabled"
+            export VANTAGE_FALLBACK_MODE="minimal"
+            [[ -n "$(type -t vantage_log_warning)" ]] && \
+                vantage_log_warning "error_recovery" "Set degradation mode to minimal - only core features enabled"
             ;;
         "safe")
-            export SENTINEL_FALLBACK_MODE="safe"
-            [[ -n "$(type -t sentinel_log_warning)" ]] && \
-                sentinel_log_warning "error_recovery" "Set degradation mode to safe - maximum stability, minimal features"
+            export VANTAGE_FALLBACK_MODE="safe"
+            [[ -n "$(type -t vantage_log_warning)" ]] && \
+                vantage_log_warning "error_recovery" "Set degradation mode to safe - maximum stability, minimal features"
             ;;
         *)
-            [[ -n "$(type -t sentinel_log_error)" ]] && \
-                sentinel_log_error "error_recovery" "Unknown degradation mode: $mode"
+            [[ -n "$(type -t vantage_log_error)" ]] && \
+                vantage_log_error "error_recovery" "Unknown degradation mode: $mode"
             return 1
             ;;
     esac
 }
 
 # Check if feature should be enabled based on degradation mode
-# Usage: sentinel_feature_available <feature_name> <criticality>
+# Usage: vantage_feature_available <feature_name> <criticality>
 # Criticality: core, important, optional
-sentinel_feature_available() {
+vantage_feature_available() {
     local feature="${1:?Feature name required}"
     local criticality="${2:-optional}"
     
-    case "$SENTINEL_FALLBACK_MODE" in
+    case "$VANTAGE_FALLBACK_MODE" in
         "safe")
             [[ "$criticality" == "core" ]]
             ;;
@@ -323,99 +323,99 @@ sentinel_feature_available() {
 }
 
 # Error recovery status report
-# Usage: sentinel_error_recovery_status
-sentinel_error_recovery_status() {
-    echo "=== SENTINEL Error Recovery Status ==="
-    echo "Degradation Mode: $SENTINEL_FALLBACK_MODE"
+# Usage: vantage_error_recovery_status
+vantage_error_recovery_status() {
+    echo "=== VANTAGE Error Recovery Status ==="
+    echo "Degradation Mode: $VANTAGE_FALLBACK_MODE"
     echo ""
     echo "Circuit Breaker States:"
-    for component in "${!SENTINEL_CIRCUIT_BREAKERS[@]}"; do
-        local state="${SENTINEL_CIRCUIT_BREAKERS[$component]}"
-        local failures="${SENTINEL_CIRCUIT_BREAKER_FAILURES[$component]:-0}"
+    for component in "${!VANTAGE_CIRCUIT_BREAKERS[@]}"; do
+        local state="${VANTAGE_CIRCUIT_BREAKERS[$component]}"
+        local failures="${VANTAGE_CIRCUIT_BREAKER_FAILURES[$component]:-0}"
         printf "  %-20s: %-10s (failures: %d)\n" "$component" "$state" "$failures"
     done
     echo ""
     echo "Registered Fallbacks:"
-    for component in "${!SENTINEL_MODULE_FALLBACKS[@]}"; do
-        printf "  %-20s: %s\n" "$component" "${SENTINEL_MODULE_FALLBACKS[$component]}"
+    for component in "${!VANTAGE_MODULE_FALLBACKS[@]}"; do
+        printf "  %-20s: %s\n" "$component" "${VANTAGE_MODULE_FALLBACKS[$component]}"
     done
     echo ""
     echo "Recent Error Contexts:"
-    find "$SENTINEL_ERROR_RECOVERY_DIR" -name "*.context" -mtime -1 -exec basename {} \; 2>/dev/null | head -10
+    find "$VANTAGE_ERROR_RECOVERY_DIR" -name "*.context" -mtime -1 -exec basename {} \; 2>/dev/null | head -10
 }
 
 # Automatic error report generation
-# Usage: sentinel_generate_error_report [output_file]
-sentinel_generate_error_report() {
-    local output_file="${1:-$SENTINEL_ERROR_RECOVERY_DIR/error_report_$(date +%Y%m%d_%H%M%S).txt}"
+# Usage: vantage_generate_error_report [output_file]
+vantage_generate_error_report() {
+    local output_file="${1:-$VANTAGE_ERROR_RECOVERY_DIR/error_report_$(date +%Y%m%d_%H%M%S).txt}"
     
     {
-        echo "=== SENTINEL Error Report ==="
+        echo "=== VANTAGE Error Report ==="
         echo "Generated: $(date)"
         echo "System: $(uname -a)"
         echo ""
-        sentinel_error_recovery_status
+        vantage_error_recovery_status
         echo ""
         echo "=== Recent Errors ==="
-        if [[ -n "$(type -t sentinel_show_logs)" ]]; then
-            sentinel_show_logs all 50 | grep -E "\[(ERROR|CRITICAL)\]" || echo "No recent errors in logs"
+        if [[ -n "$(type -t vantage_show_logs)" ]]; then
+            vantage_show_logs all 50 | grep -E "\[(ERROR|CRITICAL)\]" || echo "No recent errors in logs"
         fi
         echo ""
         echo "=== Error Contexts ==="
-        for context_file in $(find "$SENTINEL_ERROR_RECOVERY_DIR" -name "*.context" -mtime -1 2>/dev/null | head -5); do
+        for context_file in $(find "$VANTAGE_ERROR_RECOVERY_DIR" -name "*.context" -mtime -1 2>/dev/null | head -5); do
             echo "--- Context: $(basename "$context_file") ---"
             cat "$context_file"
             echo ""
         done
     } > "$output_file"
     
-    [[ -n "$(type -t sentinel_log_info)" ]] && \
-        sentinel_log_info "error_recovery" "Error report generated: $output_file"
+    [[ -n "$(type -t vantage_log_info)" ]] && \
+        vantage_log_info "error_recovery" "Error report generated: $output_file"
     
     echo "$output_file"
 }
 
 # Clean up old error contexts
-# Usage: sentinel_cleanup_error_contexts [days]
-sentinel_cleanup_error_contexts() {
+# Usage: vantage_cleanup_error_contexts [days]
+vantage_cleanup_error_contexts() {
     local days="${1:-7}"
     
-    find "$SENTINEL_ERROR_RECOVERY_DIR" -name "*.context" -mtime "+$days" -delete 2>/dev/null
+    find "$VANTAGE_ERROR_RECOVERY_DIR" -name "*.context" -mtime "+$days" -delete 2>/dev/null
     
-    [[ -n "$(type -t sentinel_log_info)" ]] && \
-        sentinel_log_info "error_recovery" "Cleaned up error contexts older than $days days"
+    [[ -n "$(type -t vantage_log_info)" ]] && \
+        vantage_log_info "error_recovery" "Cleaned up error contexts older than $days days"
 }
 
 # Initialize error recovery system
-sentinel_init_error_recovery() {
+vantage_init_error_recovery() {
     # Create necessary directories
-    mkdir -p "$SENTINEL_ERROR_RECOVERY_DIR"
+    mkdir -p "$VANTAGE_ERROR_RECOVERY_DIR"
     
     # Set default degradation mode
-    : "${SENTINEL_FALLBACK_MODE:=graceful}"
+    : "${VANTAGE_FALLBACK_MODE:=graceful}"
     
     # Schedule cleanup in background
-    (sentinel_cleanup_error_contexts >/dev/null 2>&1 &)
+    (vantage_cleanup_error_contexts >/dev/null 2>&1 &)
     
-    [[ -n "$(type -t sentinel_log_info)" ]] && \
-        sentinel_log_info "error_recovery" "Error recovery system initialized (mode: $SENTINEL_FALLBACK_MODE)"
+    [[ -n "$(type -t vantage_log_info)" ]] && \
+        vantage_log_info "error_recovery" "Error recovery system initialized (mode: $VANTAGE_FALLBACK_MODE)"
 }
 
 # Export functions
-export -f sentinel_circuit_breaker_init
-export -f sentinel_circuit_breaker_check
-export -f sentinel_circuit_breaker_success
-export -f sentinel_circuit_breaker_failure
-export -f sentinel_with_circuit_breaker
-export -f sentinel_register_fallback
-export -f sentinel_trigger_fallback
-export -f sentinel_capture_error_context
-export -f sentinel_safe_module_load
-export -f sentinel_set_degradation_mode
-export -f sentinel_feature_available
-export -f sentinel_error_recovery_status
-export -f sentinel_generate_error_report
-export -f sentinel_cleanup_error_contexts
+export -f vantage_circuit_breaker_init
+export -f vantage_circuit_breaker_check
+export -f vantage_circuit_breaker_success
+export -f vantage_circuit_breaker_failure
+export -f vantage_with_circuit_breaker
+export -f vantage_register_fallback
+export -f vantage_trigger_fallback
+export -f vantage_capture_error_context
+export -f vantage_safe_module_load
+export -f vantage_set_degradation_mode
+export -f vantage_feature_available
+export -f vantage_error_recovery_status
+export -f vantage_generate_error_report
+export -f vantage_cleanup_error_contexts
 
 # Initialize on load
-sentinel_init_error_recovery
+vantage_init_error_recovery

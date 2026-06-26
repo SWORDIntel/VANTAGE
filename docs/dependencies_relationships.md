@@ -1,8 +1,8 @@
-# SENTINEL Dependencies and Component Relationships
+# VANTAGE Dependencies and Component Relationships
 
 ## Overview
 
-This document maps out all dependencies within SENTINEL, including module dependencies, Python package requirements, system dependencies, and the relationships between different components. Understanding these relationships is crucial for maintenance, debugging, and extending SENTINEL.
+This document maps out all dependencies within VANTAGE, including module dependencies, Python package requirements, system dependencies, and the relationships between different components. Understanding these relationships is crucial for maintenance, debugging, and extending VANTAGE.
 
 ## Dependency Categories
 
@@ -103,20 +103,20 @@ autocomplete.module
 ├── fzf.module
 └── fuzzy_correction.module
 
-sentinel_ml.module
+vantage_ml.module
 ├── logging.module
 ├── config_cache.module
-└── sentinel_context.module
+└── vantage_context.module
 
-sentinel_chat.module
-├── sentinel_ml.module
-├── sentinel_context.module
-└── sentinel_nlu.module
+vantage_chat.module
+├── vantage_ml.module
+├── vantage_context.module
+└── vantage_nlu.module
 
-sentinel_osint.module
+vantage_osint.module
 ├── logging.module
 ├── config_cache.module
-└── sentinel_gitstar.module
+└── vantage_gitstar.module
 ```
 
 #### Module Initialization Order
@@ -137,17 +137,17 @@ Level 2 (Feature Modules):
 - autocomplete.module
 - fzf.module
 - fuzzy_correction.module
-- sentinel_context.module
+- vantage_context.module
 
 Level 3 (Advanced Features):
-- sentinel_ml.module
-- sentinel_nlu.module
+- vantage_ml.module
+- vantage_nlu.module
 - project_suggestions.module
 
 Level 4 (Integration Modules):
-- sentinel_chat.module
-- sentinel_osint.module
-- sentinel_cybersec_ml.module
+- vantage_chat.module
+- vantage_osint.module
+- vantage_cybersec_ml.module
 ```
 
 ## Component Relationships
@@ -183,9 +183,9 @@ graph LR
     end
     
     subgraph ML/AI
-        G[sentinel_context] --> H[sentinel_ml]
-        H --> I[sentinel_chat]
-        H --> J[sentinel_nlu]
+        G[vantage_context] --> H[vantage_ml]
+        H --> I[vantage_chat]
+        H --> J[vantage_nlu]
     end
     
     subgraph Features
@@ -202,32 +202,32 @@ graph LR
 
 ```python
 # Component dependency tree
-sentinel_base
-├── sentinel_context
+vantage_base
+├── vantage_context
 │   ├── uses: system state, git info, directory analysis
 │   └── provides: context objects
 │
-├── sentinel_autolearn
+├── vantage_autolearn
 │   ├── uses: context, command history
 │   └── provides: learning updates
 │
-├── sentinel_suggest
+├── vantage_suggest
 │   ├── uses: context, autolearn data, ML models
 │   └── provides: command suggestions
 │
-├── sentinel_nlu
+├── vantage_nlu
 │   ├── uses: NLP models, context
 │   └── provides: intent understanding
 │
-├── sentinel_chat
+├── vantage_chat
 │   ├── uses: LLM models, context, NLU
 │   └── provides: conversational interface
 │
-├── sentinel_cybersec_ml
+├── vantage_cybersec_ml
 │   ├── uses: security models, context
 │   └── provides: threat detection, recommendations
 │
-└── sentinel_osint
+└── vantage_osint
     ├── uses: web APIs, scrapers, context
     └── provides: intelligence data
 ```
@@ -263,18 +263,18 @@ defaults:
   timeout: 30
   cache_size: 1000
 
-# System configuration (/etc/sentinel/config.yaml)
+# System configuration (/etc/vantage/config.yaml)
 system:
   overrides:
     timeout: 60
 
-# User configuration (~/.sentinel/config.yaml)
+# User configuration (~/.vantage/config.yaml)
 user:
   overrides:
     cache_size: 5000
 
 # Environment variables
-SENTINEL_TIMEOUT=120
+VANTAGE_TIMEOUT=120
 
 # Final effective configuration:
 # timeout: 120 (from env var)
@@ -301,17 +301,17 @@ MODULE_C_INPUTS="$MODULE_A_CACHE_DIR:$MODULE_B_SOURCE"
 
 ```
 $HOME/
-├── .sentinel/                    # User configuration
+├── .vantage/                    # User configuration
 │   ├── config.yaml              # Main config
 │   ├── modules/                 # User modules
 │   └── data/                    # User data
 │
-├── .cache/sentinel/             # Cache directory
+├── .cache/vantage/             # Cache directory
 │   ├── ml_models/               # Cached ML models
 │   ├── completions/             # Completion cache
 │   └── osint/                   # OSINT data cache
 │
-└── .local/share/sentinel/       # Data directory
+└── .local/share/vantage/       # Data directory
     ├── logs/                    # Log files
     ├── history/                 # Command history
     └── learned/                 # Learned patterns
@@ -327,7 +327,7 @@ Module File Dependencies:
 │
 ├── Python components (require)
 │   ├── contrib/__init__.py
-│   ├── contrib/sentinel_base.py
+│   ├── contrib/vantage_base.py
 │   └── requirements.txt
 │
 └── GitStar system (requires)
@@ -341,7 +341,7 @@ Module File Dependencies:
 ### 1. Process Dependencies
 
 ```
-SENTINEL Shell Session
+VANTAGE Shell Session
 ├── Bash Process (main)
 │   ├── Module Processes
 │   └── Completion Process
@@ -424,10 +424,10 @@ pip freeze > requirements.lock
 
 ```bash
 # Check system dependencies
-sentinel check-deps
+vantage check-deps
 
 # Install missing dependencies
-sentinel install-deps
+vantage install-deps
 
 # Manual verification
 for cmd in bash python3 git fzf rg; do
@@ -439,22 +439,22 @@ done
 
 ```bash
 # Debug module dependencies
-export SENTINEL_MODULE_DEBUG=1
-sentinel module deps <module_name>
+export VANTAGE_MODULE_DEBUG=1
+vantage module deps <module_name>
 
 # Force reload modules
-sentinel module reload --force
+vantage module reload --force
 
 # Check circular dependencies
-sentinel module check-circular
+vantage module check-circular
 ```
 
 ### 3. Python Dependency Conflicts
 
 ```bash
 # Create fresh environment
-python3 -m venv ~/.sentinel/venv_test
-source ~/.sentinel/venv_test/bin/activate
+python3 -m venv ~/.vantage/venv_test
+source ~/.vantage/venv_test/bin/activate
 
 # Test installation
 pip install -r requirements.txt
@@ -492,31 +492,31 @@ pip freeze | diff requirements.lock -
 
 ```bash
 # Module dependencies
-sentinel module graph --output module_deps.png
+vantage module graph --output module_deps.png
 
 # Python dependencies
 pipdeptree --graph-output png > python_deps.png
 
 # System dependencies
-sentinel deps visualize --output system_deps.png
+vantage deps visualize --output system_deps.png
 ```
 
 ### Analyze Dependencies
 
 ```bash
 # Find unused dependencies
-sentinel deps unused
+vantage deps unused
 
 # Check for updates
-sentinel deps outdated
+vantage deps outdated
 
 # Security audit
-sentinel deps audit
+vantage deps audit
 ```
 
 ## Conclusion
 
-Understanding SENTINEL's dependencies and component relationships is essential for:
+Understanding VANTAGE's dependencies and component relationships is essential for:
 - Troubleshooting issues
 - Adding new features
 - Optimizing performance

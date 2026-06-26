@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# SENTINEL Installer - Kitty Functions
+# VANTAGE Installer - Kitty Functions
 
 _kitty_gui_available() {
   # kitty must exist AND a GUI session must be available
@@ -11,23 +11,23 @@ _kitty_gui_available() {
 _kitty_write_conf_block() {
   local kitty_conf="$1"
   local tmp
-  tmp="$(mktemp "${HOME}/.kitty.conf.sentinel.XXXXXX")"
+  tmp="$(mktemp "${HOME}/.kitty.conf.vantage.XXXXXX")"
 
   # Preserve existing file, but replace our managed block if present.
   if [[ -f "$kitty_conf" ]]; then
     awk '
       BEGIN {inblk=0}
-      /^# SENTINEL KITTY BEGIN$/ {inblk=1; next}
-      /^# SENTINEL KITTY END$/ {inblk=0; next}
+      /^# VANTAGE KITTY BEGIN$/ {inblk=1; next}
+      /^# VANTAGE KITTY END$/ {inblk=0; next}
       inblk==0 {print}
     ' "$kitty_conf" > "$tmp"
   fi
 
   {
     echo ""
-    echo "# SENTINEL KITTY BEGIN"
-    echo "# Managed by SENTINEL installer - Kitty Primary CLI Pathway"
-    echo "# Optimized settings for SENTINEL module system and TUI responsiveness"
+    echo "# VANTAGE KITTY BEGIN"
+    echo "# Managed by VANTAGE installer - Kitty Primary CLI Pathway"
+    echo "# Optimized settings for VANTAGE module system and TUI responsiveness"
     echo ""
     echo "# Performance and responsiveness"
     echo "update_check_interval 0"
@@ -45,7 +45,7 @@ _kitty_write_conf_block() {
     echo "bold_italic_font auto"
     echo "font_size 11.0"
     echo ""
-    echo "# Colors optimized for SENTINEL"
+    echo "# Colors optimized for VANTAGE"
     echo "foreground #e0e0e0"
     echo "background #0d1117"
     echo "selection_foreground #000000"
@@ -70,31 +70,31 @@ _kitty_write_conf_block() {
     echo "# Shell integration"
     echo "shell_integration enabled"
     echo ""
-    echo "# SENTINEL-specific: Enable kitty as primary CLI"
+    echo "# VANTAGE-specific: Enable kitty as primary CLI"
     echo "shell ${SHELL:-/bin/bash}"
     echo ""
-    echo "# SENTINEL startup script (kitty shell integration handles this)"
+    echo "# VANTAGE startup script (kitty shell integration handles this)"
     echo "shell_integration enabled"
     echo ""
-    echo "# SENTINEL KITTY END"
+    echo "# VANTAGE KITTY END"
   } >> "$tmp"
 
   install -m 600 "$tmp" "$kitty_conf"
   rm -f "$tmp" 2>/dev/null || true
 }
 
-_kitty_install_sentinel_launcher() {
-  local launcher="${HOME}/.local/bin/sentinel-kitty"
+_kitty_install_vantage_launcher() {
+  local launcher="${HOME}/.local/bin/vantage-kitty"
   local tmp
-  tmp="$(mktemp "${HOME}/.sentinel-kitty.XXXXXX")"
+  tmp="$(mktemp "${HOME}/.vantage-kitty.XXXXXX")"
 
   cat > "$tmp" <<'EOF'
 #!/usr/bin/env bash
 set -euo pipefail
 
-SENTINEL_ROOT="${SENTINEL_ROOT:-$HOME/.sentinel}"
+VANTAGE_ROOT="${VANTAGE_ROOT:-$HOME/.vantage}"
 
-python_bin="${SENTINEL_PYTHON:-}"
+python_bin="${VANTAGE_PYTHON:-}"
 if [[ -z "${python_bin}" || ! -x "${python_bin}" ]]; then
   if [[ -x "${HOME}/venv/bin/python3" ]]; then
     python_bin="${HOME}/venv/bin/python3"
@@ -103,10 +103,10 @@ if [[ -z "${python_bin}" || ! -x "${python_bin}" ]]; then
   fi
 fi
 
-entry="${SENTINEL_ROOT}/sentinel_toggles_tui.py"
+entry="${VANTAGE_ROOT}/contrib/vantage_toggles_tui.py"
 if [[ ! -f "${entry}" ]]; then
-  echo "SENTINEL entrypoint not found: ${entry}" >&2
-  echo "Set SENTINEL_ROOT or install SENTINEL to use sentinel-kitty." >&2
+  echo "VANTAGE entrypoint not found: ${entry}" >&2
+  echo "Set VANTAGE_ROOT or install VANTAGE to use vantage-kitty." >&2
   exit 127
 fi
 
@@ -153,17 +153,17 @@ setup_kitty_primary_cli() {
   local kitty_dir="${xdg_conf%/}/kitty"
   local kitty_conf="${kitty_dir}/kitty.conf"
 
-  step "Configuring Kitty as primary CLI for SENTINEL"
+  step "Configuring Kitty as primary CLI for VANTAGE"
   safe_mkdir "$kitty_dir" 700
   _kitty_write_conf_block "$kitty_conf"
   ok "Kitty config updated: $kitty_conf"
 
-  step "Installing sentinel-kitty launcher"
+  step "Installing vantage-kitty launcher"
   safe_mkdir "${HOME}/.local/bin" 700
-  _kitty_install_sentinel_launcher
-  ok "Launcher installed: ${HOME}/.local/bin/sentinel-kitty"
+  _kitty_install_vantage_launcher
+  ok "Launcher installed: ${HOME}/.local/bin/vantage-kitty"
 
-  step "Creating kitty.rc for SENTINEL module loading"
+  step "Creating kitty.rc for VANTAGE module loading"
   _kitty_create_rc_file
   ok "kitty.rc created"
 
@@ -182,13 +182,13 @@ _kitty_install_startup_script() {
 
   cat > "$tmp" <<'EOF'
 #!/usr/bin/env bash
-# SENTINEL Kitty Startup Script
+# VANTAGE Kitty Startup Script
 # This script is executed when kitty starts a new shell session
-# It ensures SENTINEL modules are loaded correctly in kitty
+# It ensures VANTAGE modules are loaded correctly in kitty
 
 # Mark that we're starting in kitty
-export SENTINEL_KITTY_PRIMARY_CLI=1
-export SENTINEL_TERMINAL="kitty"
+export VANTAGE_KITTY_PRIMARY_CLI=1
+export VANTAGE_TERMINAL="kitty"
 
 # Source kitty.rc if it exists
 if [[ -f "${HOME}/kitty.rc" ]]; then
@@ -198,13 +198,13 @@ fi
 # Ensure kitty integration module is loaded early
 if [[ -f "${HOME}/bash_modules.d/kitty_integration.module" ]]; then
     source "${HOME}/bash_modules.d/kitty_integration.module"
-elif [[ -f "${SENTINEL_ROOT}/bash_modules.d/kitty_integration.module" ]]; then
-    source "${SENTINEL_ROOT}/bash_modules.d/kitty_integration.module"
+elif [[ -f "${VANTAGE_ROOT}/bash_modules.d/kitty_integration.module" ]]; then
+    source "${VANTAGE_ROOT}/bash_modules.d/kitty_integration.module"
 fi
 
 # Set kitty window title
-if [[ -n "${KITTY_WINDOW_ID:-}" ]] && type sentinel_kitty_set_title &>/dev/null; then
-    sentinel_kitty_set_title "SENTINEL - $(basename "${PWD}")"
+if [[ -n "${KITTY_WINDOW_ID:-}" ]] && type vantage_kitty_set_title &>/dev/null; then
+    vantage_kitty_set_title "VANTAGE - $(basename "${PWD}")"
 fi
 EOF
 
@@ -215,25 +215,25 @@ EOF
 _kitty_create_rc_file() {
   local kitty_rc="${HOME}/kitty.rc"
   local tmp
-  tmp="$(mktemp "${HOME}/.kitty.rc.sentinel.XXXXXX")"
+  tmp="$(mktemp "${HOME}/.kitty.rc.vantage.XXXXXX")"
 
   cat > "$tmp" <<'KITTYRCEOF'
 #!/usr/bin/env bash
-# kitty.rc - SENTINEL Kitty Primary CLI Configuration
+# kitty.rc - VANTAGE Kitty Primary CLI Configuration
 #
-# This file is sourced by kitty on startup when using SENTINEL's kitty pathway.
-# It loads all SENTINEL modules optimized for kitty's GPU-accelerated terminal.
+# This file is sourced by kitty on startup when using VANTAGE's kitty pathway.
+# It loads all VANTAGE modules optimized for kitty's GPU-accelerated terminal.
 
 export LANG=en_US.utf8
 export LC_ALL=en_US.utf8
 
 # Mark that we're in kitty primary CLI mode
-export SENTINEL_KITTY_PRIMARY_CLI=1
-export SENTINEL_TERMINAL="kitty"
+export VANTAGE_KITTY_PRIMARY_CLI=1
+export VANTAGE_TERMINAL="kitty"
 
-# Determine SENTINEL_ROOT dynamically if not already set
-if [[ -z "${SENTINEL_ROOT}" ]]; then
-    export SENTINEL_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# Determine VANTAGE_ROOT dynamically if not already set
+if [[ -z "${VANTAGE_ROOT}" ]]; then
+    export VANTAGE_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 fi
 
 #========================================================================
@@ -248,39 +248,39 @@ fi
 # Configuration Caching System
 # ------------------------
 # Controls how configuration files are cached for faster shell startup
-export SENTINEL_CONFIG_CACHE_ENABLED=1
-export SENTINEL_CONFIG_FORCE_REFRESH=0
-export SENTINEL_CONFIG_CACHE_RETENTION_DAYS=30
-export SENTINEL_CONFIG_VERIFY_HASH=1
+export VANTAGE_CONFIG_CACHE_ENABLED=1
+export VANTAGE_CONFIG_FORCE_REFRESH=0
+export VANTAGE_CONFIG_CACHE_RETENTION_DAYS=30
+export VANTAGE_CONFIG_VERIFY_HASH=1
 
 # Module System Optimization
 # -------------------------
 # Controls module dependency resolution and loading behavior
-export SENTINEL_MODULE_DEBUG=0
-export SENTINEL_MODULE_AUTOLOAD=1
-export SENTINEL_MODULE_CACHE_ENABLED=1
-export SENTINEL_MODULE_VERIFY=1
+export VANTAGE_MODULE_DEBUG=0
+export VANTAGE_MODULE_AUTOLOAD=1
+export VANTAGE_MODULE_CACHE_ENABLED=1
+export VANTAGE_MODULE_VERIFY=1
 
 # Kitty-specific optimizations
-export SENTINEL_KITTY_GPU_ACCEL=1
-export SENTINEL_TERMINAL_COLORS=256
+export VANTAGE_KITTY_GPU_ACCEL=1
+export VANTAGE_TERMINAL_COLORS=256
 
 #========================================================================
 # MODULE-SPECIFIC CONFIGURATIONS
 #========================================================================
 
-# SENTINEL Feature Module Toggles
+# VANTAGE Feature Module Toggles
 # -------------------------------
-# Uncomment to enable/disable specific SENTINEL feature modules:
-export SENTINEL_OBFUSCATE_ENABLED=1
-export SENTINEL_FZF_ENABLED=1
-export SENTINEL_ML_ENABLED=1
-export SENTINEL_OSINT_ENABLED=1
-export SENTINEL_CYBERSEC_ENABLED=1
-export SENTINEL_GITSTAR_ENABLED=1
-export SENTINEL_CHAT_ENABLED=1
-export SENTINEL_SMALLLLM_ENABLED=1
-export SENTINEL_AUTO_CASE_CORRECTION_ENABLED=1
+# Uncomment to enable/disable specific VANTAGE feature modules:
+export VANTAGE_OBFUSCATE_ENABLED=1
+export VANTAGE_FZF_ENABLED=1
+export VANTAGE_ML_ENABLED=1
+export VANTAGE_OSINT_ENABLED=1
+export VANTAGE_CYBERSEC_ENABLED=1
+export VANTAGE_GITSTAR_ENABLED=1
+export VANTAGE_CHAT_ENABLED=1
+export VANTAGE_SMALLLLM_ENABLED=1
+export VANTAGE_AUTO_CASE_CORRECTION_ENABLED=1
 
 # Obfuscation Module
 # ------------------
@@ -396,7 +396,7 @@ if [[ -n "${CONFIG[LAZY_LOAD]+set}" && "${CONFIG[LAZY_LOAD]}" == "1" ]] || [[ "$
 fi
 
 # Silence module status messages
-export SENTINEL_QUIET_STATUS=1
+export VANTAGE_QUIET_STATUS=1
 
 # =============================
 # End of kitty.rc
@@ -409,19 +409,19 @@ KITTYRCEOF
 
 patch_bashrc_for_kitty() {
   local rc="$1"
-  local sentinel_bashrc="${PROJECT_ROOT}/bashrc"
+  local vantage_bashrc="${PROJECT_ROOT}/bashrc"
 
   # Check if .bashrc is owned by root or not writable
   if [[ -e "$rc" && ! -w "$rc" ]]; then
     warn "Cannot write to $rc (permission denied, may be owned by root)"
     step "Creating a new bashrc file for kitty pathway"
 
-    local user_bashrc="${HOME}/.bashrc.sentinel-kitty"
+    local user_bashrc="${HOME}/.bashrc.vantage-kitty"
 
-    if [[ -f "$sentinel_bashrc" ]]; then
-      safe_cp "$sentinel_bashrc" "$user_bashrc"
+    if [[ -f "$vantage_bashrc" ]]; then
+      safe_cp "$vantage_bashrc" "$user_bashrc"
       chmod 644 "$user_bashrc"
-      ok "SENTINEL bashrc installed as $user_bashrc"
+      ok "VANTAGE bashrc installed as $user_bashrc"
 
       if [[ $INTERACTIVE -eq 1 ]]; then
         read -r -t 30 -p "Would you like to add a line to source $user_bashrc from your $rc? You may need to enter sudo password. [y/N]: " confirm || confirm="n"
@@ -432,7 +432,7 @@ patch_bashrc_for_kitty() {
 
       if [[ "$confirm" =~ ^[Yy]([Ee][Ss])?$ ]]; then
         sudo bash -c "echo '' >> $rc"
-        sudo bash -c "echo '# SENTINEL Framework Integration - Kitty Primary CLI' >> $rc"
+        sudo bash -c "echo '# VANTAGE Framework Integration - Kitty Primary CLI' >> $rc"
         sudo bash -c "echo \"if [[ -f \\\"${user_bashrc}\\\" ]]; then\" >> $rc"
         sudo bash -c "echo \"    source \\\"${user_bashrc}\\\"\" >> $rc"
         sudo bash -c "echo 'fi' >> $rc"
@@ -440,7 +440,7 @@ patch_bashrc_for_kitty() {
       else
         echo "Please manually add the following lines to your $rc:"
         echo ""
-        echo "# SENTINEL Framework Integration - Kitty Primary CLI"
+        echo "# VANTAGE Framework Integration - Kitty Primary CLI"
         echo "if [[ -f \"${user_bashrc}\" ]]; then"
         echo "    source \"${user_bashrc}\""
         echo "fi"
@@ -451,7 +451,7 @@ patch_bashrc_for_kitty() {
       if ! grep -q "source.*kitty.rc" "$user_bashrc"; then
         {
           echo ''
-          echo '# SENTINEL Kitty Primary CLI'
+          echo '# VANTAGE Kitty Primary CLI'
           echo "if [[ -f \"\${HOME}/kitty.rc\" ]]; then"
           echo "    source \"\${HOME}/kitty.rc\""
           echo 'fi'
@@ -461,30 +461,30 @@ patch_bashrc_for_kitty() {
 
       return 0
     else
-      fail "SENTINEL bashrc not found at $sentinel_bashrc"
+      fail "VANTAGE bashrc not found at $vantage_bashrc"
       return 1
     fi
   fi
 
   # Normal flow for writable .bashrc
   if [[ -f "$rc" ]]; then
-    safe_cp "$rc" "$rc.sentinel-kitty.bak.$(date +%s)"
-    ok "Backed up $rc to $rc.sentinel-kitty.bak.$(date +%s)"
+    safe_cp "$rc" "$rc.vantage-kitty.bak.$(date +%s)"
+    ok "Backed up $rc to $rc.vantage-kitty.bak.$(date +%s)"
   fi
 
-  step "Patching $rc for SENTINEL Kitty Primary CLI"
+  step "Patching $rc for VANTAGE Kitty Primary CLI"
   if ! grep -q "source.*kitty.rc" "$rc"; then
     {
       echo ''
-      echo '# SENTINEL Framework Integration - Kitty Primary CLI'
-      echo "export SENTINEL_ROOT=\"${PROJECT_ROOT}\""
-      echo "export SENTINEL_KITTY_PRIMARY_CLI=1"
+      echo '# VANTAGE Framework Integration - Kitty Primary CLI'
+      echo "export VANTAGE_ROOT=\"${PROJECT_ROOT}\""
+      echo "export VANTAGE_KITTY_PRIMARY_CLI=1"
       echo "if [[ -f \"\${HOME}/kitty.rc\" ]]; then"
       echo "    source \"\${HOME}/kitty.rc\""
       echo 'fi'
     } >> "$rc"
-    ok "Patched $rc to load SENTINEL Kitty Primary CLI"
+    ok "Patched $rc to load VANTAGE Kitty Primary CLI"
   else
-    ok "SENTINEL Kitty Primary CLI already integrated in $rc"
+    ok "VANTAGE Kitty Primary CLI already integrated in $rc"
   fi
 }

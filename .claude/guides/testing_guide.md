@@ -1,8 +1,8 @@
-# SENTINEL Testing Guide
+# VANTAGE Testing Guide
 
 ## Overview
 
-Testing is crucial for SENTINEL's reliability. This guide covers testing strategies, tools, and best practices for ensuring your changes work correctly.
+Testing is crucial for VANTAGE's reliability. This guide covers testing strategies, tools, and best practices for ensuring your changes work correctly.
 
 ## Testing Levels
 
@@ -86,11 +86,11 @@ EOF
 ```
 
 ### 4. System Testing
-Test the complete SENTINEL system.
+Test the complete VANTAGE system.
 
 ```bash
 # The main system test
-./sentinel_postinstall_check.sh
+./scripts/vantage_postinstall_check.sh
 ```
 
 ## Testing Tools
@@ -98,10 +98,10 @@ Test the complete SENTINEL system.
 ### 1. Built-in Test Runner
 
 ```bash
-# SENTINEL test runner
+# VANTAGE test runner
 cat > tests/run_tests.sh << 'EOF'
 #!/bin/bash
-# SENTINEL Test Runner
+# VANTAGE Test Runner
 
 TESTS_DIR="$(dirname "$0")"
 PASSED=0
@@ -200,23 +200,23 @@ EOF
 # Performance test framework
 cat > tests/performance/measure_startup.sh << 'EOF'
 #!/bin/bash
-# Measure bash startup time with SENTINEL
+# Measure bash startup time with VANTAGE
 
-# Baseline (no SENTINEL)
+# Baseline (no VANTAGE)
 echo "Measuring baseline bash startup..."
 baseline=$(( \
     time bash -c 'exit' \
 ) 2>&1 | grep real | awk '{print $2}')
 
-# With SENTINEL
-echo "Measuring SENTINEL bash startup..."
-sentinel=$(( \
+# With VANTAGE
+echo "Measuring VANTAGE bash startup..."
+vantage=$(( \
     time bash --rcfile bashrc -c 'exit' \
 ) 2>&1 | grep real | awk '{print $2}')
 
 echo "Results:"
 echo "  Baseline: $baseline"
-echo "  SENTINEL: $sentinel"
+echo "  VANTAGE: $vantage"
 
 # Module load times
 echo -e "\nModule load times:"
@@ -301,7 +301,7 @@ test_bash_version() {
     
     # Check if version available
     if command -v "bash$version" &>/dev/null; then
-        "bash$version" --rcfile bashrc -c 'echo "SENTINEL loaded successfully"'
+        "bash$version" --rcfile bashrc -c 'echo "VANTAGE loaded successfully"'
     else
         echo "Bash $version not available, skipping"
     fi
@@ -579,7 +579,7 @@ Brief description of what is being tested.
 ### 2. Test Report Template
 
 ```markdown
-# Test Report: SENTINEL v[VERSION]
+# Test Report: VANTAGE v[VERSION]
 
 ## Summary
 - **Date**: YYYY-MM-DD

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# SENTINEL Installer - Main Entry Point
+# VANTAGE Installer - Main Entry Point
 
 # Source the initialization script
 source "$(dirname "${BASH_SOURCE[0]}")/lib/init.sh"
@@ -18,27 +18,27 @@ for arg in "$@"; do
             INTERACTIVE=0
             ;;
         --headless)
-            export SENTINEL_HEADLESS=1
-            export SENTINEL_SKIP_BLESH=1
-            export SENTINEL_SKIP_WAVE=1
+            export VANTAGE_HEADLESS=1
+            export VANTAGE_SKIP_BLESH=1
+            export VANTAGE_SKIP_WAVE=1
             ;;
     esac
 done
 
 # Detect installation pathway
-INSTALL_PATHWAY="${SENTINEL_INSTALL_PATHWAY:-bash}"
+INSTALL_PATHWAY="${VANTAGE_INSTALL_PATHWAY:-bash}"
 
 # Check for kitty pathway flag
 if [[ " $@ " =~ " --kitty-primary " ]] || [[ "${INSTALL_PATHWAY}" == "kitty" ]]; then
-    export SENTINEL_KITTY_PRIMARY_CLI=1
-    export SENTINEL_SKIP_BLESH=1
-    export SENTINEL_SKIP_WAVE=1
+    export VANTAGE_KITTY_PRIMARY_CLI=1
+    export VANTAGE_SKIP_BLESH=1
+    export VANTAGE_SKIP_WAVE=1
     INSTALL_PATHWAY="kitty"
     log "Selected installation pathway: Kitty Primary CLI"
-elif [[ $INTERACTIVE -eq 1 ]] && [[ "${SENTINEL_HEADLESS:-0}" != "1" ]]; then
+elif [[ $INTERACTIVE -eq 1 ]] && [[ "${VANTAGE_HEADLESS:-0}" != "1" ]]; then
     # Interactive mode: ask user which pathway
     echo ""
-    echo "SENTINEL Installation Pathway Selection"
+    echo "VANTAGE Installation Pathway Selection"
     echo "========================================"
     echo "1. Bash (default) - Traditional bash-based installation"
     echo "2. Kitty Primary CLI - GPU-accelerated terminal as primary CLI"
@@ -47,9 +47,9 @@ elif [[ $INTERACTIVE -eq 1 ]] && [[ "${SENTINEL_HEADLESS:-0}" != "1" ]]; then
     
     case "$pathway_choice" in
         2|kitty|Kitty)
-            export SENTINEL_KITTY_PRIMARY_CLI=1
-            export SENTINEL_SKIP_BLESH=1
-            export SENTINEL_SKIP_WAVE=1
+            export VANTAGE_KITTY_PRIMARY_CLI=1
+            export VANTAGE_SKIP_BLESH=1
+            export VANTAGE_SKIP_WAVE=1
             INSTALL_PATHWAY="kitty"
             log "User selected: Kitty Primary CLI pathway"
             ;;

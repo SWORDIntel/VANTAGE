@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# SENTINEL Installer - Core Installation
+# VANTAGE Installer - Core Installation
 
 # Prompt for custom user environment
 prompt_custom_env
@@ -8,14 +8,14 @@ prompt_custom_env
 setup_directories
 
 # Setup Wave Terminal only if not in headless mode
-if [[ "${SENTINEL_SKIP_WAVE:-0}" != "1" ]]; then
+if [[ "${VANTAGE_SKIP_WAVE:-0}" != "1" ]]; then
   setup_wave_terminal
 else
   log "Skipping Wave Terminal configuration (headless mode)"
 fi
 
 # Install BLE.sh only if not in headless mode
-if [[ "${SENTINEL_SKIP_BLESH:-0}" != "1" ]]; then
+if [[ "${VANTAGE_SKIP_BLESH:-0}" != "1" ]]; then
   if ! is_done "BLESH_INSTALLED"; then
     if [[ -f "${BLESH_DIR}/ble.sh" ]]; then
       ok "BLE.sh already present – skipping clone"

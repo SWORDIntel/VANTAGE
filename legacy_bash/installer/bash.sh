@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# SENTINEL Installer - Bash Functions
+# VANTAGE Installer - Bash Functions
 
 ensure_local_bin_in_path() {
     step "Ensuring ~/.local/bin is in PATH"
@@ -28,7 +28,7 @@ ensure_local_bin_in_path() {
 
 patch_bashrc() {
   local rc="$1"
-  local sentinel_bashrc="${PROJECT_ROOT}/bashrc"
+  local vantage_bashrc="${PROJECT_ROOT}/bashrc"
 
   # Check if .bashrc is owned by root or not writable
   if [[ -e "$rc" && ! -w "$rc" ]]; then
@@ -36,13 +36,13 @@ patch_bashrc() {
     step "Creating a new bashrc file and requesting to source it from your existing .bashrc"
 
     # Create a separate user bashrc file
-    local user_bashrc="${HOME}/.bashrc.sentinel"
+    local user_bashrc="${HOME}/.bashrc.vantage"
 
-    # Copy SENTINEL bashrc to user_bashrc if available
-    if [[ -f "$sentinel_bashrc" ]]; then
-      safe_cp "$sentinel_bashrc" "$user_bashrc"
+    # Copy VANTAGE bashrc to user_bashrc if available
+    if [[ -f "$vantage_bashrc" ]]; then
+      safe_cp "$vantage_bashrc" "$user_bashrc"
       chmod 644 "$user_bashrc"
-      ok "SENTINEL bashrc installed as $user_bashrc"
+      ok "VANTAGE bashrc installed as $user_bashrc"
 
       # Prompt to add sourcing line to original .bashrc via sudo
       if [[ $INTERACTIVE -eq 1 ]]; then
@@ -55,7 +55,7 @@ patch_bashrc() {
       if [[ "$confirm" =~ ^[Yy]([Ee][Ss])?$ ]]; then
         # Use sudo to modify the root-owned .bashrc
         sudo bash -c "echo '' >> $rc"
-        sudo bash -c "echo '# SENTINEL Framework Integration' >> $rc"
+        sudo bash -c "echo '# VANTAGE Framework Integration' >> $rc"
         sudo bash -c "echo \"if [[ -f \\\"${user_bashrc}\\\" ]]; then\" >> $rc"
         sudo bash -c "echo \"    source \\\"${user_bashrc}\\\"\" >> $rc"
         sudo bash -c "echo 'fi' >> $rc"
@@ -63,7 +63,7 @@ patch_bashrc() {
       else
         echo "Please manually add the following lines to your $rc:"
         echo ""
-        echo "# SENTINEL Framework Integration"
+        echo "# VANTAGE Framework Integration"
         echo "if [[ -f \"${user_bashrc}\" ]]; then"
         echo "    source \"${user_bashrc}\""
         echo "fi"
@@ -74,7 +74,7 @@ patch_bashrc() {
       if ! grep -q "source.*bashrc.postcustom" "$user_bashrc"; then
         {
           echo ''
-          echo '# SENTINEL Extensions'
+          echo '# VANTAGE Extensions'
           echo "if [[ -f \"\${HOME}/bashrc.postcustom\" ]]; then"
           echo "    source \"\${HOME}/bashrc.postcustom\""
           echo 'fi'
@@ -84,52 +84,52 @@ patch_bashrc() {
 
       return 0
     else
-      fail "SENTINEL bashrc not found at $sentinel_bashrc"
+      fail "VANTAGE bashrc not found at $vantage_bashrc"
       return 1
     fi
   fi
 
   # Normal flow for writable .bashrc
   if [[ -f "$rc" ]]; then
-    safe_cp "$rc" "$rc.sentinel.bak.$(date +%s)"
-    ok "Backed up $rc to $rc.sentinel.bak.$(date +%s)"
+    safe_cp "$rc" "$rc.vantage.bak.$(date +%s)"
+    ok "Backed up $rc to $rc.vantage.bak.$(date +%s)"
   fi
-  step "Prompting for full replacement of $rc with SENTINEL bashrc"
+  step "Prompting for full replacement of $rc with VANTAGE bashrc"
   if [[ $INTERACTIVE -eq 1 ]]; then
-    read -r -t 30 -p "Replace your $rc with SENTINEL's secure version? [y/N]: " confirm || confirm="n"
+    read -r -t 30 -p "Replace your $rc with VANTAGE's secure version? [y/N]: " confirm || confirm="n"
   else
     confirm="n"
     log "Non-interactive mode: using default answer '$confirm'"
   fi
   if [[ "$confirm" =~ ^[Yy]([Ee][Ss])?$ ]]; then
-    if [[ -f "$sentinel_bashrc" ]]; then
-      safe_cp "$sentinel_bashrc" "$rc"
+    if [[ -f "$vantage_bashrc" ]]; then
+      safe_cp "$vantage_bashrc" "$rc"
       {
         echo ''
-        echo '# SENTINEL Framework Root'
-        echo "export SENTINEL_ROOT=\"${PROJECT_ROOT}\""
+        echo '# VANTAGE Framework Root'
+        echo "export VANTAGE_ROOT=\"${PROJECT_ROOT}\""
       } >> "$rc"
       chmod 644 "$rc"
-      ok "SENTINEL bashrc installed as $rc"
-      log "Replaced $rc with SENTINEL bashrc at $(date)"
+      ok "VANTAGE bashrc installed as $rc"
+      log "Replaced $rc with VANTAGE bashrc at $(date)"
     else
-      warn "SENTINEL bashrc not found at $sentinel_bashrc; skipping replacement."
+      warn "VANTAGE bashrc not found at $vantage_bashrc; skipping replacement."
     fi
   else
-    step "Patching existing bashrc to load SENTINEL"
+    step "Patching existing bashrc to load VANTAGE"
     if ! grep -q "source.*waveterm.rc" "$rc"; then
       {
         echo ''
-        echo '# SENTINEL Framework Integration'
-        echo "export SENTINEL_ROOT=\"${PROJECT_ROOT}\""
+        echo '# VANTAGE Framework Integration'
+        echo "export VANTAGE_ROOT=\"${PROJECT_ROOT}\""
         echo "if [[ -f \"\${HOME}/waveterm.rc\" ]]; then"
         echo "    # Safe loading mechanism that won't crash the terminal"
         echo "    source \"\${HOME}/waveterm.rc\" 2>/dev/null || echo \"[bashrc] Warning: Failed to load waveterm.rc\" >&2"
         echo 'fi'
       } >> "$rc"
-      ok "Patched $rc to load SENTINEL"
+      ok "Patched $rc to load VANTAGE"
     else
-      ok "SENTINEL already integrated in $rc"
+      ok "VANTAGE already integrated in $rc"
     fi
   fi
 }
@@ -138,7 +138,7 @@ copy_postcustom_bootstrap() {
     if ! is_done "POSTCUSTOM_READY"; then
       step "Deploying bashrc.postcustom and waveterm.rc"
       install -m 644 "${PROJECT_ROOT}/bashrc.postcustom" "${HOME}/bashrc.postcustom"
-      install -m 644 "${PROJECT_ROOT}/waveterm.rc" "${HOME}/waveterm.rc"
+      install -m 644 "${PROJECT_ROOT}/legacy_bash/waveterm.rc" "${HOME}/waveterm.rc"
 
 
       ok "bashrc.postcustom and waveterm.rc in place with VENV_AUTO enabled"
@@ -237,44 +237,44 @@ enable_fzf_module() {
     POSTCUSTOM_FILE="${HOME}/bashrc.postcustom"
 
     if [[ -n "$FZF_BIN" ]]; then
-      step "fzf detected at $FZF_BIN; enabling SENTINEL FZF module"
-      if ! grep -q '^export SENTINEL_FZF_ENABLED=1' "$POSTCUSTOM_FILE"; then
-        echo 'export SENTINEL_FZF_ENABLED=1  # Enable FZF integration' >> "$POSTCUSTOM_FILE"
-        ok "Enabled SENTINEL FZF module in $POSTCUSTOM_FILE"
+      step "fzf detected at $FZF_BIN; enabling VANTAGE FZF module"
+      if ! grep -q '^export VANTAGE_FZF_ENABLED=1' "$POSTCUSTOM_FILE"; then
+        echo 'export VANTAGE_FZF_ENABLED=1  # Enable FZF integration' >> "$POSTCUSTOM_FILE"
+        ok "Enabled VANTAGE FZF module in $POSTCUSTOM_FILE"
       else
-        ok "SENTINEL FZF module already enabled"
+        ok "VANTAGE FZF module already enabled"
       fi
     else
-      warn "fzf not found; SENTINEL FZF module not enabled. Install fzf and set export SENTINEL_FZF_ENABLED=1 in $POSTCUSTOM_FILE to enable."
+      warn "fzf not found; VANTAGE FZF module not enabled. Install fzf and set export VANTAGE_FZF_ENABLED=1 in $POSTCUSTOM_FILE to enable."
     fi
 }
 
-_sentinel_kitty_gui_available() {
+_vantage_kitty_gui_available() {
   # kitty must exist AND a GUI session must be available
   command -v kitty >/dev/null 2>&1 || return 1
   [[ -n "${WAYLAND_DISPLAY:-}" || -n "${DISPLAY:-}" ]] || return 1
   return 0
 }
 
-_sentinel_write_kitty_conf_block() {
+_vantage_write_kitty_conf_block() {
   local kitty_conf="$1"
   local tmp
-  tmp="$(mktemp "${HOME}/.kitty.conf.sentinel.XXXXXX")"
+  tmp="$(mktemp "${HOME}/.kitty.conf.vantage.XXXXXX")"
 
   # Preserve existing file, but replace our managed block if present.
   if [[ -f "$kitty_conf" ]]; then
     awk '
       BEGIN {inblk=0}
-      /^# SENTINEL KITTY BEGIN$/ {inblk=1; next}
-      /^# SENTINEL KITTY END$/ {inblk=0; next}
+      /^# VANTAGE KITTY BEGIN$/ {inblk=1; next}
+      /^# VANTAGE KITTY END$/ {inblk=0; next}
       inblk==0 {print}
     ' "$kitty_conf" > "$tmp"
   fi
 
   {
     echo ""
-    echo "# SENTINEL KITTY BEGIN"
-    echo "# Managed by SENTINEL installer. Safe to delete to disable."
+    echo "# VANTAGE KITTY BEGIN"
+    echo "# Managed by VANTAGE installer. Safe to delete to disable."
     echo "# Conservative settings focused on TUI responsiveness."
     echo "update_check_interval 0"
     echo "enable_audio_bell no"
@@ -283,25 +283,25 @@ _sentinel_write_kitty_conf_block() {
     echo "input_delay 1"
     echo "confirm_os_window_close 0"
     echo "allow_remote_control no"
-    echo "# SENTINEL KITTY END"
+    echo "# VANTAGE KITTY END"
   } >> "$tmp"
 
   install -m 600 "$tmp" "$kitty_conf"
   rm -f "$tmp" 2>/dev/null || true
 }
 
-_sentinel_install_sentinel_tty_launcher() {
-  local launcher="${HOME}/.local/bin/sentinel-tty"
+_vantage_install_vantage_tty_launcher() {
+  local launcher="${HOME}/.local/bin/vantage-tty"
   local tmp
-  tmp="$(mktemp "${HOME}/.sentinel-tty.XXXXXX")"
+  tmp="$(mktemp "${HOME}/.vantage-tty.XXXXXX")"
 
   cat > "$tmp" <<'EOF'
 #!/usr/bin/env bash
 set -euo pipefail
 
-SENTINEL_ROOT="${SENTINEL_ROOT:-$HOME/.sentinel}"
+VANTAGE_ROOT="${VANTAGE_ROOT:-$HOME/.vantage}"
 
-python_bin="${SENTINEL_PYTHON:-}"
+python_bin="${VANTAGE_PYTHON:-}"
 if [[ -z "${python_bin}" || ! -x "${python_bin}" ]]; then
   if [[ -x "${HOME}/venv/bin/python3" ]]; then
     python_bin="${HOME}/venv/bin/python3"
@@ -310,10 +310,10 @@ if [[ -z "${python_bin}" || ! -x "${python_bin}" ]]; then
   fi
 fi
 
-entry="${SENTINEL_ROOT}/sentinel_toggles_tui.py"
+entry="${VANTAGE_ROOT}/contrib/vantage_toggles_tui.py"
 if [[ ! -f "${entry}" ]]; then
-  echo "SENTINEL entrypoint not found: ${entry}" >&2
-  echo "Set SENTINEL_ROOT or install SENTINEL to use sentinel-tty." >&2
+  echo "VANTAGE entrypoint not found: ${entry}" >&2
+  echo "Set VANTAGE_ROOT or install VANTAGE to use vantage-tty." >&2
   exit 127
 fi
 
@@ -348,7 +348,7 @@ setup_kitty_integration() {
   fi
 
   # Skip automatically in headless / non-interactive installs
-  if [[ "${SENTINEL_HEADLESS:-0}" == "1" ]]; then
+  if [[ "${VANTAGE_HEADLESS:-0}" == "1" ]]; then
     log "Skipping Kitty integration (headless mode)"
     mark_done "KITTY_INTEGRATION_DONE"
     return 0
@@ -368,7 +368,7 @@ setup_kitty_integration() {
     return 0
   fi
 
-  if ! _sentinel_kitty_gui_available; then
+  if ! _vantage_kitty_gui_available; then
     warn "Kitty integration requested, but kitty/GUI session not detected. Continuing without enabling."
     warn "Requirement: kitty must be in PATH and DISPLAY or WAYLAND_DISPLAY must be set."
     mark_done "KITTY_INTEGRATION_DONE"
@@ -381,13 +381,13 @@ setup_kitty_integration() {
 
   step "Configuring Kitty for low-latency TUI"
   safe_mkdir "$kitty_dir" 700
-  _sentinel_write_kitty_conf_block "$kitty_conf"
+  _vantage_write_kitty_conf_block "$kitty_conf"
   ok "Kitty config updated: $kitty_conf"
 
-  step "Installing sentinel-tty launcher"
+  step "Installing vantage-tty launcher"
   safe_mkdir "${HOME}/.local/bin" 700
-  _sentinel_install_sentinel_tty_launcher
-  ok "Launcher installed: ${HOME}/.local/bin/sentinel-tty"
+  _vantage_install_vantage_tty_launcher
+  ok "Launcher installed: ${HOME}/.local/bin/vantage-tty"
 
   mark_done "KITTY_INTEGRATION_DONE"
   ok "Kitty integration enabled (optional)"
@@ -395,7 +395,7 @@ setup_kitty_integration() {
 
 secure_permissions() {
     if ! is_done "PERMISSIONS_SECURED"; then
-      step "Securing permissions on all SENTINEL files and modules"
+      step "Securing permissions on all VANTAGE files and modules"
 
       # Secure all directories
       find "${HOME}/bash_modules.d" -type d -exec chmod 700 {} \;
@@ -416,10 +416,10 @@ secure_permissions() {
         warn "Cannot change permissions on $HOME/.bashrc (not writable)"
       fi
 
-      # Secure .bashrc.sentinel if it exists instead
-      if [[ -f "$HOME/.bashrc.sentinel" ]]; then
-        chmod 644 "$HOME/.bashrc.sentinel"
-        ok "Secured permissions on $HOME/.bashrc.sentinel"
+      # Secure .bashrc.vantage if it exists instead
+      if [[ -f "$HOME/.bashrc.vantage" ]]; then
+        chmod 644 "$HOME/.bashrc.vantage"
+        ok "Secured permissions on $HOME/.bashrc.vantage"
       fi
 
       # Secure .blerc if present
@@ -483,8 +483,8 @@ run_verification_checks() {
 
     # Check that Python venv exists and has basic packages
     VENV_PYTHON="${HOME}/venv/bin/python3"
-    if [[ "${SENTINEL_SKIP_PYTHON_VENV:-0}" == "1" ]]; then
-      log "Skipping Python venv verification (SENTINEL_SKIP_PYTHON_VENV=1)"
+    if [[ "${VANTAGE_SKIP_PYTHON_VENV:-0}" == "1" ]]; then
+      log "Skipping Python venv verification (VANTAGE_SKIP_PYTHON_VENV=1)"
     elif [[ ! -f "$VENV_PYTHON" ]]; then
       warn "Python virtual environment not properly installed"
     else
@@ -529,7 +529,7 @@ final_summary() {
     # Add specific guidance for Debian login shells
     echo "Important for Debian/Ubuntu users:"
     echo "• If using login shells (common with GUI terminals), ensure your ~/.profile or ~/.bash_profile"
-    echo "  sources ~/.bashrc so SENTINEL loads correctly. Add these lines if missing:"
+    echo "  sources ~/.bashrc so VANTAGE loads correctly. Add these lines if missing:"
     echo "    if [ -f \"$HOME/.bashrc\" ]; then"
     echo "        . \"$HOME/.bashrc\""
     echo "    fi"
@@ -543,9 +543,9 @@ final_summary() {
     echo
 
     # Run post-install check if present
-    POSTINSTALL_CHECK_SCRIPT="${PROJECT_ROOT}/sentinel_postinstall_check.sh"
+    POSTINSTALL_CHECK_SCRIPT="${PROJECT_ROOT}/scripts/vantage_postinstall_check.sh"
     if [[ -f "$POSTINSTALL_CHECK_SCRIPT" ]]; then
-      step "Running SENTINEL post-installation verification"
+      step "Running VANTAGE post-installation verification"
       bash "$POSTINSTALL_CHECK_SCRIPT"
       ok "Post-installation verification complete. See summary above."
     else
@@ -553,9 +553,9 @@ final_summary() {
     fi
 
     # Create a summary file for referencem
-    SUMMARY_FILE="${HOME}/SENTINEL_INSTALL_SUMMARY.txt"
+    SUMMARY_FILE="${HOME}/VANTAGE_INSTALL_SUMMARY.txt"
     {
-      echo "SENTINEL Installation Summary"
+      echo "VANTAGE Installation Summary"
       echo "============================="
       echo "Date: $(date)"
       echo "Version: ${INSTALLER_VERSION}"
@@ -569,9 +569,9 @@ final_summary() {
       echo "- Python venv: ${HOME}/venv"
       echo "- BLE.sh: ${BLESH_DIR}"
       echo ""
-      echo "To activate SENTINEL in new shells, one of these should be present:"
+      echo "To activate VANTAGE in new shells, one of these should be present:"
       echo "1. ${HOME}/.bashrc sources ${HOME}/bashrc.postcustom"
-      echo "2. ${HOME}/.bashrc.sentinel is sourced from ${HOME}/.bashrc"
+      echo "2. ${HOME}/.bashrc.vantage is sourced from ${HOME}/.bashrc"
       echo ""
       echo "For support, check the logs at ${LOG_DIR}/install.log"
     } > "$SUMMARY_FILE"

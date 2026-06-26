@@ -46,7 +46,7 @@ The module uses `command_not_found_handle` to intercept commands that don't exis
 The module is enabled by default. To disable it:
 
 ```bash
-export SENTINEL_AUTO_CASE_CORRECTION_ENABLED=0
+export VANTAGE_AUTO_CASE_CORRECTION_ENABLED=0
 ```
 
 Then reload your shell configuration:
@@ -61,7 +61,7 @@ source ~/kitty.rc  # for kitty pathway
 To see when corrections are happening:
 
 ```bash
-export SENTINEL_DEBUG=1
+export VANTAGE_DEBUG=1
 source ~/.bashrc
 ```
 
@@ -104,13 +104,13 @@ The module is lightweight:
 
 1. Check if module is enabled:
    ```bash
-   echo $SENTINEL_AUTO_CASE_CORRECTION_ENABLED
+   echo $VANTAGE_AUTO_CASE_CORRECTION_ENABLED
    ```
    Should output `1`
 
 2. Check if module is loaded:
    ```bash
-   echo $_SENTINEL_AUTO_CASE_CORRECTION_LOADED
+   echo $_VANTAGE_AUTO_CASE_CORRECTION_LOADED
    ```
    Should output `1`
 
@@ -137,7 +137,7 @@ alias GIT='GIT'  # Preserves uppercase GIT
 
 Or disable the module temporarily:
 ```bash
-SENTINEL_AUTO_CASE_CORRECTION_ENABLED=0 bash
+VANTAGE_AUTO_CASE_CORRECTION_ENABLED=0 bash
 ```
 
 ## Examples in Action

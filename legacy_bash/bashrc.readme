@@ -180,7 +180,7 @@ Modules are stored in `~/.bash_modules.d/` as shell scripts.
 
 ## Help and Documentation
 
-Type `help-sentinel` to see a list of available commands and features.
+Type `help-vantage` to see a list of available commands and features.
 
 ## Compatibility
 

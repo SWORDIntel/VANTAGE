@@ -1,8 +1,8 @@
-# SENTINEL Module Metadata Caching System
+# VANTAGE Module Metadata Caching System
 
 ## Overview
 
-The SENTINEL module caching system eliminates redundant file parsing by storing module metadata in a persistent cache. This significantly reduces startup time, especially for systems with many modules.
+The VANTAGE module caching system eliminates redundant file parsing by storing module metadata in a persistent cache. This significantly reduces startup time, especially for systems with many modules.
 
 ## Cache Architecture
 
@@ -10,13 +10,13 @@ The SENTINEL module caching system eliminates redundant file parsing by storing 
 
 ```
 Memory Cache (Fastest)
-    ├── SENTINEL_MODULE_METADATA_CACHE
-    ├── SENTINEL_MODULE_DEPS_GRAPH
-    └── SENTINEL_MODULE_REVERSE_DEPS
+    ├── VANTAGE_MODULE_METADATA_CACHE
+    ├── VANTAGE_MODULE_DEPS_GRAPH
+    └── VANTAGE_MODULE_REVERSE_DEPS
            │
            ▼
 File System Cache (Persistent)
-    └── ~/.cache/sentinel/modules/
+    └── ~/.cache/vantage/modules/
         ├── module1.meta
         ├── module2.meta
         └── ...
@@ -108,13 +108,13 @@ Testing with 30 modules:
 
 ```bash
 # Cache directory location
-export SENTINEL_MODULE_CACHE_DIR="$HOME/.cache/sentinel/modules"
+export VANTAGE_MODULE_CACHE_DIR="$HOME/.cache/vantage/modules"
 
 # Enable/disable caching
-export SENTINEL_MODULE_CACHING_ENABLED=1
+export VANTAGE_MODULE_CACHING_ENABLED=1
 
 # Cache debugging
-export SENTINEL_DEBUG_CACHE=1
+export VANTAGE_DEBUG_CACHE=1
 ```
 
 ### Cache Management Commands
@@ -124,7 +124,7 @@ export SENTINEL_DEBUG_CACHE=1
 clear_module_cache
 
 # Invalidate specific module cache
-invalidate_module_cache sentinel_ml
+invalidate_module_cache vantage_ml
 
 # Show cache statistics
 modules-cache-stats
@@ -132,14 +132,14 @@ modules-cache-stats
 
 ## Cache File Format
 
-Example cache file (`~/.cache/sentinel/modules/logging.meta`):
+Example cache file (`~/.cache/vantage/modules/logging.meta`):
 
 ```
 3a7b9c8d2e1f4a5b6c7d8e9f0a1b2c3d4e5f6789abcdef0123456789abcdef0
-DESC:System-wide logging functionality for SENTINEL
+DESC:System-wide logging functionality for VANTAGE
 VER:2.0.0
 DEPS:
-FILE:/opt/github/SENTINEL/bash_modules.d/logging.module
+FILE:/opt/github/VANTAGE/bash_modules.d/logging.module
 ```
 
 ## Advanced Features
@@ -174,7 +174,7 @@ For shared systems, cache can be centralized:
 
 ```bash
 # Use shared cache directory
-export SENTINEL_MODULE_CACHE_DIR="/var/cache/sentinel/modules"
+export VANTAGE_MODULE_CACHE_DIR="/var/cache/vantage/modules"
 ```
 
 ## Cache Integrity
@@ -198,10 +198,10 @@ export SENTINEL_MODULE_CACHE_DIR="/var/cache/sentinel/modules"
 1. **Cache not improving performance**
    ```bash
    # Check if caching is enabled
-   echo $SENTINEL_MODULE_CACHING_ENABLED
+   echo $VANTAGE_MODULE_CACHING_ENABLED
    
    # Verify cache directory exists and is writable
-   ls -la $SENTINEL_MODULE_CACHE_DIR
+   ls -la $VANTAGE_MODULE_CACHE_DIR
    ```
 
 2. **Stale cache entries**
@@ -214,8 +214,8 @@ export SENTINEL_MODULE_CACHE_DIR="/var/cache/sentinel/modules"
 3. **Cache permission errors**
    ```bash
    # Fix cache directory permissions
-   chmod 755 $SENTINEL_MODULE_CACHE_DIR
-   chmod 644 $SENTINEL_MODULE_CACHE_DIR/*.meta
+   chmod 755 $VANTAGE_MODULE_CACHE_DIR
+   chmod 644 $VANTAGE_MODULE_CACHE_DIR/*.meta
    ```
 
 ## Best Practices
@@ -226,7 +226,7 @@ export SENTINEL_MODULE_CACHE_DIR="/var/cache/sentinel/modules"
 
 2. **Development Workflow**
    - Use `invalidate_module_cache` when modifying modules
-   - Enable `SENTINEL_DEBUG_CACHE` during development
+   - Enable `VANTAGE_DEBUG_CACHE` during development
 
 3. **Production Deployment**
    - Pre-warm cache during installation
@@ -240,19 +240,19 @@ Monitor cache effectiveness:
 
 ```bash
 # After module loading
-echo "Cache hits: ${#SENTINEL_MODULE_CACHE_HITS[@]}"
-echo "Total modules: ${#SENTINEL_MODULE_METADATA_CACHE[@]}"
-echo "Hit rate: $((${#SENTINEL_MODULE_CACHE_HITS[@]} * 100 / ${#SENTINEL_MODULE_METADATA_CACHE[@]}))%"
+echo "Cache hits: ${#VANTAGE_MODULE_CACHE_HITS[@]}"
+echo "Total modules: ${#VANTAGE_MODULE_METADATA_CACHE[@]}"
+echo "Hit rate: $((${#VANTAGE_MODULE_CACHE_HITS[@]} * 100 / ${#VANTAGE_MODULE_METADATA_CACHE[@]}))%"
 ```
 
 ### Cache Size Monitoring
 
 ```bash
 # Check cache disk usage
-du -sh $SENTINEL_MODULE_CACHE_DIR
+du -sh $VANTAGE_MODULE_CACHE_DIR
 
 # Count cached modules
-ls -1 $SENTINEL_MODULE_CACHE_DIR/*.meta | wc -l
+ls -1 $VANTAGE_MODULE_CACHE_DIR/*.meta | wc -l
 ```
 
 ## Future Enhancements

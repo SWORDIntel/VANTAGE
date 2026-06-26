@@ -1,6 +1,6 @@
-# SENTINEL Auto-Sort Scripts
+# VANTAGE Auto-Sort Scripts
 
-Two Python scripts for automatically organizing files in the SENTINEL repository's gitstar/readmes structure.
+Two Python scripts for automatically organizing files in the VANTAGE repository's gitstar/readmes structure.
 
 ## 1. `auto_sort.py`
 

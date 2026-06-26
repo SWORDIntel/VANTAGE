@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# SENTINEL Installer - Directory Setup Functions
+# VANTAGE Installer - Directory Setup Functions
 
 setup_directories() {
     if is_done "DIRS_CREATED"; then

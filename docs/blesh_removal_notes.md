@@ -1,14 +1,14 @@
 # BLE.sh Removal Notes
 
 ## Summary
-BLE.sh (Bash Line Editor) is being phased out from SENTINEL. This document tracks the changes made to remove BLE.sh integration warnings.
+BLE.sh (Bash Line Editor) is being phased out from VANTAGE. This document tracks the changes made to remove BLE.sh integration warnings.
 
 ## Changes Made (2025-07-11)
 
 ### 1. Updated fzf.module
 The FZF module was showing warnings about BLE.sh not being loaded. The following changes were made:
 
-- **BLE.sh Check**: Modified to only check for BLE.sh when `SENTINEL_VERBOSE=1` is set
+- **BLE.sh Check**: Modified to only check for BLE.sh when `VANTAGE_VERBOSE=1` is set
 - **Warning Removal**: Removed the "BLE.sh not loaded" warning that appeared during normal startup
 - **FZF Integration**: Updated to only attempt BLE.sh FZF integration if BLE.sh is actually loaded
 - **Logging**: Removed BLE.sh version from FZF module logging
@@ -19,7 +19,7 @@ The FZF module was showing warnings about BLE.sh not being loaded. The following
 - BLE.sh functionality can still be accessed if verbose mode is enabled
 
 ### 3. Files Modified
-- `/opt/github/SENTINEL/bash_modules.d/fzf.module`
+- `/opt/github/VANTAGE/bash_modules.d/fzf.module`
 
 ### 4. Related Components
 - BLE.sh is still installed at `~/.local/share/blesh/`

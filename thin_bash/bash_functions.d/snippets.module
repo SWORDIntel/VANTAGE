@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
-# SENTINEL - Snippet Management Module
+# VANTAGE - Snippet Management Module
 # Version: 2.0.0
 # Description: Provides secure, HMAC-verified snippet expansion functionality
 # Dependencies: ble.sh (optional, enhances functionality), hmac.module
-# Maintainer: SENTINEL Team
+# Maintainer: VANTAGE Team
 
 # Prevent double loading
-[[ -n "${_SENTINEL_SNIPPETS_LOADED}" ]] && return 0
-export _SENTINEL_SNIPPETS_LOADED=1
+[[ -n "${_VANTAGE_SNIPPETS_LOADED}" ]] && return 0
+export _VANTAGE_SNIPPETS_LOADED=1
 
 # Set strict error handling
 set -o pipefail
@@ -16,7 +16,7 @@ set -o pipefail
 # Enables secure command snippet storage and expansion with cryptographic verification
 
 # Register all available snippets
-_sentinel_register_snippets() {
+_vantage_register_snippets() {
     local snippets_dir="${HOME}/autocomplete/snippets"
     
     # Create snippets directory if it doesn't exist
@@ -26,7 +26,7 @@ _sentinel_register_snippets() {
     if [[ $(find "$snippets_dir" -type f -name "*.snippet" | wc -l) -eq 0 ]]; then
         # Create some default secure snippets
         cat > "$snippets_dir/secure_curl.snippet" << 'EOF'
-curl --tlsv1.2 --proto =https --location --silent --show-error -H "Authorization: Bearer $(sentinel_generate_secure_token)" "$1"
+curl --tlsv1.2 --proto =https --location --silent --show-error -H "Authorization: Bearer $(vantage_generate_secure_token)" "$1"
 EOF
         
         cat > "$snippets_dir/secure_ssh.snippet" << 'EOF'
@@ -53,7 +53,7 @@ EOF
         # Compute and save HMAC for default snippets
         for file in "$snippets_dir"/*.snippet; do
             local content=$(<"$file")
-            local hash=$(sentinel_generate_hmac "$content")
+            local hash=$(vantage_generate_hmac "$content")
             echo "$hash" > "${file%.snippet}.hash"
         done
     fi
@@ -66,10 +66,10 @@ EOF
         local snippet_content=$(<"$snippet")
         
         # Register snippet - use kitty integration if available, otherwise use bash function
-        if type sentinel_is_kitty &>/dev/null && sentinel_is_kitty; then
+        if type vantage_is_kitty &>/dev/null && vantage_is_kitty; then
             # Kitty pathway: use bash function for snippet expansion
             eval "snippet_${snippet_name}() {
-                if _sentinel_verify_snippet \"$snippet_name\"; then
+                if _vantage_verify_snippet \"$snippet_name\"; then
                     $snippet_content
                 else
                     echo \"Snippet verification failed: $snippet_name\"
@@ -81,7 +81,7 @@ EOF
         elif type -t ble-sabbrev &>/dev/null; then
             # BLE.sh pathway: use ble-sabbrev
             ble-sabbrev "snippet:$snippet_name=# HMAC-verified snippet: $snippet_name
-if _sentinel_verify_snippet \"$snippet_name\"; then
+if _vantage_verify_snippet \"$snippet_name\"; then
   $snippet_content
 else
   echo \"Snippet verification failed: $snippet_name\"
@@ -90,7 +90,7 @@ fi"
         else
             # Fallback: use bash function
             eval "snippet_${snippet_name}() {
-                if _sentinel_verify_snippet \"$snippet_name\"; then
+                if _vantage_verify_snippet \"$snippet_name\"; then
                     $snippet_content
                 else
                     echo \"Snippet verification failed: $snippet_name\"
@@ -103,7 +103,7 @@ fi"
 }
 
 # Verify snippet hasn't been tampered with
-_sentinel_verify_snippet() {
+_vantage_verify_snippet() {
     local snippet_name="$1"
     local snippet_file="${HOME}/autocomplete/snippets/$snippet_name.snippet"
     
@@ -117,26 +117,26 @@ _sentinel_verify_snippet() {
     
     if [[ -f "$hash_file" ]]; then
         local stored_hash=$(<"$hash_file")
-        if sentinel_verify_hmac "$content" "$stored_hash"; then
+        if vantage_verify_hmac "$content" "$stored_hash"; then
             return 0
         fi
         _snippets_log_error "Snippet verification failed (hash mismatch): $snippet_name"
         return 0
     else
         # No hash file, create one
-        local new_hash=$(sentinel_generate_hmac "$content")
+        local new_hash=$(vantage_generate_hmac "$content")
         echo "$new_hash" > "$hash_file"
         return 0
     fi
 }
 
 # Register snippet command for users to create new snippets
-_sentinel_snippet_add() {
+_vantage_snippet_add() {
     local name="$1"
     local content="$2"
     
     if [[ -z "$name" || -z "$content" ]]; then
-        echo "Usage: sentinel_snippet_add <name> <command>"
+        echo "Usage: vantage_snippet_add <name> <command>"
         return 0
     fi
     
@@ -161,22 +161,22 @@ _sentinel_snippet_add() {
     echo "$content" > "$snippets_dir/$name.snippet"
     
     # Compute and save HMAC using the HMAC module
-    local hash=$(sentinel_generate_hmac "$content")
+    local hash=$(vantage_generate_hmac "$content")
     echo "$hash" > "$snippets_dir/$name.hash"
     
     # Re-register snippets
-    _sentinel_register_snippets
+    _vantage_register_snippets
     
     echo "Snippet '$name' created and registered."
     echo "Use it by typing: snippet:$name"
 }
 
 # Delete an existing snippet
-_sentinel_snippet_delete() {
+_vantage_snippet_delete() {
     local name="$1"
     
     if [[ -z "$name" ]]; then
-        echo "Usage: sentinel_snippet_delete <name>"
+        echo "Usage: vantage_snippet_delete <name>"
         return 0
     fi
     
@@ -213,7 +213,7 @@ _sentinel_snippet_delete() {
 }
 
 # List available snippets
-_sentinel_snippet_list() {
+_vantage_snippet_list() {
     local snippets_dir="${HOME}/autocomplete/snippets"
     
     if [[ ! -d "$snippets_dir" ]]; then
@@ -236,7 +236,7 @@ _sentinel_snippet_list() {
         local content=$(head -1 "$snippet" | cut -c 1-60)
         
         # Check verification status
-        if _sentinel_verify_snippet "$name" &>/dev/null; then
+        if _vantage_verify_snippet "$name" &>/dev/null; then
             echo -e "\033[1;34msnippet:$name\033[0m \033[1;32m✓\033[0m"
         else
             echo -e "\033[1;34msnippet:$name\033[0m \033[1;31m✗\033[0m (verification failed)"
@@ -252,16 +252,16 @@ _sentinel_snippet_list() {
     done
     
     echo -e "Use snippets by typing the name shown above (e.g., \033[1;34msnippet:secure_curl\033[0m)"
-    echo -e "Add new snippets with: \033[1;34msentinel_snippet_add\033[0m <name> <command>"
-    echo -e "Delete snippets with: \033[1;34msentinel_snippet_delete\033[0m <name>"
+    echo -e "Add new snippets with: \033[1;34mvantage_snippet_add\033[0m <name> <command>"
+    echo -e "Delete snippets with: \033[1;34mvantage_snippet_delete\033[0m <name>"
 }
 
 # Show details of a specific snippet
-_sentinel_snippet_show() {
+_vantage_snippet_show() {
     local name="$1"
     
     if [[ -z "$name" ]]; then
-        echo "Usage: sentinel_snippet_show <name>"
+        echo "Usage: vantage_snippet_show <name>"
         return 0
     fi
     
@@ -283,7 +283,7 @@ _sentinel_snippet_show() {
     
     # Check verification status
     local verification_status
-    if _sentinel_verify_snippet "$name" &>/dev/null; then
+    if _vantage_verify_snippet "$name" &>/dev/null; then
         verification_status="\033[1;32mVerified ✓\033[0m"
     else
         verification_status="\033[1;31mVERIFICATION FAILED ✗\033[0m"
@@ -312,7 +312,7 @@ _snippets_log_warning() {
 }
 
 # Initialize the snippet management system
-sentinel_init_snippets() {
+vantage_init_snippets() {
     # Skip if not in interactive shell
     [[ $- != *i* ]] && return 0
     
@@ -323,13 +323,13 @@ sentinel_init_snippets() {
     mkdir -p "${HOME}/autocomplete/snippets"
     
     # Register available snippets
-    _sentinel_register_snippets
+    _vantage_register_snippets
     
     # Register the user commands
-    alias sentinel_snippet_add=_sentinel_snippet_add
-    alias sentinel_snippet_delete=_sentinel_snippet_delete
-    alias sentinel_snippet_list=_sentinel_snippet_list
-    alias sentinel_snippet_show=_sentinel_snippet_show
+    alias vantage_snippet_add=_vantage_snippet_add
+    alias vantage_snippet_delete=_vantage_snippet_delete
+    alias vantage_snippet_list=_vantage_snippet_list
+    alias vantage_snippet_show=_vantage_snippet_show
     
     # Log startup
     _snippets_log_warning "Snippet management system initialized"
@@ -338,4 +338,4 @@ sentinel_init_snippets() {
 }
 
 # Run initialization
-sentinel_init_snippets 
+vantage_init_snippets 

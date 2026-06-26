@@ -1,12 +1,12 @@
 # Kitty Primary CLI Installation Pathway
 
-SENTINEL now supports a dedicated installation pathway that configures **kitty** as the primary terminal CLI. This pathway is optimized for kitty's GPU-accelerated rendering and provides a streamlined experience for users who prefer kitty as their terminal emulator.
+VANTAGE now supports a dedicated installation pathway that configures **kitty** as the primary terminal CLI. This pathway is optimized for kitty's GPU-accelerated rendering and provides a streamlined experience for users who prefer kitty as their terminal emulator.
 
 ## Overview
 
 The Kitty Primary CLI pathway:
 - Configures kitty as the primary terminal interface
-- Optimizes all SENTINEL modules for kitty's GPU acceleration
+- Optimizes all VANTAGE modules for kitty's GPU acceleration
 - Provides kitty-specific integrations and features
 - Skips BLE.sh and Wave Terminal (not needed with kitty)
 - Creates a dedicated `kitty.rc` configuration file
@@ -21,10 +21,10 @@ The Kitty Primary CLI pathway:
 
 ### Option 1: Direct Kitty Pathway Installer
 
-Run the dedicated kitty installer:
+Run the kitty installer pathway:
 
 ```bash
-bash install_kitty.sh
+bash install.sh kitty
 ```
 
 ### Option 2: Main Installer with Pathway Selection
@@ -41,7 +41,7 @@ bash installer/install.sh
 Set the pathway via environment variable:
 
 ```bash
-export SENTINEL_INSTALL_PATHWAY=kitty
+export VANTAGE_INSTALL_PATHWAY=kitty
 bash installer/install.sh
 ```
 
@@ -58,8 +58,8 @@ bash installer/install.sh --kitty-primary
 ### 1. Kitty Configuration (`~/.config/kitty/kitty.conf`)
 
 The installer creates/updates kitty's configuration with:
-- Optimized performance settings for SENTINEL
-- SENTINEL-themed color scheme
+- Optimized performance settings for VANTAGE
+- VANTAGE-themed color scheme
 - Font configuration (JetBrains Mono)
 - Shell integration enabled
 - Low-latency TUI settings
@@ -67,7 +67,7 @@ The installer creates/updates kitty's configuration with:
 ### 2. Kitty RC File (`~/kitty.rc`)
 
 A dedicated configuration file that:
-- Loads all SENTINEL modules optimized for kitty
+- Loads all VANTAGE modules optimized for kitty
 - Sets kitty-specific environment variables
 - Enables GPU acceleration flags
 - Configures module system for kitty
@@ -80,25 +80,25 @@ A startup script that:
 - Loads kitty integration module early
 - Sets window titles dynamically
 
-### 4. Sentinel Kitty Launcher (`~/.local/bin/sentinel-kitty`)
+### 4. Vantage Kitty Launcher (`~/.local/bin/vantage-kitty`)
 
 A launcher script that:
-- Always runs SENTINEL tools in kitty
+- Always runs VANTAGE tools in kitty
 - Handles fallback if kitty is unavailable
 - Provides consistent kitty experience
 
 ### 5. Kitty Integration Module (`bash_modules.d/kitty_integration.module`)
 
 A module that provides:
-- `sentinel_is_kitty()` - Detect if running in kitty
-- `sentinel_kitty_available()` - Check if kitty is available
-- `sentinel_kitty_set_title()` - Set window title
-- `sentinel_kitty_set_tab_title()` - Set tab title
-- `sentinel_kitty_enable_features()` - Enable kitty features
+- `vantage_is_kitty()` - Detect if running in kitty
+- `vantage_kitty_available()` - Check if kitty is available
+- `vantage_kitty_set_title()` - Set window title
+- `vantage_kitty_set_tab_title()` - Set tab title
+- `vantage_kitty_enable_features()` - Enable kitty features
 
 ## Module Alignment
 
-All SENTINEL modules are automatically aligned to work with kitty:
+All VANTAGE modules are automatically aligned to work with kitty:
 
 - **Terminal Detection**: Modules detect kitty via `KITTY_WINDOW_ID` and `TERM` variables
 - **GPU Acceleration**: Modules enable GPU acceleration when kitty is detected
@@ -107,19 +107,19 @@ All SENTINEL modules are automatically aligned to work with kitty:
 
 ## Usage
 
-### Starting Kitty with SENTINEL
+### Starting Kitty with VANTAGE
 
 Simply start kitty normally. The startup script will automatically:
 1. Load `kitty.rc`
-2. Initialize SENTINEL modules
+2. Initialize VANTAGE modules
 3. Set up kitty integration
 
-### Using SENTINEL Tools
+### Using VANTAGE Tools
 
-All SENTINEL tools work normally. The `sentinel-kitty` launcher ensures tools run in kitty:
+All VANTAGE tools work normally. The `vantage-kitty` launcher ensures tools run in kitty:
 
 ```bash
-sentinel-kitty <command>
+vantage-kitty <command>
 ```
 
 ### Checking Kitty Status
@@ -128,24 +128,24 @@ Use the kitty integration module functions:
 
 ```bash
 # Check if running in kitty
-sentinel_is_kitty && echo "Running in kitty"
+vantage_is_kitty && echo "Running in kitty"
 
 # Check if kitty is available
-sentinel_kitty_available && echo "Kitty is available"
+vantage_kitty_available && echo "Kitty is available"
 
 # Set window title
-sentinel_kitty_set_title "My Project"
+vantage_kitty_set_title "My Project"
 ```
 
 ## Configuration
 
 ### Customizing Kitty Config
 
-The SENTINEL-managed block in `~/.config/kitty/kitty.conf` is between:
+The VANTAGE-managed block in `~/.config/kitty/kitty.conf` is between:
 ```
-# SENTINEL KITTY BEGIN
+# VANTAGE KITTY BEGIN
 ...
-# SENTINEL KITTY END
+# VANTAGE KITTY END
 ```
 
 You can modify settings outside this block, or edit the block directly (it will be preserved on reinstall).
@@ -185,8 +185,8 @@ If modules aren't loading:
 ### Performance Issues
 
 If experiencing performance issues:
-1. Verify GPU acceleration: `echo $SENTINEL_KITTY_GPU_ACCEL`
-2. Check kitty config: `cat ~/.config/kitty/kitty.conf | grep SENTINEL`
+1. Verify GPU acceleration: `echo $VANTAGE_KITTY_GPU_ACCEL`
+2. Check kitty config: `cat ~/.config/kitty/kitty.conf | grep VANTAGE`
 3. Review module loading times: Enable debug mode
 
 ## Migration from Bash Pathway
@@ -201,7 +201,7 @@ To migrate from the bash pathway to kitty:
 
 2. Run the kitty installer:
    ```bash
-   bash install_kitty.sh
+   bash install.sh kitty
    ```
 
 3. Restart kitty or source the new configuration:
@@ -213,10 +213,10 @@ To migrate from the bash pathway to kitty:
 
 To remove the kitty pathway:
 
-1. Remove SENTINEL block from `~/.config/kitty/kitty.conf`
+1. Remove VANTAGE block from `~/.config/kitty/kitty.conf`
 2. Remove `~/kitty.rc`
 3. Remove `~/kitty_startup.sh`
-4. Remove `~/.local/bin/sentinel-kitty`
+4. Remove `~/.local/bin/vantage-kitty`
 5. Re-run installer with bash pathway
 
 Or simply re-run the bash pathway installer to overwrite.
@@ -227,10 +227,10 @@ For issues specific to the kitty pathway:
 - Check logs: `~/logs/install.log`
 - Review kitty config: `~/.config/kitty/kitty.conf`
 - Verify environment: `env | grep KITTY`
-- Test kitty integration: `sentinel_is_kitty && echo "OK"`
+- Test kitty integration: `vantage_is_kitty && echo "OK"`
 
 ## See Also
 
 - [Kitty Documentation](https://sw.kovidgoyal.net/kitty/)
-- [SENTINEL Module System](../module_system.md)
+- [VANTAGE Module System](../module_system.md)
 - [Installation Guide](../README.md)

@@ -1,8 +1,8 @@
-# SENTINEL Best Practices
+# VANTAGE Best Practices
 
 ## Overview
 
-This document contains established best practices learned from developing and maintaining SENTINEL. Follow these guidelines to ensure code quality, performance, and maintainability.
+This document contains established best practices learned from developing and maintaining VANTAGE. Follow these guidelines to ensure code quality, performance, and maintainability.
 
 ## General Principles
 
@@ -52,7 +52,7 @@ fi
 ## Bash-Specific Best Practices
 
 ### 1. Use Modern Bash Features
-SENTINEL requires Bash 4.0+, so use its features.
+VANTAGE requires Bash 4.0+, so use its features.
 
 ```bash
 # Associative arrays
@@ -336,8 +336,8 @@ Help users understand and fix issues.
 echo "Error!"
 
 # GOOD: Specific and actionable
-echo "Error: Configuration file not found at ~/.config/sentinel/config.yml"
-echo "Please run 'sentinel config --init' to create a default configuration."
+echo "Error: Configuration file not found at ~/.config/vantage/config.yml"
+echo "Please run 'vantage config --init' to create a default configuration."
 ```
 
 ## Testing Best Practices
@@ -454,7 +454,7 @@ export PATH="/my/path:$PATH"
 
 # GOOD: Preserve user preferences
 alias ls="${USER_LS_ALIAS:-ls --color=auto}"
-export PATH="${SENTINEL_BIN}:${PATH}"
+export PATH="${VANTAGE_BIN}:${PATH}"
 ```
 
 ## Maintenance Best Practices

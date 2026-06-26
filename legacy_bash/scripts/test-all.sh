@@ -18,7 +18,7 @@ fi
 
 unset BASH_ENV ENV
 
-RUN_HOME="$(mktemp -d "${TMPDIR:-/tmp}/sentinel-test-home.XXXXXX")"
+RUN_HOME="$(mktemp -d "${TMPDIR:-/tmp}/vantage-test-home.XXXXXX")"
 cleanup() {
     rm -rf "$RUN_HOME"
 }
@@ -26,8 +26,8 @@ trap cleanup EXIT
 
 export HOME="$RUN_HOME"
 export XDG_CONFIG_HOME="$HOME/.config"
-export SENTINEL_ROOT="$ROOT_DIR"
-export SENTINEL_SKIP_PYTHON_VENV="${SENTINEL_SKIP_PYTHON_VENV:-1}"
+export VANTAGE_ROOT="$ROOT_DIR"
+export VANTAGE_SKIP_PYTHON_VENV="${VANTAGE_SKIP_PYTHON_VENV:-1}"
 export PYTHONDONTWRITEBYTECODE=1
 export LANG="${LANG:-C.UTF-8}"
 export LC_ALL="${LC_ALL:-C.UTF-8}"
@@ -100,7 +100,7 @@ run_broad_suite() {
     run_step "External tools" bash tests/test_external_tools.sh
     run_step "Return code helper" bash tests/ret_test.sh 0
     run_step "Bash syntax check" bash tests/bash_check.sh bash_modules
-    run_step "Contrib Python integration" bash -lc 'source bash_modules.d/python_integration.module >/dev/null && python3 contrib/sentinel_integration_test.py'
+    run_step "Contrib Python integration" bash -lc 'source bash_modules.d/python_integration.module >/dev/null && python3 contrib/vantage_integration_test.py'
 }
 
 log "root=$ROOT_DIR"

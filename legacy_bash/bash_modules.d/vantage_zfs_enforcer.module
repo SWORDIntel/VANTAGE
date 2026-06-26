@@ -1,0 +1,239 @@
+#!/usr/bin/env bash
+# VANTAGE Module: ZFS Directory Enforcer
+# Version: 1.0.0
+# HMAC: [Generated at install - Implementation requires VANTAGE framework specifics for HMAC generation/verification]
+
+VANTAGE_MODULE_NAME="zfs_enforcer"
+VANTAGE_MODULE_DESCRIPTION="Enforces ZFS directory conventions for commands"
+VANTAGE_MODULE_VERSION="1.0.0"
+VANTAGE_MODULE_DEPENDENCIES="logging config_cache" # Assumed to be handled by VANTAGE framework
+
+# Check for ZFS command
+if ! command -v zfs &> /dev/null; then
+    export ZFS_ENFORCER_ENABLED=0
+    return 0
+fi
+
+# --- Configuration ---
+
+# Directory mapping configuration: Maps target directories to regex patterns for commands.
+# Users can extend this array in their own config files if the VANTAGE framework supports module config overrides.
+declare -A ZFS_DIRECTORY_RULES=(
+    ["${ZFS_BUILD_DIR:-/opt/build}"]="make|gcc|g\+\+|clang|cmake|\./configure|ninja|meson|cargo build|go build|mvn |gradle"
+    ["${ZFS_AI_DIR:-/opt/ai}"]="python.*(train|model|eval|predict|dataset|inference)\.py|jupyter .*notebook|tensorboard|python -m torch|python -m tensorflow"
+    ["${ZFS_CODE_DIR:-/opt/code}"]="git|hg|svn|vim|nvim|emacs|code|nano|subl|gedit .*\.(c|cpp|h|hpp|py|js|ts|go|rs|java|scala|php|rb|pl|sh|md|txt)"
+    ["${ZFS_CONFIG_DIR:-/opt/config}"]="edit .*\.(conf|cfg|ini|yaml|yml|toml)|systemctl edit|crontab -e|visudo|manage-dotfiles" # 'edit' is a placeholder for common config editing
+    ["${ZFS_DOCKER_DIR:-/opt/docker}"]="docker build|docker-compose up|docker-compose build|dockerfile"
+    ["${ZFS_KERNEL_DIR:-/opt/kernel}"]="make (menuconfig|oldconfig|xconfig|bzImage|modules)|dkms|mkinitcpio|dracut"
+    # Add more rules as needed, e.g.:
+    # ["/opt/data/ml"]="scp .*my_dataset.* /opt/data/ml/" # Example for data operations
+)
+
+# Enable/disable enforcement. Can be overridden by user config (e.g., in ~/.config/vantage/config.sh or similar)
+ZFS_ENFORCER_ENABLED="${ZFS_ENFORCER_ENABLED:-1}" # 1 for enabled, 0 for disabled
+
+# Enable/disable automatic change of directory.
+ZFS_ENFORCER_AUTO_CD="${ZFS_ENFORCER_AUTO_CD:-0}" # 1 for auto-cd, 0 for prompt
+
+# --- Internal Variables ---
+_ZFS_ENFORCER_INTERNAL_CALL_GUARD=0 # Prevents recursion within the trap for internal commands
+
+# --- Core Logic Functions ---
+
+# _zfs_analyze_command: Checks if the given command matches a rule and if the current directory is mismatched.
+# Arguments:
+#   $1: The command string to analyze.
+# Returns:
+#   0 if a mismatch is found (command should be in a different ZFS designated directory).
+#   1 if no mismatch is found or no rule applies.
+function _zfs_analyze_command() {
+    local cmd_to_check="$1"
+    local current_dir
+    current_dir="$(pwd)" # Ensure pwd is up-to-date
+
+    # Optimization: If command is empty or just 'cd' or related to this script, ignore early.
+    if [[ -z "$cmd_to_check" || "$cmd_to_check" == "cd"* || "$cmd_to_check" == "zfs_enforcer_"* ]]; then
+        return 1
+    fi
+
+    for target_dir in "${!ZFS_DIRECTORY_RULES[@]}"; do
+        local pattern="${ZFS_DIRECTORY_RULES[$target_dir]}"
+        # Using extended regex for more power
+        if [[ "$cmd_to_check" =~ $pattern ]]; then
+            # Check if current directory starts with the target directory path
+            if [[ "$current_dir" != "$target_dir" && "$current_dir" != "$target_dir/"* ]]; then
+                return 0  # Mismatch: command matches rule, but directory is wrong.
+            else
+                return 1 # Match: command matches rule, and directory is correct or a sub-path.
+            fi
+        fi
+    done
+    return 1  # No rule matched this command.
+}
+
+# _zfs_get_suggested_dir: Finds the suggested ZFS directory for a given command based on rules.
+# Arguments:
+#   $1: The command string.
+# Returns:
+#   The suggested directory path if a rule matches, otherwise an empty string.
+#   Exits with 0 if suggestion found, 1 otherwise.
+function _zfs_get_suggested_dir() {
+    local cmd_to_check="$1"
+    for target_dir in "${!ZFS_DIRECTORY_RULES[@]}"; do
+        local pattern="${ZFS_DIRECTORY_RULES[$target_dir]}"
+        if [[ "$cmd_to_check" =~ $pattern ]]; then
+            echo "$target_dir"
+            return 0
+        fi
+    done
+    return 1
+}
+
+# --- Main Enforcement Function (Called by DEBUG trap) ---
+
+# _zfs_enforce_directory: Main function hooked to the DEBUG trap.
+#   Analyzes BASH_COMMAND and prompts/acts if a directory convention is violated.
+function _zfs_enforce_directory() {
+    # Respect ZFS_ENFORCER_ENABLED setting
+    [[ "$ZFS_ENFORCER_ENABLED" != "1" ]] && return 0
+
+    # Get the command about to be executed
+    local current_bash_command="${BASH_COMMAND}"
+
+    # Guard against empty commands or calls from within this function itself
+    [[ -z "$current_bash_command" ]] && return 0
+    [[ "$_ZFS_ENFORCER_INTERNAL_CALL_GUARD" -eq 1 ]] && return 0
+
+    # Set guard to prevent recursion for commands executed by this function (e.g., echo, read)
+    _ZFS_ENFORCER_INTERNAL_CALL_GUARD=1
+
+    if _zfs_analyze_command "$current_bash_command"; then
+        local suggested_dir
+        suggested_dir=$(_zfs_get_suggested_dir "$current_bash_command")
+
+        if [[ -n "$suggested_dir" ]]; then
+            # Ensure directory exists before suggesting to cd into it
+            if ! [[ -d "$suggested_dir" ]]; then
+                 echo -e "\n\033[33m⚠ ZFS Directory Notice:\033[0m Suggested directory '\033[32m$suggested_dir\033[0m' does not exist. Please create it or update rules." >&2
+                 _ZFS_ENFORCER_INTERNAL_CALL_GUARD=0 # Reset guard
+                 return 0
+            fi
+
+            # Terminal colors
+            local color_yellow='\033[33m'
+            local color_cyan='\033[36m'
+            local color_red='\033[31m'
+            local color_green='\033[32m'
+            local color_reset='\033[0m'
+
+            echo -e "\n${color_yellow}⚠ ZFS Directory Notice:${color_reset}" >&2
+            echo -e "  Command:   ${color_cyan}${current_bash_command}${color_reset}" >&2
+            echo -e "  Current:   ${color_red}$(pwd)${color_reset}" >&2
+            echo -e "  Suggested: ${color_green}${suggested_dir}${color_reset}" >&2
+
+            if [[ "$ZFS_ENFORCER_AUTO_CD" == "1" ]]; then
+                if builtin cd "$suggested_dir"; then
+                    echo -e "${color_green}✓ Auto-changed to $suggested_dir${color_reset}" >&2
+                    # PS1="${PS1}" # Force prompt redraw if needed, though `cd` usually does.
+                else
+                    echo -e "${color_red}✗ Failed to auto-change to $suggested_dir${color_reset}" >&2
+                fi
+            else
+                local user_reply
+                # Use /dev/tty to ensure prompt is shown even if stdin/stdout are redirected for the main command
+                read -p "Change to suggested directory? [Y/n/a(lways)/s(kip session)]: " -n 1 -r user_reply </dev/tty
+                echo >&2 # Newline after prompt
+
+                case "$user_reply" in
+                    [Yy]|"") # Default to Yes
+                        if builtin cd "$suggested_dir"; then
+                            echo -e "${color_green}✓ Changed to $suggested_dir${color_reset}" >&2
+                        else
+                            echo -e "${color_red}✗ Failed to change to $suggested_dir${color_reset}" >&2
+                        fi
+                        ;;
+                    [Aa]) # Always (for this session, effectively auto-cd)
+                        export ZFS_ENFORCER_AUTO_CD=1
+                        if builtin cd "$suggested_dir"; then
+                             echo -e "${color_green}✓ Changed to $suggested_dir. Auto-CD enabled for this session.${color_reset}" >&2
+                        else
+                            echo -e "${color_red}✗ Failed to change to $suggested_dir. Auto-CD enabled for this session.${color_reset}" >&2
+                        fi
+                        ;;
+                    [Ss]) # Skip for this session
+                        export ZFS_ENFORCER_ENABLED=0
+                        echo -e "${color_yellow}ℹ ZFS Enforcer disabled for this session.${color_reset}" >&2
+                        ;;
+                    *) # No or any other key
+                        echo -e "${color_yellow}ℹ Staying in $(pwd)${color_reset}" >&2
+                        ;;
+                esac
+            fi
+        fi
+    fi
+
+    _ZFS_ENFORCER_INTERNAL_CALL_GUARD=0 # Reset guard
+    return 0 # Must return 0 for DEBUG trap, non-zero can terminate script
+}
+
+# --- Public Control Functions ---
+
+# zfs_enforcer_enable: Enables the ZFS directory enforcement.
+function zfs_enforcer_enable() {
+    # Check if trap is already set to avoid duplicates (simple check)
+    if ! trap -p DEBUG | grep -q '_zfs_enforce_directory'; then
+        trap '_zfs_enforce_directory' DEBUG
+    fi
+    export ZFS_ENFORCER_ENABLED=1
+    echo "ZFS Directory Enforcer: ENABLED"
+}
+
+# zfs_enforcer_disable: Disables the ZFS directory enforcement for the current session.
+function zfs_enforcer_disable() {
+    trap - DEBUG # Remove the trap
+    export ZFS_ENFORCER_ENABLED=0
+    echo "ZFS Directory Enforcer: DISABLED (for current session)"
+}
+
+# zfs_enforcer_config: Displays the current configuration and rules.
+function zfs_enforcer_config() {
+    echo "--- ZFS Directory Enforcer Configuration ---"
+    echo "Status: $( [[ "$ZFS_ENFORCER_ENABLED" == "1" ]] && echo "ENABLED" || echo "DISABLED" )"
+    echo "Auto-CD: $( [[ "$ZFS_ENFORCER_AUTO_CD" == "1" ]] && echo "ENABLED" || echo "PROMPT" )"
+    echo ""
+    echo "Directory Rules (Path -> Command Regex Pattern):"
+    for dir_path in "${!ZFS_DIRECTORY_RULES[@]}"; do
+        printf "  %-15s -> %s\n" "$dir_path" "${ZFS_DIRECTORY_RULES[$dir_path]}"
+    done
+    echo "-------------------------------------------"
+}
+
+# --- Module Initialization ---
+
+# This block ensures that the module enables itself if sourced,
+# but doesn't run enable logic if the script is executed directly (e.g., for testing functions).
+if [[ "${BASH_SOURCE[0]}" != "${0}" ]]; then
+    # Sourced
+    if [[ "$ZFS_ENFORCER_ENABLED" == "1" ]]; then
+        zfs_enforcer_enable
+    else
+        # If disabled by default in config, ensure trap is not set from previous sessions if file is re-sourced
+        trap - DEBUG
+    fi
+else
+    # Executed directly
+    echo "This is a VANTAGE module. To use it, source it in your .bashrc or add it to your VANTAGE bash_modules.d setup."
+    echo "Example: source $(pwd)/$(basename "${BASH_SOURCE[0]}")"
+    echo "Available functions: zfs_enforcer_enable, zfs_enforcer_disable, zfs_enforcer_config"
+fi
+
+# Export public functions to be available in the shell
+export -f zfs_enforcer_enable
+export -f zfs_enforcer_disable
+export -f zfs_enforcer_config
+# Internal functions are typically not exported unless VANTAGE framework requires it for testing/extension.
+# export -f _zfs_enforce_directory
+# export -f _zfs_analyze_command
+# export -f _zfs_get_suggested_dir
+
+true # Ensure sourced script returns true

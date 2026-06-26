@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# SENTINEL Bash Completion Loader
+# VANTAGE Bash Completion Loader
 # Recursively loads all completion files from the completion directories
 
 # Function to load completion files from a directory recursively

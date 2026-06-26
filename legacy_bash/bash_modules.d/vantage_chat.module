@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+### BEGIN MODULE INFO
+### END MODULE INFO 
+
+# Prevent multiple loading
+[[ -n "${_VANTAGE_CHAT_LOADED}" ]] && return 0
+export _VANTAGE_CHAT_LOADED=1
+
+# Check if module is enabled via environment variable with robust error handling
+# and silent status check that doesn't print messages
+if [[ "${VANTAGE_CHAT_ENABLED:-0}" != "1" ]]; then
+    # Module is disabled but won't echo about it
+    # This line would return, preventing the module from loading
+    # when the environment variable is not set
+    return 0 2>/dev/null || true
+fi
+
+# Continue with the rest of the file, starting after the original check

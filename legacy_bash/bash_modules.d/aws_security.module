@@ -1,14 +1,14 @@
 #!/usr/bin/env bash
-# SENTINEL - AWS Security Module
+# VANTAGE - AWS Security Module
 # Version: 1.0.0
 # Description: Provides helper functions and aliases for AWS security operations.
 # Dependencies: logging
 
 # --- Module Metadata ---
-SENTINEL_MODULE_NAME="aws_security"
-SENTINEL_MODULE_DESCRIPTION="AWS security helper functions and aliases"
-SENTINEL_MODULE_VERSION="1.0.0"
-SENTINEL_MODULE_DEPENDENCIES="logging"
+VANTAGE_MODULE_NAME="aws_security"
+VANTAGE_MODULE_DESCRIPTION="AWS security helper functions and aliases"
+VANTAGE_MODULE_VERSION="1.0.0"
+VANTAGE_MODULE_DEPENDENCIES="logging"
 
 # --- Configuration ---
 # The default duration for assumed role sessions (in seconds).
@@ -20,14 +20,14 @@ AWS_ASSUME_ROLE_DURATION="${AWS_ASSUME_ROLE_DURATION:-3600}"
 # Usage: assume_role <role_arn> [role_session_name]
 assume_role() {
     local role_arn="$1"
-    local session_name="${2:-sentinel-session-$(date +%s)}"
+    local session_name="${2:-vantage-session-$(date +%s)}"
 
     if [[ -z "$role_arn" ]]; then
-        sentinel_log_error "aws_security" "Role ARN is required."
+        vantage_log_error "aws_security" "Role ARN is required."
         return 1
     fi
 
-    sentinel_log_info "aws_security" "Assuming role: $role_arn"
+    vantage_log_info "aws_security" "Assuming role: $role_arn"
 
     local credentials
     credentials=$(aws sts assume-role \
@@ -35,10 +35,10 @@ assume_role() {
         --role-session-name "$session_name" \
         --duration-seconds "$AWS_ASSUME_ROLE_DURATION" \
         --query 'Credentials.[AccessKeyId,SecretAccessKey,SessionToken]' \
-        --output text 2> >(sentinel_log_error "aws_security" >&2))
+        --output text 2> >(vantage_log_error "aws_security" >&2))
 
     if [[ -z "$credentials" ]]; then
-        sentinel_log_error "aws_security" "Failed to assume role."
+        vantage_log_error "aws_security" "Failed to assume role."
         return 1
     fi
 
@@ -48,7 +48,7 @@ assume_role() {
     export AWS_SECRET_ACCESS_KEY="$secret"
     export AWS_SESSION_TOKEN="$token"
 
-    sentinel_log_info "aws_security" "Successfully assumed role. Credentials will expire in $(($AWS_ASSUME_ROLE_DURATION / 60)) minutes."
+    vantage_log_info "aws_security" "Successfully assumed role. Credentials will expire in $(($AWS_ASSUME_ROLE_DURATION / 60)) minutes."
 }
 
 # --- Aliases ---

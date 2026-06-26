@@ -1,8 +1,8 @@
-# SENTINEL Module System Architecture
+# VANTAGE Module System Architecture
 
 ## Overview
 
-The SENTINEL module system is a sophisticated dynamic loading framework that allows features to be added, removed, or modified without affecting the core system.
+The VANTAGE module system is a sophisticated dynamic loading framework that allows features to be added, removed, or modified without affecting the core system.
 
 ## Module Structure
 
@@ -14,7 +14,7 @@ The SENTINEL module system is a sophisticated dynamic loading framework that all
 # Version: 1.0.0
 # Description: Example module showing structure
 # Dependencies: none
-# Author: SENTINEL Team
+# Author: VANTAGE Team
 
 # Module metadata
 MODULE_NAME="example_module"
@@ -133,7 +133,7 @@ Integrate external tools
 # Examples:
 - hashcat.module         # Password cracking
 - distcc.module          # Distributed compilation
-- sentinel_chat.module   # AI chat interface
+- vantage_chat.module   # AI chat interface
 ```
 
 ### 4. Security Modules
@@ -179,8 +179,8 @@ detect_circular_deps() {
 
 ### Configuration Sources
 1. Module defaults (in module file)
-2. System configuration (/etc/sentinel/)
-3. User configuration (~/.config/sentinel/)
+2. System configuration (/etc/vantage/)
+3. User configuration (~/.config/vantage/)
 4. Environment variables
 5. Runtime configuration
 

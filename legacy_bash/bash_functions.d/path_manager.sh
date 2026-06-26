@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
-# SENTINEL Path Manager
-# Persistent path management solution for SENTINEL framework
+# VANTAGE Path Manager
+# Persistent path management solution for VANTAGE framework
 # Last Update: 2023-08-14
 
 # Path configuration file
-PATH_CONFIG_FILE="${HOME}/.sentinel_paths"
+PATH_CONFIG_FILE="${HOME}/.vantage_paths"
 
 # Initialize path config file if it doesn't exist
 [[ ! -f "${PATH_CONFIG_FILE}" ]] && touch "${PATH_CONFIG_FILE}"
@@ -20,7 +20,7 @@ load_custom_paths() {
             # Only add if directory exists and isn't already in PATH
             if [[ -d "${path_entry}" && ":${PATH}:" != *":${path_entry}:"* ]]; then
                 export PATH="${path_entry}:${PATH}"
-                [[ "${SENTINEL_QUIET_MODULES:-1}" != "1" ]] && echo "Added custom path: ${path_entry}"
+                [[ "${VANTAGE_QUIET_MODULES:-1}" != "1" ]] && echo "Added custom path: ${path_entry}"
             fi
         done < "${PATH_CONFIG_FILE}"
     fi

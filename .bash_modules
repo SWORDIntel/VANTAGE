@@ -28,14 +28,14 @@ hashcat
 hmac
 obfuscate
 project_suggestions
-sentinel_gitstar
+vantage_gitstar
 
 # AI/ML and contextual modules
-sentinel_context
-sentinel_chat
-sentinel_cybersec_ml
-sentinel_ml
-sentinel_ml_enhanced
-sentinel_osint
+vantage_context
+vantage_chat
+vantage_cybersec_ml
+vantage_ml
+vantage_ml_enhanced
+vantage_osint
 
 # Add other modules below this line 

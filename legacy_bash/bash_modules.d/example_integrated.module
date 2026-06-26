@@ -5,7 +5,7 @@
 # Description:           Demonstrates how to use python_integration module
 #                        for enhanced functionality in bash modules.
 # Author:                Team 5 Agent 1
-# URL:                   https://github.com/SWORDIntel/SENTINEL/
+# URL:                   https://github.com/SWORDIntel/VANTAGE/
 # Version:               1.0.0
 # Stability:             stable
 # Tags:                  example, integration, demo
@@ -15,7 +15,7 @@
 ### END MODULE INFO
 
 # Ensure python_integration is loaded
-if ! declare -f sentinel_state_get &>/dev/null; then
+if ! declare -f vantage_state_get &>/dev/null; then
     echo "[EXAMPLE] Error: python_integration module must be loaded first"
     return 1
 fi
@@ -25,10 +25,10 @@ process_json_data() {
     local json_input="$1"
     
     # Use Python for JSON processing (much easier than bash)
-    sentinel_python_exec -c "
+    vantage_python_exec -c "
 import json
 import sys
-from sentinel_integration import sentinel
+from vantage_integration import vantage
 
 try:
     data = json.loads('$json_input')
@@ -41,7 +41,7 @@ try:
     }
     
     # Store result in state
-    sentinel.set_state('json_result', json.dumps(result))
+    vantage.set_state('json_result', json.dumps(result))
     
     # Also print for immediate use
     print(json.dumps(result, indent=2))
@@ -60,35 +60,35 @@ long_running_task() {
     echo "[EXAMPLE] Starting long-running task: $task_name"
     
     # Store task info
-    sentinel_state_set "task_${task_name}_status" "running"
-    sentinel_state_set "task_${task_name}_progress" "0"
+    vantage_state_set "task_${task_name}_status" "running"
+    vantage_state_set "task_${task_name}_progress" "0"
     
     # Run Python task in background with IPC
     (
-        sentinel_python_exec -c "
+        vantage_python_exec -c "
 import time
-from sentinel_integration import sentinel
+from vantage_integration import vantage
 
 task_name = '$task_name'
 duration = $duration
 
 # Create IPC channel for progress updates
-sentinel.bash_exec(f'sentinel_ipc_create_channel task_{task_name}')
+vantage.bash_exec(f'vantage_ipc_create_channel task_{task_name}')
 
 for i in range(duration):
     progress = int((i + 1) / duration * 100)
     
     # Update state
-    sentinel.set_state(f'task_{task_name}_progress', str(progress))
+    vantage.set_state(f'task_{task_name}_progress', str(progress))
     
     # Send IPC message
-    sentinel.ipc_send(f'task_{task_name}', f'Progress: {progress}%')
+    vantage.ipc_send(f'task_{task_name}', f'Progress: {progress}%')
     
     time.sleep(1)
 
 # Task complete
-sentinel.set_state(f'task_{task_name}_status', 'completed')
-sentinel.ipc_send(f'task_{task_name}', 'Task completed!')
+vantage.set_state(f'task_{task_name}_status', 'completed')
+vantage.ipc_send(f'task_{task_name}', 'Task completed!')
 "
     ) &
     
@@ -96,8 +96,8 @@ sentinel.ipc_send(f'task_{task_name}', 'Task completed!')
     echo "[EXAMPLE] Task started with PID: $task_pid"
     
     # Monitor progress
-    while [[ $(sentinel_state_get "task_${task_name}_status") == "running" ]]; do
-        local progress=$(sentinel_state_get "task_${task_name}_progress")
+    while [[ $(vantage_state_get "task_${task_name}_status") == "running" ]]; do
+        local progress=$(vantage_state_get "task_${task_name}_progress")
         echo -ne "\r[EXAMPLE] Progress: ${progress}%"
         sleep 0.5
     done
@@ -111,22 +111,22 @@ configure_feature() {
     local value="$2"
     
     # Set configuration
-    sentinel_config_set "example.${feature}" "$value"
+    vantage_config_set "example.${feature}" "$value"
     
     echo "[EXAMPLE] Configuration set: ${feature} = ${value}"
     
     # Verify from Python side
-    sentinel_python_exec -c "
-from sentinel_integration import sentinel
+    vantage_python_exec -c "
+from vantage_integration import vantage
 
 feature = '$feature'
-value = sentinel.get_config(f'example.{feature}')
+value = vantage.get_config(f'example.{feature}')
 
 print(f'[PYTHON] Confirmed configuration: {feature} = {value}')
 
 # Perform feature-specific setup
 if feature == 'logging' and value == 'enabled':
-    sentinel.logger.info('Logging has been enabled via bash configuration')
+    vantage.logger.info('Logging has been enabled via bash configuration')
 "
 }
 
@@ -137,11 +137,11 @@ safe_operation() {
     echo "[EXAMPLE] Performing safe operation: $operation"
     
     # Set up error trap
-    sentinel_state_set "operation_error" ""
+    vantage_state_set "operation_error" ""
     
     # Execute operation with error handling
-    if sentinel_python_exec -c "
-from sentinel_integration import sentinel
+    if vantage_python_exec -c "
+from vantage_integration import vantage
 
 try:
     # Simulate operation
@@ -156,15 +156,15 @@ try:
         
 except Exception as e:
     error_msg = str(e)
-    sentinel.set_state('operation_error', error_msg)
-    sentinel.logger.error(f'Operation failed: {error_msg}')
+    vantage.set_state('operation_error', error_msg)
+    vantage.logger.error(f'Operation failed: {error_msg}')
     raise
 "; then
         echo "[EXAMPLE] Operation succeeded"
     else
-        local error=$(sentinel_state_get "operation_error")
+        local error=$(vantage_state_get "operation_error")
         echo "[EXAMPLE] Operation failed: $error"
-        sentinel_log "error" "Safe operation failed: $error"
+        vantage_log "error" "Safe operation failed: $error"
     fi
 }
 

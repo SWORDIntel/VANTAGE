@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
-# SENTINEL Text Formatting Aliases
+# VANTAGE Text Formatting Aliases
 # Enhanced text formatting and manipulation utilities for command line operations
 # Based on original work by Jason Thistlethwaite (2013)
-# Enhanced for SENTINEL (2023)
+# Enhanced for VANTAGE (2023)
 
 # CSV Processing
 # -------------

@@ -1,0 +1,350 @@
+#!/usr/bin/env bash
+# VANTAGE Enhanced ML Module
+# Integrates predictive command chains, advanced task detection, and NLU capabilities
+
+# Prevent multiple loading
+[[ -n "${_VANTAGE_ML_ENHANCED_LOADED}" ]] && return 0
+export _VANTAGE_ML_ENHANCED_LOADED=1
+
+# Check if Python is available
+if ! command -v python3 &>/dev/null; then
+    echo "Warning: Python 3 not found. VANTAGE enhanced ML features disabled."
+    return 0
+fi
+
+# Path to ML scripts
+VANTAGE_ML_DIR="$(dirname "${BASH_SOURCE[0]}")/../contrib"
+
+# Check if our modules exist
+CHAIN_PREDICT_SCRIPT="$VANTAGE_ML_DIR/vantage_chain_predict.py"
+TASK_DETECT_SCRIPT="$VANTAGE_ML_DIR/vantage_task_detect.py"
+NLU_SCRIPT="$VANTAGE_ML_DIR/vantage_nlu.py"
+
+# Flag to track if at least one module is available
+VANTAGE_ENHANCED_ML_AVAILABLE=0
+
+# Make modules executable if they exist
+for script in "$CHAIN_PREDICT_SCRIPT" "$TASK_DETECT_SCRIPT" "$NLU_SCRIPT"; do
+    if [ -f "$script" ]; then
+        chmod +x "$script" 2>/dev/null
+        VANTAGE_ENHANCED_ML_AVAILABLE=1
+    else
+        echo "Warning: $script not found - some enhanced ML features will be disabled."
+    fi
+done
+
+if [ $VANTAGE_ENHANCED_ML_AVAILABLE -eq 0 ]; then
+    echo "Error: No enhanced ML modules found. Enhanced ML features disabled."
+    return 0
+fi
+
+# Check for module dependencies
+VANTAGE_ML_DEPS_AVAILABLE=0
+if python3 -c "import importlib.util; print(all(importlib.util.find_spec(pkg) is not None for pkg in ['numpy', 'markovify']))" 2>/dev/null | grep -q "True"; then
+    VANTAGE_ML_DEPS_AVAILABLE=1
+else
+    if [[ "${VANTAGE_VERBOSE:-0}" == "1" ]] || [[ "${VANTAGE_DEBUG:-0}" == "1" ]]; then
+        echo "Warning: Required Python packages (numpy, markovify) not installed."
+        echo "To enable full VANTAGE Enhanced ML features, install required packages:"
+        echo "  pip install numpy markovify llama-cpp-python"
+        echo "Basic functionality will still be available."
+    fi
+fi
+
+# Initialize the modules
+if [[ "${VANTAGE_VERBOSE:-0}" == "1" ]] || [[ "${VANTAGE_DEBUG:-0}" == "1" ]]; then
+    echo "Initializing VANTAGE Enhanced ML capabilities..."
+fi
+
+# Function to record commands for chain prediction
+function __vantage_record_for_chain() {
+    local exit_code=$1
+    local command="$2"
+    
+    # Only record if chain prediction is available
+    if [ -f "$CHAIN_PREDICT_SCRIPT" ]; then
+        # Run in background to avoid slowing down the shell
+        ( python3 "$CHAIN_PREDICT_SCRIPT" --process "$command" --exit-code $exit_code >/dev/null 2>&1 & disown ) 2>/dev/null
+    fi
+}
+
+# Hook into command completion if not already done by context module
+if ! declare -F __vantage_command_done >/dev/null; then
+    function __vantage_command_done() {
+        local exit_code=$?
+        local last_cmd=$(HISTTIMEFORMAT= history 1 | sed 's/^[ 0-9]\+[ ]\+//')
+        
+        __vantage_record_for_chain $exit_code "$last_cmd"
+        return $exit_code
+    }
+    
+    # Add our function to PROMPT_COMMAND to run after each command
+    if [[ "$PROMPT_COMMAND" != *"__vantage_command_done"* ]]; then
+        PROMPT_COMMAND="__vantage_command_done;${PROMPT_COMMAND:-:}"
+    fi
+fi
+
+# Function to train the chain prediction model
+function vantage_train_chains() {
+    if [ -f "$CHAIN_PREDICT_SCRIPT" ]; then
+        echo "Training command chain prediction model..."
+        python3 "$CHAIN_PREDICT_SCRIPT" --train
+    else
+        echo "Error: Chain prediction module not available."
+    fi
+}
+
+# Function to get command chain suggestions
+function vantage_predict() {
+    if [ -f "$CHAIN_PREDICT_SCRIPT" ]; then
+        if [ -z "$1" ]; then
+            echo "Usage: vantage_predict <current_command>"
+            return 0
+        fi
+        
+        # Get current task if task detection is available
+        local task_arg=""
+        if [ -f "$TASK_DETECT_SCRIPT" ]; then
+            local task_info=$(python3 "$TASK_DETECT_SCRIPT" --detect)
+            task_arg="--task $(echo "$task_info" | grep -o '"task": "[^"]*"' | cut -d'"' -f4)"
+        fi
+        
+        # Get predictions
+        python3 "$CHAIN_PREDICT_SCRIPT" --predict "$1" $task_arg | jq -r '.[] | "\(.confidence*100 | floor)% \(.command) - \(.description)"' 2>/dev/null ||
+            python3 "$CHAIN_PREDICT_SCRIPT" --predict "$1" $task_arg
+    else
+        echo "Error: Chain prediction module not available."
+    fi
+}
+
+# Function to suggest error corrections
+function vantage_fix() {
+    if [ -f "$CHAIN_PREDICT_SCRIPT" ]; then
+        if [ -z "$1" ]; then
+            # If no command provided, use the last failed command
+            local last_cmd_info=$(HISTTIMEFORMAT= history 2 | head -n 1)
+            local last_cmd=$(echo "$last_cmd_info" | sed 's/^[ 0-9]\+[ ]\+//')
+            set -- "$last_cmd"
+        fi
+        
+        echo "Suggested fixes for: $1"
+        python3 "$CHAIN_PREDICT_SCRIPT" --fix "$1" | jq -r '.[] | "\(.confidence*100 | floor)% \(.command) - \(.description)"' 2>/dev/null ||
+            python3 "$CHAIN_PREDICT_SCRIPT" --fix "$1"
+    else
+        echo "Error: Chain prediction module not available."
+    fi
+}
+
+# Function to detect current task
+function vantage_task() {
+    if [ -f "$TASK_DETECT_SCRIPT" ]; then
+        local subcommand=${1:-detect}
+        
+        case "$subcommand" in
+            detect)
+                python3 "$TASK_DETECT_SCRIPT" --detect | jq . 2>/dev/null ||
+                    python3 "$TASK_DETECT_SCRIPT" --detect
+                ;;
+            project)
+                python3 "$TASK_DETECT_SCRIPT" --project | jq . 2>/dev/null ||
+                    python3 "$TASK_DETECT_SCRIPT" --project
+                ;;
+            history)
+                python3 "$TASK_DETECT_SCRIPT" --history | jq . 2>/dev/null ||
+                    python3 "$TASK_DETECT_SCRIPT" --history
+                ;;
+            suggest)
+                python3 "$TASK_DETECT_SCRIPT" --suggestions | jq . 2>/dev/null ||
+                    python3 "$TASK_DETECT_SCRIPT" --suggestions
+                ;;
+            info)
+                if [ -z "$2" ]; then
+                    echo "Usage: vantage_task info <task_name>"
+                    return 0
+                fi
+                python3 "$TASK_DETECT_SCRIPT" --task-info "$2" | jq . 2>/dev/null ||
+                    python3 "$TASK_DETECT_SCRIPT" --task-info "$2"
+                ;;
+            learn)
+                if [ -z "$2" ] || [ -z "$3" ]; then
+                    echo "Usage: vantage_task learn <task_name> <command1,command2,...>"
+                    return 0
+                fi
+                python3 "$TASK_DETECT_SCRIPT" --learn-commands "$2,$3"
+                ;;
+            *)
+                echo "Unknown subcommand: $subcommand"
+                echo "Available subcommands: detect, project, history, suggest, info, learn"
+                return 0
+                ;;
+        esac
+    else
+        echo "Error: Task detection module not available."
+    fi
+}
+
+# Function to translate natural language to shell commands
+function vantage_translate() {
+    if [ -f "$NLU_SCRIPT" ]; then
+        if [ -z "$1" ]; then
+            echo "Usage: vantage_translate \"your query here\""
+            return 0
+        fi
+        
+        # Translate the query
+        local result=$(python3 "$NLU_SCRIPT" --translate "$*")
+        local command=$(echo "$result" | jq -r '.command')
+        local confidence=$(echo "$result" | jq -r '.confidence')
+        local method=$(echo "$result" | jq -r '.method')
+        
+        # Display the result
+        echo "Translated command (${method}, ${confidence}): $command"
+        echo 
+        echo "Press enter to execute, Ctrl+C to cancel, or type 'e' to edit"
+        read -r response
+        
+        if [[ "$response" == "e" ]]; then
+            # Let user edit the command before executing
+            read -e -i "$command" -p "Edit command: " edited_command
+            command="$edited_command"
+        fi
+        
+        if [[ -n "$command" ]]; then
+            # Execute the command
+            echo "Executing: $command"
+            eval "$command"
+            local exit_code=$?
+            
+            # Provide feedback to the learning system
+            echo "Was this translation helpful? (y/n)"
+            read -r feedback
+            if [[ "$feedback" == "y" ]]; then
+                ( python3 "$NLU_SCRIPT" --feedback "$*|$command|true" >/dev/null 2>&1 & disown ) 2>/dev/null
+            else
+                ( python3 "$NLU_SCRIPT" --feedback "$*|$command|false" >/dev/null 2>&1 & disown ) 2>/dev/null
+            fi
+            
+            return $exit_code
+        fi
+    else
+        echo "Error: NLU module not available."
+    fi
+}
+
+# Function to generate shell scripts
+function vantage_script() {
+    if [ -f "$NLU_SCRIPT" ]; then
+        if [ -z "$1" ] || [ -z "$2" ]; then
+            echo "Usage: vantage_script <output_file.sh> \"description of what the script should do\""
+            return 0
+        fi
+        
+        local output_file="$1"
+        shift
+        local description="$*"
+        
+        # Check if file exists and prompt for overwrite
+        if [ -f "$output_file" ]; then
+            echo "File $output_file already exists. Overwrite? (y/n)"
+            read -r response
+            if [[ "$response" != "y" ]]; then
+                echo "Aborted."
+                return 0
+            fi
+        fi
+        
+        echo "Generating script for: $description"
+        echo "This may take a moment..."
+        
+        # Generate the script
+        python3 "$NLU_SCRIPT" --script "$description" > "$output_file"
+        chmod +x "$output_file"
+        
+        echo "Script generated and saved to $output_file"
+        echo "Made executable with chmod +x"
+    else
+        echo "Error: NLU module not available."
+    fi
+}
+
+# Function to explain shell commands
+function vantage_explain() {
+    if [ -f "$NLU_SCRIPT" ]; then
+        if [ -z "$1" ]; then
+            echo "Usage: vantage_explain \"command to explain\""
+            return 0
+        fi
+        
+        echo "Explaining command: $*"
+        python3 "$NLU_SCRIPT" --explain "$*"
+    else
+        echo "Error: NLU module not available."
+    fi
+}
+
+# Create a global hook that runs occasionally to analyze the recent commands
+function __vantage_enhanced_ml_hook() {
+    # Record task occasionally
+    if [ -f "$TASK_DETECT_SCRIPT" ] && [ $((RANDOM % 10)) -eq 0 ]; then
+        # 10% chance of running task detection
+        ( python3 "$TASK_DETECT_SCRIPT" --detect >/dev/null 2>&1 & disown ) 2>/dev/null
+    fi
+    
+    # Periodically train the prediction model
+    if [ -f "$CHAIN_PREDICT_SCRIPT" ] && [ $((RANDOM % 100)) -eq 0 ]; then
+        # 1% chance of retraining
+        ( python3 "$CHAIN_PREDICT_SCRIPT" --train >/dev/null 2>&1 & disown ) 2>/dev/null
+    fi
+}
+
+# Add periodic hook to PROMPT_COMMAND if not already there
+if [[ "$PROMPT_COMMAND" != *"__vantage_enhanced_ml_hook"* ]]; then
+    PROMPT_COMMAND="__vantage_enhanced_ml_hook;${PROMPT_COMMAND:-:}"
+fi
+
+# Create bash completion for commands
+complete -F "__vantage_enhanced_completion" vantage_predict vantage_translate
+
+function __vantage_enhanced_completion() {
+    local cur=${COMP_WORDS[COMP_CWORD]}
+    local cmd=${COMP_WORDS[0]}
+    
+    case "$cmd" in
+        vantage_predict)
+            if [ ${#cur} -ge 1 ]; then
+                # Get command suggestions from context module if available
+                if declare -F __vantage_completion >/dev/null; then
+                    __vantage_completion
+                elif [ -f "$CHAIN_PREDICT_SCRIPT" ]; then
+                    # Fall back to chain predictions
+                    local suggestions=$(python3 "$CHAIN_PREDICT_SCRIPT" --predict "$cur" | 
+                                      jq -r '.[].command' 2>/dev/null)
+                    
+                    if [ -n "$suggestions" ]; then
+                        COMPREPLY=( $(compgen -W "$suggestions" -- "$cur") )
+                    fi
+                fi
+            fi
+            ;;
+        vantage_translate)
+            # No specific completions for translate yet
+            ;;
+    esac
+}
+
+# Create aliases
+alias spred="vantage_predict"
+alias sfix="vantage_fix"
+alias stask="vantage_task"
+alias strans="vantage_translate"
+alias sscript="vantage_script"
+alias sexplain="vantage_explain"
+
+# Initial setup on module load
+if [[ "${VANTAGE_QUIET_MODE:-0}" != "1" && "${VANTAGE_SUPPRESS_MODULE_MESSAGES:-0}" != "1" ]]; then
+    echo "VANTAGE Enhanced ML Module loaded"
+fi
+if [ -f "$TASK_DETECT_SCRIPT" ]; then
+    # Detect current task in background (suppress job notifications)
+    ( python3 "$TASK_DETECT_SCRIPT" --detect >/dev/null 2>&1 & ) 2>/dev/null
+fi 

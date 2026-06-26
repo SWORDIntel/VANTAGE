@@ -1,34 +1,34 @@
 #!/usr/bin/env bash
-# SENTINEL - Configuration Cache Module
+# VANTAGE - Configuration Cache Module
 # Version: 1.0.0
 # Description: Provides advanced configuration caching for faster shell startup
 # Dependencies: logging
-# Maintainer: SENTINEL Team
+# Maintainer: VANTAGE Team
 
 # Module metadata for dependency resolution
-SENTINEL_MODULE_DESCRIPTION="Advanced configuration caching system"
-SENTINEL_MODULE_VERSION="1.0.0"
-SENTINEL_MODULE_DEPENDENCIES="logging"
+VANTAGE_MODULE_DESCRIPTION="Advanced configuration caching system"
+VANTAGE_MODULE_VERSION="1.0.0"
+VANTAGE_MODULE_DEPENDENCIES="logging"
 
 # Prevent double loading
-[[ -n "${_SENTINEL_CONFIG_CACHE_LOADED}" ]] && return 0
-export _SENTINEL_CONFIG_CACHE_LOADED=1
+[[ -n "${_VANTAGE_CONFIG_CACHE_LOADED}" ]] && return 0
+export _VANTAGE_CONFIG_CACHE_LOADED=1
 
 # Ensure cache directories exist
-SENTINEL_CONFIG_CACHE_DIR="${SENTINEL_CACHE_DIR:-$HOME/.sentinel/cache}/config"
-mkdir -p "$SENTINEL_CONFIG_CACHE_DIR"
+VANTAGE_CONFIG_CACHE_DIR="${VANTAGE_CACHE_DIR:-$HOME/.vantage/cache}/config"
+mkdir -p "$VANTAGE_CONFIG_CACHE_DIR"
 
 # Set default configuration parameters
-: "${SENTINEL_CONFIG_CACHE_ENABLED:=1}"
-: "${SENTINEL_CONFIG_FORCE_REFRESH:=0}"
-: "${SENTINEL_CONFIG_CACHE_RETENTION_DAYS:=30}"
-: "${SENTINEL_CONFIG_VERIFY_HASH:=1}"
+: "${VANTAGE_CONFIG_CACHE_ENABLED:=1}"
+: "${VANTAGE_CONFIG_FORCE_REFRESH:=0}"
+: "${VANTAGE_CONFIG_CACHE_RETENTION_DAYS:=30}"
+: "${VANTAGE_CONFIG_VERIFY_HASH:=1}"
 
 # Log initialization
-if type sentinel_log_info &>/dev/null; then
-    sentinel_log_info "config_cache" "Configuration cache module loaded"
+if type vantage_log_info &>/dev/null; then
+    vantage_log_info "config_cache" "Configuration cache module loaded"
 else
-    if [[ "${SENTINEL_QUIET_MODE:-0}" != "1" && "${SENTINEL_SUPPRESS_MODULE_MESSAGES:-0}" != "1" ]]; then
+    if [[ "${VANTAGE_QUIET_MODE:-0}" != "1" && "${VANTAGE_SUPPRESS_MODULE_MESSAGES:-0}" != "1" ]]; then
         echo "Configuration cache module loaded (logging module not available)"
     fi
 fi
@@ -45,15 +45,15 @@ config_cache_key() {
 # Usage: config_cache_load <filepath> [options]
 config_cache_load() {
     # Skip if caching is disabled
-    if [[ "$SENTINEL_CONFIG_CACHE_ENABLED" != "1" ]]; then 
+    if [[ "$VANTAGE_CONFIG_CACHE_ENABLED" != "1" ]]; then 
         source "$1" 2>/dev/null || true
         return 0  # Always return success to prevent terminal crashes
     fi
     
     local filepath="$1"
     shift
-    local force_refresh="$SENTINEL_CONFIG_FORCE_REFRESH"
-    local verify="$SENTINEL_CONFIG_VERIFY_HASH"
+    local force_refresh="$VANTAGE_CONFIG_FORCE_REFRESH"
+    local verify="$VANTAGE_CONFIG_VERIFY_HASH"
     local debug=0
     local selective_vars=""
     
@@ -90,15 +90,15 @@ config_cache_load() {
     cache_key=$(config_cache_key "$filepath" 2>/dev/null) || cache_key="${filepath//[^a-zA-Z0-9]/_}"
     
     # Ensure cache directory exists
-    mkdir -p "$SENTINEL_CONFIG_CACHE_DIR" 2>/dev/null || {
+    mkdir -p "$VANTAGE_CONFIG_CACHE_DIR" 2>/dev/null || {
         # If cache directory creation fails, just source directly
         source "$filepath" 2>/dev/null || true
         return 0  # Return success to prevent terminal crashes
     }
     
-    local cache_file="${SENTINEL_CONFIG_CACHE_DIR}/${cache_key}.cache"
-    local hash_file="${SENTINEL_CONFIG_CACHE_DIR}/${cache_key}.hash"
-    local stats_file="${SENTINEL_CONFIG_CACHE_DIR}/${cache_key}.stats"
+    local cache_file="${VANTAGE_CONFIG_CACHE_DIR}/${cache_key}.cache"
+    local hash_file="${VANTAGE_CONFIG_CACHE_DIR}/${cache_key}.hash"
+    local stats_file="${VANTAGE_CONFIG_CACHE_DIR}/${cache_key}.stats"
     
     # Skip hash verification if md5sum isn't available
     if [[ $verify -eq 1 ]]; then
@@ -167,9 +167,9 @@ config_cache_load() {
     local temp_cache=""
     
     # Use safer alternative if mktemp fails
-    temp_env_before=$(mktemp 2>/dev/null) || temp_env_before="${SENTINEL_CONFIG_CACHE_DIR}/tmp_before_$$"
-    temp_env_after=$(mktemp 2>/dev/null) || temp_env_after="${SENTINEL_CONFIG_CACHE_DIR}/tmp_after_$$"
-    temp_cache=$(mktemp 2>/dev/null) || temp_cache="${SENTINEL_CONFIG_CACHE_DIR}/tmp_cache_$$"
+    temp_env_before=$(mktemp 2>/dev/null) || temp_env_before="${VANTAGE_CONFIG_CACHE_DIR}/tmp_before_$$"
+    temp_env_after=$(mktemp 2>/dev/null) || temp_env_after="${VANTAGE_CONFIG_CACHE_DIR}/tmp_after_$$"
+    temp_cache=$(mktemp 2>/dev/null) || temp_cache="${VANTAGE_CONFIG_CACHE_DIR}/tmp_cache_$$"
     
     # Touch files to ensure they exist
     touch "$temp_env_before" "$temp_env_after" "$temp_cache" 2>/dev/null
@@ -214,8 +214,8 @@ config_cache_load() {
     
     # Log success only if debug is enabled and logging available
     if [[ $debug -eq 1 ]]; then
-        if type sentinel_log_info &>/dev/null; then
-            sentinel_log_info "config_cache" "Updated cache for $filepath" 2>/dev/null || true
+        if type vantage_log_info &>/dev/null; then
+            vantage_log_info "config_cache" "Updated cache for $filepath" 2>/dev/null || true
         fi
     fi
     
@@ -226,21 +226,21 @@ config_cache_load() {
 
 # Clean up old cache files
 config_cache_cleanup() {
-    local retention_days="${1:-$SENTINEL_CONFIG_CACHE_RETENTION_DAYS}"
+    local retention_days="${1:-$VANTAGE_CONFIG_CACHE_RETENTION_DAYS}"
     
-    if [[ ! -d "$SENTINEL_CONFIG_CACHE_DIR" ]]; then
-        if type sentinel_log_warning &>/dev/null; then
-            sentinel_log_warning "config_cache" "Cache directory not found, creating it"
+    if [[ ! -d "$VANTAGE_CONFIG_CACHE_DIR" ]]; then
+        if type vantage_log_warning &>/dev/null; then
+            vantage_log_warning "config_cache" "Cache directory not found, creating it"
         fi
-        mkdir -p "$SENTINEL_CONFIG_CACHE_DIR"
+        mkdir -p "$VANTAGE_CONFIG_CACHE_DIR"
         return 0
     fi
     
     # Find and remove old cache files
-    find "$SENTINEL_CONFIG_CACHE_DIR" -type f -mtime "+${retention_days}" -delete 2>/dev/null
+    find "$VANTAGE_CONFIG_CACHE_DIR" -type f -mtime "+${retention_days}" -delete 2>/dev/null
     
-    if type sentinel_log_info &>/dev/null; then
-        sentinel_log_info "config_cache" "Cleaned up cache files older than $retention_days days"
+    if type vantage_log_info &>/dev/null; then
+        vantage_log_info "config_cache" "Cleaned up cache files older than $retention_days days"
     fi
     
     return 0
@@ -250,13 +250,13 @@ config_cache_cleanup() {
 config_cache_stats() {
     local verbose="${1:-0}"
     
-    if [[ ! -d "$SENTINEL_CONFIG_CACHE_DIR" ]]; then
+    if [[ ! -d "$VANTAGE_CONFIG_CACHE_DIR" ]]; then
         echo "Cache directory not found."
         return 0
     fi
     
-    local cache_files=$(find "$SENTINEL_CONFIG_CACHE_DIR" -name "*.cache" | wc -l)
-    local total_size=$(du -sh "$SENTINEL_CONFIG_CACHE_DIR" 2>/dev/null | cut -f1)
+    local cache_files=$(find "$VANTAGE_CONFIG_CACHE_DIR" -name "*.cache" | wc -l)
+    local total_size=$(du -sh "$VANTAGE_CONFIG_CACHE_DIR" 2>/dev/null | cut -f1)
     
     echo "Configuration Cache Statistics:"
     echo "------------------------------"
@@ -266,7 +266,7 @@ config_cache_stats() {
     if [[ "$verbose" == "1" ]]; then
         echo ""
         echo "Most frequently loaded configurations:"
-        grep -l "load_count" "$SENTINEL_CONFIG_CACHE_DIR"/*.stats 2>/dev/null | while read stats_file; do
+        grep -l "load_count" "$VANTAGE_CONFIG_CACHE_DIR"/*.stats 2>/dev/null | while read stats_file; do
             local cache_key=$(basename "$stats_file" .stats)
             local load_count=$(grep "load_count=" "$stats_file" | cut -d= -f2)
             local last_load=$(grep "last_load=" "$stats_file" | cut -d= -f2)
@@ -277,7 +277,7 @@ config_cache_stats() {
         
         echo ""
         echo "Recently refreshed configurations:"
-        grep -l "last_refresh" "$SENTINEL_CONFIG_CACHE_DIR"/*.stats 2>/dev/null | while read stats_file; do
+        grep -l "last_refresh" "$VANTAGE_CONFIG_CACHE_DIR"/*.stats 2>/dev/null | while read stats_file; do
             local cache_key=$(basename "$stats_file" .stats)
             local last_refresh=$(grep "last_refresh=" "$stats_file" | cut -d= -f2)
             local last_refresh_date=$(date -d @$last_refresh 2>/dev/null || date -r $last_refresh 2>/dev/null || echo "unknown")
@@ -304,6 +304,6 @@ export -f config_cache_stats
 export -f load_cached_config  # Override the standard function
 
 # Log successful initialization
-if type sentinel_log_info &>/dev/null; then
-    sentinel_log_info "config_cache" "Configuration cache module initialized"
+if type vantage_log_info &>/dev/null; then
+    vantage_log_info "config_cache" "Configuration cache module initialized"
 fi 

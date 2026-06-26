@@ -1,23 +1,23 @@
 #!/usr/bin/env bash
-# SENTINEL - Fallback Registry Module
+# VANTAGE - Fallback Registry Module
 # Version: 1.0.0
-# Description: Provides fallback implementations for critical SENTINEL modules
+# Description: Provides fallback implementations for critical VANTAGE modules
 # Dependencies: error_recovery logging
-# Maintainer: SENTINEL Team
+# Maintainer: VANTAGE Team
 
 # Module metadata
-SENTINEL_MODULE_DESCRIPTION="Fallback implementations for critical modules"
-SENTINEL_MODULE_VERSION="1.0.0"
-SENTINEL_MODULE_DEPENDENCIES="error_recovery logging"
+VANTAGE_MODULE_DESCRIPTION="Fallback implementations for critical modules"
+VANTAGE_MODULE_VERSION="1.0.0"
+VANTAGE_MODULE_DEPENDENCIES="error_recovery logging"
 
 # Prevent double loading
-[[ -n "${_SENTINEL_FALLBACK_REGISTRY_LOADED}" ]] && return 0
-export _SENTINEL_FALLBACK_REGISTRY_LOADED=1
+[[ -n "${_VANTAGE_FALLBACK_REGISTRY_LOADED}" ]] && return 0
+export _VANTAGE_FALLBACK_REGISTRY_LOADED=1
 
 # === FZF Module Fallback ===
 fzf_module_fallback() {
-    [[ -n "$(type -t sentinel_log_warning)" ]] && \
-        sentinel_log_warning "fallback_registry" "FZF unavailable, using basic file selection"
+    [[ -n "$(type -t vantage_log_warning)" ]] && \
+        vantage_log_warning "fallback_registry" "FZF unavailable, using basic file selection"
     
     # Basic file selector without FZF
     select_file() {
@@ -56,8 +56,8 @@ fzf_module_fallback() {
 
 # === Autocomplete Module Fallback ===
 autocomplete_module_fallback() {
-    [[ -n "$(type -t sentinel_log_warning)" ]] && \
-        sentinel_log_warning "fallback_registry" "Advanced autocomplete unavailable, using basic completion"
+    [[ -n "$(type -t vantage_log_warning)" ]] && \
+        vantage_log_warning "fallback_registry" "Advanced autocomplete unavailable, using basic completion"
     
     # Basic completion function
     _basic_completion() {
@@ -83,9 +83,9 @@ autocomplete_module_fallback() {
 }
 
 # === ML Module Fallback ===
-sentinel_ml_fallback() {
-    [[ -n "$(type -t sentinel_log_warning)" ]] && \
-        sentinel_log_warning "fallback_registry" "ML features unavailable, using history-based suggestions"
+vantage_ml_fallback() {
+    [[ -n "$(type -t vantage_log_warning)" ]] && \
+        vantage_log_warning "fallback_registry" "ML features unavailable, using history-based suggestions"
     
     # History-based command suggestion
     suggest_command() {
@@ -105,12 +105,12 @@ sentinel_ml_fallback() {
 }
 
 # === Chat Module Fallback ===
-sentinel_chat_fallback() {
-    [[ -n "$(type -t sentinel_log_warning)" ]] && \
-        sentinel_log_warning "fallback_registry" "Chat AI unavailable, using help system"
+vantage_chat_fallback() {
+    [[ -n "$(type -t vantage_log_warning)" ]] && \
+        vantage_log_warning "fallback_registry" "Chat AI unavailable, using help system"
     
     # Basic help system
-    sentinel_chat() {
+    vantage_chat() {
         local query="$*"
         
         echo "AI Chat unavailable. Showing help for: $query" >&2
@@ -125,13 +125,13 @@ sentinel_chat_fallback() {
         fi
     }
     
-    export -f sentinel_chat
+    export -f vantage_chat
 }
 
 # === Cybersecurity ML Module Fallback ===
-sentinel_cybersec_ml_fallback() {
-    [[ -n "$(type -t sentinel_log_warning)" ]] && \
-        sentinel_log_warning "fallback_registry" "Cybersecurity ML unavailable, using rule-based detection"
+vantage_cybersec_ml_fallback() {
+    [[ -n "$(type -t vantage_log_warning)" ]] && \
+        vantage_log_warning "fallback_registry" "Cybersecurity ML unavailable, using rule-based detection"
     
     # Basic anomaly detection
     detect_anomalies() {
@@ -149,9 +149,9 @@ sentinel_cybersec_ml_fallback() {
 }
 
 # === GitStar Module Fallback ===
-sentinel_gitstar_fallback() {
-    [[ -n "$(type -t sentinel_log_warning)" ]] && \
-        sentinel_log_warning "fallback_registry" "GitStar unavailable, using basic repository search"
+vantage_gitstar_fallback() {
+    [[ -n "$(type -t vantage_log_warning)" ]] && \
+        vantage_log_warning "fallback_registry" "GitStar unavailable, using basic repository search"
     
     # Basic GitHub search
     search_github() {
@@ -174,9 +174,9 @@ sentinel_gitstar_fallback() {
 }
 
 # === OSINT Module Fallback ===
-sentinel_osint_fallback() {
-    [[ -n "$(type -t sentinel_log_warning)" ]] && \
-        sentinel_log_warning "fallback_registry" "OSINT tools unavailable, using basic lookups"
+vantage_osint_fallback() {
+    [[ -n "$(type -t vantage_log_warning)" ]] && \
+        vantage_log_warning "fallback_registry" "OSINT tools unavailable, using basic lookups"
     
     # Basic OSINT lookups
     osint_lookup() {
@@ -227,21 +227,21 @@ logging_module_fallback() {
     }
     
     # Create wrapper functions
-    sentinel_log() { emergency_log "LOG" "$@"; }
-    sentinel_log_debug() { [[ "${DEBUG:-0}" == "1" ]] && emergency_log "DEBUG" "$@"; }
-    sentinel_log_info() { emergency_log "INFO" "$@"; }
-    sentinel_log_warning() { emergency_log "WARN" "$@"; }
-    sentinel_log_error() { emergency_log "ERROR" "$@"; }
-    sentinel_log_critical() { emergency_log "CRIT" "$@"; }
+    vantage_log() { emergency_log "LOG" "$@"; }
+    vantage_log_debug() { [[ "${DEBUG:-0}" == "1" ]] && emergency_log "DEBUG" "$@"; }
+    vantage_log_info() { emergency_log "INFO" "$@"; }
+    vantage_log_warning() { emergency_log "WARN" "$@"; }
+    vantage_log_error() { emergency_log "ERROR" "$@"; }
+    vantage_log_critical() { emergency_log "CRIT" "$@"; }
     
-    export -f emergency_log sentinel_log sentinel_log_debug sentinel_log_info
-    export -f sentinel_log_warning sentinel_log_error sentinel_log_critical
+    export -f emergency_log vantage_log vantage_log_debug vantage_log_info
+    export -f vantage_log_warning vantage_log_error vantage_log_critical
 }
 
 # === Config Cache Module Fallback ===
 config_cache_fallback() {
-    [[ -n "$(type -t sentinel_log_warning)" ]] && \
-        sentinel_log_warning "fallback_registry" "Config cache unavailable, using direct sourcing"
+    [[ -n "$(type -t vantage_log_warning)" ]] && \
+        vantage_log_warning "fallback_registry" "Config cache unavailable, using direct sourcing"
     
     # Direct config loading without cache
     config_cache_load() {
@@ -260,8 +260,8 @@ config_cache_fallback() {
 
 # === HMAC Module Fallback ===
 hmac_module_fallback() {
-    [[ -n "$(type -t sentinel_log_warning)" ]] && \
-        sentinel_log_warning "fallback_registry" "HMAC verification unavailable, using checksums"
+    [[ -n "$(type -t vantage_log_warning)" ]] && \
+        vantage_log_warning "fallback_registry" "HMAC verification unavailable, using checksums"
     
     # Basic checksum verification
     verify_integrity() {
@@ -281,8 +281,8 @@ hmac_module_fallback() {
 
 # === Shell Security Module Fallback ===
 shell_security_fallback() {
-    [[ -n "$(type -t sentinel_log_warning)" ]] && \
-        sentinel_log_warning "fallback_registry" "Advanced shell security unavailable, using basic protections"
+    [[ -n "$(type -t vantage_log_warning)" ]] && \
+        vantage_log_warning "fallback_registry" "Advanced shell security unavailable, using basic protections"
     
     # Basic security settings
     set -o noclobber  # Prevent accidental file overwrites
@@ -308,11 +308,11 @@ register_all_fallbacks() {
     local modules=(
         "fzf:fzf_module_fallback"
         "autocomplete:autocomplete_module_fallback"
-        "sentinel_ml:sentinel_ml_fallback"
-        "sentinel_chat:sentinel_chat_fallback"
-        "sentinel_cybersec_ml:sentinel_cybersec_ml_fallback"
-        "sentinel_gitstar:sentinel_gitstar_fallback"
-        "sentinel_osint:sentinel_osint_fallback"
+        "vantage_ml:vantage_ml_fallback"
+        "vantage_chat:vantage_chat_fallback"
+        "vantage_cybersec_ml:vantage_cybersec_ml_fallback"
+        "vantage_gitstar:vantage_gitstar_fallback"
+        "vantage_osint:vantage_osint_fallback"
         "logging:logging_module_fallback"
         "config_cache:config_cache_fallback"
         "hmac:hmac_module_fallback"
@@ -323,13 +323,13 @@ register_all_fallbacks() {
         local module="${module_pair%:*}"
         local fallback="${module_pair#*:}"
         
-        if type sentinel_register_fallback &>/dev/null; then
-            sentinel_register_fallback "$module" "$fallback"
+        if type vantage_register_fallback &>/dev/null; then
+            vantage_register_fallback "$module" "$fallback"
         fi
     done
     
-    [[ -n "$(type -t sentinel_log_info)" ]] && \
-        sentinel_log_info "fallback_registry" "Registered ${#modules[@]} module fallbacks"
+    [[ -n "$(type -t vantage_log_info)" ]] && \
+        vantage_log_info "fallback_registry" "Registered ${#modules[@]} module fallbacks"
 }
 
 # Test fallback system
@@ -337,7 +337,7 @@ test_fallback_system() {
     echo "=== Testing Fallback System ==="
     
     # Save current state
-    local original_mode="$SENTINEL_FALLBACK_MODE"
+    local original_mode="$VANTAGE_FALLBACK_MODE"
     
     # Test each fallback
     echo "Testing FZF fallback..."
@@ -345,15 +345,15 @@ test_fallback_system() {
     type select_file &>/dev/null && echo "✓ FZF fallback OK" || echo "✗ FZF fallback FAILED"
     
     echo "Testing ML fallback..."
-    sentinel_ml_fallback
+    vantage_ml_fallback
     type suggest_command &>/dev/null && echo "✓ ML fallback OK" || echo "✗ ML fallback FAILED"
     
     echo "Testing logging fallback..."
     logging_module_fallback
-    sentinel_log_info "test" "Logging fallback test" && echo "✓ Logging fallback OK" || echo "✗ Logging fallback FAILED"
+    vantage_log_info "test" "Logging fallback test" && echo "✓ Logging fallback OK" || echo "✗ Logging fallback FAILED"
     
     # Restore state
-    sentinel_set_degradation_mode "$original_mode" 2>/dev/null
+    vantage_set_degradation_mode "$original_mode" 2>/dev/null
     
     echo "=== Fallback System Test Complete ==="
 }
@@ -378,11 +378,11 @@ init_fallback_registry() {
 # Export functions
 export -f fzf_module_fallback
 export -f autocomplete_module_fallback
-export -f sentinel_ml_fallback
-export -f sentinel_chat_fallback
-export -f sentinel_cybersec_ml_fallback
-export -f sentinel_gitstar_fallback
-export -f sentinel_osint_fallback
+export -f vantage_ml_fallback
+export -f vantage_chat_fallback
+export -f vantage_cybersec_ml_fallback
+export -f vantage_gitstar_fallback
+export -f vantage_osint_fallback
 export -f logging_module_fallback
 export -f config_cache_fallback
 export -f hmac_module_fallback

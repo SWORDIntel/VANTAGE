@@ -1,4 +1,4 @@
-# SENTINEL Installer
+# VANTAGE Installer
 
 The supported installer entrypoint is the repository-root [`install.sh`](../install.sh). That wrapper resolves the project root and then delegates to [`installer/install.sh`](install.sh).
 

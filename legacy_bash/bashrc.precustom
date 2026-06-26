@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 ###############################################################################
-# SENTINEL – Early Bash Configuration
+# VANTAGE – Early Bash Configuration
 # ------------------------------------------------------------------------------
 # This file is loaded EARLY in the bash startup process.
 # Use it for core settings that should be available to all bash sessions and
@@ -8,7 +8,7 @@
 #
 # TOGGLE STRUCTURE:
 # - Core system toggles (U_*)
-# - Security and behavior settings (SENTINEL_SECURE_*)
+# - Security and behavior settings (VANTAGE_SECURE_*)
 # - Configuration that other modules depend upon
 ###############################################################################
 
@@ -23,16 +23,16 @@
 #export U_DEBUG=1                  # Debug mode (core)
 
 # Whether to load the contents of ~/bashrc.postcustom after bashrc completes
-export U_POSTCUSTOM=1             # Load postcustom (core) - REQUIRED for SENTINEL
+export U_POSTCUSTOM=1             # Load postcustom (core) - REQUIRED for VANTAGE
 
 # Whether to include ~/bin and ~/.bin in $PATH
 export U_BINS=1                   # Add ~/bin to PATH (core)
 
 # Whether to load ~/.bash_functions and ~/.bash_functions.d/*
-export U_FUNCS=1                  # Load functions (core) - REQUIRED for SENTINEL
+export U_FUNCS=1                  # Load functions (core) - REQUIRED for VANTAGE
 
 # Whether to load ~/.bash_aliases and ~/.bash_aliases.d/*
-export U_ALIASES=1                # Load aliases (core) - REQUIRED for SENTINEL
+export U_ALIASES=1                # Load aliases (core) - REQUIRED for VANTAGE
 
 # Whether to enable authentication agent helpers
 export U_AGENTS=1                 # SSH/GPG agent helpers (core)
@@ -43,11 +43,11 @@ export U_AGENTS=1                 # SSH/GPG agent helpers (core)
 # Whether to enable lesspipe (enables 'less' to read non-text files)
 export ENABLE_LESSPIPE=1          # Lesspipe support (core)
 
-# If enabled, the modules system will be enabled (required for SENTINEL)
-export U_MODULES_ENABLE=1         # Enable SENTINEL modules system - REQUIRED
+# If enabled, the modules system will be enabled (required for VANTAGE)
+export U_MODULES_ENABLE=1         # Enable VANTAGE modules system - REQUIRED
 
 ###############################################################################
-# SENTINEL CORE SECURITY SETTINGS
+# VANTAGE CORE SECURITY SETTINGS
 # ------------------------------------------------------------------------------
 # These settings control core security features and should be defined EARLY.
 # DO NOT SET THESE IN OTHER FILES. This is the canonical source for these values.
@@ -59,28 +59,28 @@ export U_MODULES_ENABLE=1         # Enable SENTINEL modules system - REQUIRED
 export VENV_AUTO=1                # Enable Python venv auto-activation
 
 # Secure remove (rm) command
-export SENTINEL_SECURE_RM=1       # Use secure rm when using 'rm' command
+export VANTAGE_SECURE_RM=1       # Use secure rm when using 'rm' command
 
 # Module system behavior
-export SENTINEL_QUIET_MODULES=0   # Set to 1 to suppress module load messages
+export VANTAGE_QUIET_MODULES=0   # Set to 1 to suppress module load messages
 
 # Secure Logout Configuration
 # --------------------------
 # These settings control what happens when you log out of your shell
-export SENTINEL_SECURE_BASH_HISTORY=0      # Clear bash history on logout
-export SENTINEL_SECURE_SSH_KNOWN_HOSTS=0   # Clear SSH known_hosts on logout
-export SENTINEL_SECURE_CLEAN_CACHE=0       # Clean cache directories on logout
-export SENTINEL_SECURE_BROWSER_CACHE=0     # Clean browser cache on logout
-export SENTINEL_SECURE_RECENT=0            # Clear recent files list on logout
-export SENTINEL_SECURE_VIM_UNDO=1          # Clear vim undo history on logout
-export SENTINEL_SECURE_CLIPBOARD=0         # Clear clipboard on logout
-export SENTINEL_SECURE_CLEAR_SCREEN=0      # Clear screen on logout
+export VANTAGE_SECURE_BASH_HISTORY=0      # Clear bash history on logout
+export VANTAGE_SECURE_SSH_KNOWN_HOSTS=0   # Clear SSH known_hosts on logout
+export VANTAGE_SECURE_CLEAN_CACHE=0       # Clean cache directories on logout
+export VANTAGE_SECURE_BROWSER_CACHE=0     # Clean browser cache on logout
+export VANTAGE_SECURE_RECENT=0            # Clear recent files list on logout
+export VANTAGE_SECURE_VIM_UNDO=1          # Clear vim undo history on logout
+export VANTAGE_SECURE_CLIPBOARD=0         # Clear clipboard on logout
+export VANTAGE_SECURE_CLEAR_SCREEN=0      # Clear screen on logout
 
 # Core Module Enablement
 # ---------------------
 # This controls whether the autocomplete system will be activated
 # It's defined here because it needs to be available early for module loading
-export SENTINEL_AUTOCOMPLETE_ENABLED=1     # Enable autocomplete system
+export VANTAGE_AUTOCOMPLETE_ENABLED=1     # Enable autocomplete system
 
 # Performance Configuration
 # -----------------------
@@ -93,6 +93,6 @@ export BASHRC_PROFILE=1            # Enable bashrc performance profiling
 ###############################################################################
 # IMPORTANT:
 # - Do not add feature module toggles here. Those belong in bashrc.postcustom.
-# - Do not set SENTINEL_*_ENABLED flags here except for core components.
+# - Do not set VANTAGE_*_ENABLED flags here except for core components.
 # - This file contains settings that must be available BEFORE modules load.
 ###############################################################################

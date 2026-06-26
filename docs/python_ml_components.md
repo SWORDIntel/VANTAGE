@@ -1,38 +1,38 @@
-# SENTINEL Python/ML Components Documentation
+# VANTAGE Python/ML Components Documentation
 
 ## Overview
 
-SENTINEL integrates advanced Python-based machine learning and AI capabilities to provide intelligent terminal assistance. These components work seamlessly with the bash environment to offer context-aware suggestions, natural language understanding, and cybersecurity-focused ML features.
+VANTAGE integrates advanced Python-based machine learning and AI capabilities to provide intelligent terminal assistance. These components work seamlessly with the bash environment to offer context-aware suggestions, natural language understanding, and cybersecurity-focused ML features.
 
 ## Architecture Overview
 
 ```
 contrib/
 ├── Core Intelligence
-│   ├── sentinel_autolearn.py      # Adaptive learning system
-│   ├── sentinel_context.py        # Context awareness
-│   ├── sentinel_suggest.py        # Command suggestions
-│   └── sentinel_task_detect.py    # Task detection
+│   ├── vantage_autolearn.py      # Adaptive learning system
+│   ├── vantage_context.py        # Context awareness
+│   ├── vantage_suggest.py        # Command suggestions
+│   └── vantage_task_detect.py    # Task detection
 │
 ├── ML/AI Features
-│   ├── sentinel_chat.py           # LLM chat interface
-│   ├── sentinel_chat_context.py   # Chat context management
-│   ├── sentinel_nlu.py            # Natural language processing
-│   └── sentinel_chain_predict.py  # Command chain prediction
+│   ├── vantage_chat.py           # LLM chat interface
+│   ├── vantage_chat_context.py   # Chat context management
+│   ├── vantage_nlu.py            # Natural language processing
+│   └── vantage_chain_predict.py  # Command chain prediction
 │
 ├── Cybersecurity ML
-│   └── sentinel_cybersec_ml.py    # Security-focused ML
+│   └── vantage_cybersec_ml.py    # Security-focused ML
 │
 └── OSINT Tools
-    ├── sentinel_osint.py          # OSINT data collection
-    ├── sentinel_osint_tui.py      # OSINT terminal UI
-    ├── sentinel_gitstar.py        # GitHub analysis
-    └── sentinel_gitstar_tui.py    # GitStar terminal UI
+    ├── vantage_osint.py          # OSINT data collection
+    ├── vantage_osint_tui.py      # OSINT terminal UI
+    ├── vantage_gitstar.py        # GitHub analysis
+    └── vantage_gitstar_tui.py    # GitStar terminal UI
 ```
 
 ## Core Components
 
-### 1. Adaptive Learning System (sentinel_autolearn.py)
+### 1. Adaptive Learning System (vantage_autolearn.py)
 
 The adaptive learning system monitors user behavior and continuously improves its suggestions and predictions.
 
@@ -66,7 +66,7 @@ class AdaptiveLearner:
         return self._predict_command(current_context)
 ```
 
-### 2. Context Awareness (sentinel_context.py)
+### 2. Context Awareness (vantage_context.py)
 
 Provides rich context information for intelligent decision-making.
 
@@ -92,7 +92,7 @@ current_context = context.get_current_context()
 }
 ```
 
-### 3. Intelligent Suggestions (sentinel_suggest.py)
+### 3. Intelligent Suggestions (vantage_suggest.py)
 
 Provides context-aware command suggestions based on multiple factors.
 
@@ -122,7 +122,7 @@ def generate_suggestions(context):
     return rank_suggestions(suggestions, context)
 ```
 
-### 4. Task Detection (sentinel_task_detect.py)
+### 4. Task Detection (vantage_task_detect.py)
 
 Automatically detects what task the user is trying to accomplish.
 
@@ -139,7 +139,7 @@ Recent Commands → Feature Extraction → Task Classification → Confidence Sc
                 Command Patterns        ML Classifier      Task Suggestions
 ```
 
-### 5. LLM Chat Interface (sentinel_chat.py)
+### 5. LLM Chat Interface (vantage_chat.py)
 
 Integrates local LLM models for natural language interaction.
 
@@ -156,7 +156,7 @@ Integrates local LLM models for natural language interaction.
 
 #### Usage Example:
 ```bash
-$ sentinel-chat "how do I find large files in the current directory?"
+$ vantage-chat "how do I find large files in the current directory?"
 
 Based on your request, here are several ways to find large files:
 
@@ -166,13 +166,13 @@ Based on your request, here are several ways to find large files:
 2. Using 'du' command:
    du -h . | grep '[0-9\.]\+G'
 
-3. Using the SENTINEL helper function:
+3. Using the VANTAGE helper function:
    findlarge 100M
 
 Would you like me to explain any of these commands?
 ```
 
-### 6. Natural Language Understanding (sentinel_nlu.py)
+### 6. Natural Language Understanding (vantage_nlu.py)
 
 Processes natural language inputs to understand user intent.
 
@@ -189,7 +189,7 @@ Processes natural language inputs to understand user intent.
 - **Development**: build, test, deploy
 - **Security**: scan, analyze, exploit
 
-### 7. Command Chain Prediction (sentinel_chain_predict.py)
+### 7. Command Chain Prediction (vantage_chain_predict.py)
 
 Predicts sequences of commands based on patterns.
 
@@ -217,7 +217,7 @@ class ChainPredictor:
         return self.ensemble_predict(markov_pred, lstm_pred)
 ```
 
-### 8. Cybersecurity ML (sentinel_cybersec_ml.py)
+### 8. Cybersecurity ML (vantage_cybersec_ml.py)
 
 Specialized ML features for cybersecurity tasks.
 
@@ -234,7 +234,7 @@ Specialized ML features for cybersecurity tasks.
 - **Sequence Analysis**: RNN for log pattern analysis
 - **Clustering**: DBSCAN for grouping similar threats
 
-### 9. OSINT Tools (sentinel_osint.py)
+### 9. OSINT Tools (vantage_osint.py)
 
 Open Source Intelligence gathering with ML enhancement.
 
@@ -253,7 +253,7 @@ Open Source Intelligence gathering with ML enhancement.
 - Code repositories
 - Dark web monitoring
 
-### 10. GitStar System (sentinel_gitstar.py)
+### 10. GitStar System (vantage_gitstar.py)
 
 Analyzes and categorizes GitHub repositories.
 
@@ -286,9 +286,9 @@ Python components communicate with bash through:
 
 ```bash
 # In bash module
-sentinel_ml_suggest() {
+vantage_ml_suggest() {
     local context=$(get_current_context)
-    local suggestions=$(python3 $SENTINEL_PATH/contrib/sentinel_suggest.py "$context")
+    local suggestions=$(python3 $VANTAGE_PATH/contrib/vantage_suggest.py "$context")
     echo "$suggestions"
 }
 
@@ -306,7 +306,7 @@ def main():
 
 ### Python Component Configuration
 
-Configuration file: `~/.sentinel/ml_config.yaml`
+Configuration file: `~/.vantage/ml_config.yaml`
 
 ```yaml
 ml_components:
@@ -336,18 +336,18 @@ ml_components:
 
 ```bash
 # ML Component Settings
-export SENTINEL_ML_ENABLED=true
-export SENTINEL_ML_MODEL_PATH="$HOME/.sentinel/models"
-export SENTINEL_ML_CACHE_SIZE=1000
-export SENTINEL_ML_BATCH_SIZE=32
+export VANTAGE_ML_ENABLED=true
+export VANTAGE_ML_MODEL_PATH="$HOME/.vantage/models"
+export VANTAGE_ML_CACHE_SIZE=1000
+export VANTAGE_ML_BATCH_SIZE=32
 
 # Chat Settings
-export SENTINEL_CHAT_MODEL="mistral"
-export SENTINEL_CHAT_CONTEXT=true
+export VANTAGE_CHAT_MODEL="mistral"
+export VANTAGE_CHAT_CONTEXT=true
 
 # OSINT Settings
-export SENTINEL_OSINT_TIMEOUT=30
-export SENTINEL_OSINT_MAX_RESULTS=100
+export VANTAGE_OSINT_TIMEOUT=30
+export VANTAGE_OSINT_MAX_RESULTS=100
 ```
 
 ## Performance Optimization
@@ -391,7 +391,7 @@ export SENTINEL_OSINT_MAX_RESULTS=100
 1. **Model Loading Errors**
    ```bash
    # Check model path
-   ls -la $SENTINEL_ML_MODEL_PATH
+   ls -la $VANTAGE_ML_MODEL_PATH
    
    # Verify Python dependencies
    pip check -r requirements.txt
@@ -400,10 +400,10 @@ export SENTINEL_OSINT_MAX_RESULTS=100
 2. **Performance Issues**
    ```bash
    # Enable profiling
-   export SENTINEL_ML_PROFILE=true
+   export VANTAGE_ML_PROFILE=true
    
    # Check resource usage
-   sentinel ml status
+   vantage ml status
    ```
 
 3. **Integration Problems**
@@ -412,7 +412,7 @@ export SENTINEL_OSINT_MAX_RESULTS=100
    python3 contrib/test_ml_components.py
    
    # Check IPC
-   sentinel ml test-ipc
+   vantage ml test-ipc
    ```
 
 ## Development Guide
@@ -421,11 +421,11 @@ export SENTINEL_OSINT_MAX_RESULTS=100
 
 1. **Create Component File**
    ```python
-   # contrib/sentinel_myfeature.py
+   # contrib/vantage_myfeature.py
    
-   from sentinel_base import SentinelComponent
+   from vantage_base import VantageComponent
    
-   class MyFeature(SentinelComponent):
+   class MyFeature(VantageComponent):
        def __init__(self):
            super().__init__("myfeature")
            
@@ -437,7 +437,7 @@ export SENTINEL_OSINT_MAX_RESULTS=100
 2. **Register Component**
    ```python
    # In __init__.py
-   from .sentinel_myfeature import MyFeature
+   from .vantage_myfeature import MyFeature
    
    COMPONENTS = {
        'myfeature': MyFeature
@@ -447,8 +447,8 @@ export SENTINEL_OSINT_MAX_RESULTS=100
 3. **Create Bash Integration**
    ```bash
    # In module file
-   sentinel_myfeature() {
-       python3 $SENTINEL_PATH/contrib/run_component.py myfeature "$@"
+   vantage_myfeature() {
+       python3 $VANTAGE_PATH/contrib/run_component.py myfeature "$@"
    }
    ```
 
@@ -471,4 +471,4 @@ export SENTINEL_OSINT_MAX_RESULTS=100
 
 ## Conclusion
 
-The Python/ML components provide SENTINEL with powerful intelligence capabilities while maintaining security and performance. These components work together to create an adaptive, context-aware terminal experience that learns and improves over time.
+The Python/ML components provide VANTAGE with powerful intelligence capabilities while maintaining security and performance. These components work together to create an adaptive, context-aware terminal experience that learns and improves over time.

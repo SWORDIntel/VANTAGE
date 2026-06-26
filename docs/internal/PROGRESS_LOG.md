@@ -1,9 +1,9 @@
-# SENTINEL Startup Optimization - Progress Log
+# VANTAGE Startup Optimization - Progress Log
 **Date**: July 11, 2025  
 **Task**: Reduce verbose output spam during shell startup
 
 ## Problem Identified
-The SENTINEL bash environment was producing excessive verbose output during startup, including:
+The VANTAGE bash environment was producing excessive verbose output during startup, including:
 - Module loading messages from 30+ modules
 - Parallel loader job completion notifications ("[1] Done", "[2] Done", etc.)
 - Configuration summaries and usage instructions
@@ -21,9 +21,9 @@ Through systematic analysis of the module system, identified key sources of verb
    - `hashcat.module` (lines 903-904): Loading confirmation
    - `obfuscate.module` (lines 27, 1454): Warning and loading messages
    - `distcc.module` (lines 359-360): Loading and usage instructions
-   - `sentinel_context.module` (line 157): Status message
+   - `vantage_context.module` (line 157): Status message
    - `bash_logout.module` (line 322): Configuration instructions
-   - `sentinel_ml_enhanced.module` (line 340): Loading confirmation
+   - `vantage_ml_enhanced.module` (line 340): Loading confirmation
    - `config_cache.module` (line 31): Fallback status message
 
 3. **Background Job Notifications**:
@@ -39,19 +39,19 @@ Through systematic analysis of the module system, identified key sources of verb
 ### 1. Environment Variable Controls
 Added comprehensive quiet mode flags in `bashrc.postcustom`:
 ```bash
-export SENTINEL_QUIET_STATUS=1
-export SENTINEL_VERBOSE=0
-export SENTINEL_DEBUG=0
-export SENTINEL_DEBUG_MODULES=0
-export SENTINEL_QUIET_MODE=1
-export SENTINEL_DISABLE_STARTUP_MESSAGES=1
-export SENTINEL_SUPPRESS_MODULE_MESSAGES=1
+export VANTAGE_QUIET_STATUS=1
+export VANTAGE_VERBOSE=0
+export VANTAGE_DEBUG=0
+export VANTAGE_DEBUG_MODULES=0
+export VANTAGE_QUIET_MODE=1
+export VANTAGE_DISABLE_STARTUP_MESSAGES=1
+export VANTAGE_SUPPRESS_MODULE_MESSAGES=1
 ```
 
 ### 2. Conditional Message Display
 Modified all verbose modules to respect quiet mode:
 ```bash
-if [[ "${SENTINEL_QUIET_MODE:-0}" != "1" && "${SENTINEL_SUPPRESS_MODULE_MESSAGES:-0}" != "1" ]]; then
+if [[ "${VANTAGE_QUIET_MODE:-0}" != "1" && "${VANTAGE_SUPPRESS_MODULE_MESSAGES:-0}" != "1" ]]; then
     # Show message only when not in quiet mode
 fi
 ```
@@ -60,9 +60,9 @@ Applied to:
 - `hashcat.module`
 - `obfuscate.module` 
 - `distcc.module`
-- `sentinel_context.module`
+- `vantage_context.module`
 - `bash_logout.module`
-- `sentinel_ml_enhanced.module`
+- `vantage_ml_enhanced.module`
 - `config_cache.module`
 - `parallel_loader.module`
 - `tools/module_helpers/install-autocomplete.sh`
@@ -73,7 +73,7 @@ Applied to:
 - Eliminated job completion notifications from module metadata loading
 
 ### 4. Streamlined Status Reporting
-Created `sentinel_startup_summary()` function to provide minimal critical information:
+Created `vantage_startup_summary()` function to provide minimal critical information:
 - Timestamp when ready
 - Active virtual environment status
 - NPU device availability
@@ -85,15 +85,15 @@ Replaced verbose OpenVINO environment checks with minimal warning-only output in
 ## Files Modified
 
 ### Core Configuration:
-- `/opt/github/SENTINEL/bashrc.postcustom` - Added quiet mode variables and streamlined functions
+- `/opt/github/VANTAGE/bashrc.postcustom` - Added quiet mode variables and streamlined functions
 
 ### Module Files:
 - `bash_modules.d/hashcat.module` - Conditional loading messages
 - `bash_modules.d/obfuscate.module` - Conditional warning and info messages  
 - `bash_modules.d/distcc.module` - Conditional loading messages
-- `bash_modules.d/sentinel_context.module` - Conditional loading messages
+- `bash_modules.d/vantage_context.module` - Conditional loading messages
 - `bash_modules.d/bash_logout.module` - Conditional loading messages
-- `bash_modules.d/sentinel_ml_enhanced.module` - Conditional loading messages
+- `bash_modules.d/vantage_ml_enhanced.module` - Conditional loading messages
 - `bash_modules.d/config_cache.module` - Conditional loading messages
 - `bash_modules.d/parallel_loader.module` - Conditional loader messages + background job silencing
 - `tools/module_helpers/install-autocomplete.sh` - Conditional banner display
@@ -101,7 +101,7 @@ Replaced verbose OpenVINO environment checks with minimal warning-only output in
 
 ## Testing Strategy
 - Modified modules use conditional checks with fallback defaults
-- Quiet mode can be disabled by setting `SENTINEL_QUIET_MODE=0`
+- Quiet mode can be disabled by setting `VANTAGE_QUIET_MODE=0`
 - Background compatibility maintained for debugging scenarios
 - No functional changes to module behavior, only output control
 
@@ -157,7 +157,7 @@ Replaced verbose OpenVINO environment checks with minimal warning-only output in
 ### 3. User Configuration
 - Add command-line utilities to toggle quiet mode
 - Consider per-module verbosity controls
-- Integration with SENTINEL configuration management
+- Integration with VANTAGE configuration management
 
 ### 4. Performance Monitoring
 - Monitor startup time improvements
@@ -168,21 +168,21 @@ Replaced verbose OpenVINO environment checks with minimal warning-only output in
 
 ### Enable Verbose Mode (for debugging):
 ```bash
-export SENTINEL_QUIET_MODE=0
+export VANTAGE_QUIET_MODE=0
 source ~/.bashrc
 ```
 
 ### Return to Quiet Mode:
 ```bash
-export SENTINEL_QUIET_MODE=1
+export VANTAGE_QUIET_MODE=1
 source ~/.bashrc
 ```
 
 ### Show Current Verbosity Settings:
 ```bash
-env | grep SENTINEL_.*QUIET
-env | grep SENTINEL_.*VERBOSE
-env | grep SENTINEL_.*DEBUG
+env | grep VANTAGE_.*QUIET
+env | grep VANTAGE_.*VERBOSE
+env | grep VANTAGE_.*DEBUG
 ```
 
 This optimization significantly improves the user experience by eliminating startup spam while preserving all functionality and debugging capabilities.

@@ -1,9 +1,9 @@
 local wezterm = require 'wezterm'
-local ui = require 'sentinel.ui'
-local dashboards = require 'sentinel.dashboards'
-local chains = require 'sentinel.chains'
-local git_ui = require 'sentinel.git_ui'
-local workspace_builder = require 'sentinel.workspace_builder'
+local ui = require 'vantage.ui'
+local dashboards = require 'vantage.dashboards'
+local chains = require 'vantage.chains'
+local git_ui = require 'vantage.git_ui'
+local workspace_builder = require 'vantage.workspace_builder'
 
 local M = {}
 
@@ -14,11 +14,11 @@ function M.setup(config)
     config.leader = { key = 'a', mods = 'CTRL', timeout_milliseconds = 1000 }
 
     local custom_keys = {
-        -- Master SENTINEL UI Toggle
+        -- Master VANTAGE UI Toggle
         {
             key = 'M',
             mods = 'CTRL|SHIFT',
-            action = wezterm.action_callback(ui.show_sentinel_menu),
+            action = wezterm.action_callback(ui.show_vantage_menu),
         },
         -- Pillar 1: LLM Chat Sidebar
         {

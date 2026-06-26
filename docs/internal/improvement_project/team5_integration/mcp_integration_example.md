@@ -2,26 +2,26 @@
 
 ## Overview
 
-The Model Context Protocol (MCP) enables AI models to interact with SENTINEL's external tools through a standardized JSON-based protocol. This allows for seamless integration between AI assistants and system tools.
+The Model Context Protocol (MCP) enables AI models to interact with VANTAGE's external tools through a standardized JSON-based protocol. This allows for seamless integration between AI assistants and system tools.
 
 ## Architecture
 
 ```
-AI Model <-> MCP Client <-> MCP Socket <-> SENTINEL MCP Handler <-> External Tools
+AI Model <-> MCP Client <-> MCP Socket <-> VANTAGE MCP Handler <-> External Tools
 ```
 
 ## Setup
 
-1. Enable MCP in your SENTINEL configuration:
+1. Enable MCP in your VANTAGE configuration:
 ```bash
-export SENTINEL_MCP_ENABLED=1
-export SENTINEL_MCP_SOCKET="$HOME/.sentinel/tools/mcp.sock"
-export SENTINEL_MCP_TIMEOUT=30
+export VANTAGE_MCP_ENABLED=1
+export VANTAGE_MCP_SOCKET="$HOME/.vantage/tools/mcp.sock"
+export VANTAGE_MCP_TIMEOUT=30
 ```
 
 2. Load the external tools module:
 ```bash
-source ~/.sentinel/modules/external_tools.module
+source ~/.vantage/modules/external_tools.module
 ```
 
 ## Protocol Specification
@@ -244,7 +244,7 @@ import socket
 import os
 
 class MCPClient:
-    def __init__(self, socket_path="~/.sentinel/tools/mcp.sock"):
+    def __init__(self, socket_path="~/.vantage/tools/mcp.sock"):
         self.socket_path = os.path.expanduser(socket_path)
         self.request_id = 0
     
@@ -292,7 +292,7 @@ print("Git status:", result)
 #!/usr/bin/env bash
 # MCP client implementation in bash
 
-MCP_SOCKET="${MCP_SOCKET:-$HOME/.sentinel/tools/mcp.sock}"
+MCP_SOCKET="${MCP_SOCKET:-$HOME/.vantage/tools/mcp.sock}"
 
 mcp_request() {
     local method="$1"
@@ -367,7 +367,7 @@ my_plugin_mcp_handler() {
 
 2. Register handler during plugin initialization:
 ```bash
-echo "myplugin:my_plugin_mcp_handler" >> "$SENTINEL_TOOLS_DIR/mcp_handlers.txt"
+echo "myplugin:my_plugin_mcp_handler" >> "$VANTAGE_TOOLS_DIR/mcp_handlers.txt"
 ```
 
 3. Use namespaced method names:

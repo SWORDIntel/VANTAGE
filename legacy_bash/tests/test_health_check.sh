@@ -1,17 +1,17 @@
 #!/usr/bin/env bash
-# Test script for SENTINEL health check module
+# Test script for VANTAGE health check module
 
-export SENTINEL_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")"/.. && pwd)"
-export SENTINEL_SKIP_AUTO_LOAD=1
-export SENTINEL_QUIET_MODULES=1
+export VANTAGE_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")"/.. && pwd)"
+export VANTAGE_SKIP_AUTO_LOAD=1
+export VANTAGE_QUIET_MODULES=1
 tmp_home="$(mktemp -d)"
-trap 'rm -rf "$tmp_home" "${SENTINEL_HEALTH_CHECK_DIR}"' EXIT
+trap 'rm -rf "$tmp_home" "${VANTAGE_HEALTH_CHECK_DIR}"' EXIT
 export HOME="$tmp_home"
-export SENTINEL_HEALTH_CHECK_DIR="/tmp/sentinel_health_test_$$"
-rm -rf "${SENTINEL_HEALTH_CHECK_DIR}"
+export VANTAGE_HEALTH_CHECK_DIR="/tmp/vantage_health_test_$$"
+rm -rf "${VANTAGE_HEALTH_CHECK_DIR}"
 
 # Source the module system
-source "${SENTINEL_ROOT}/bash_modules"
+source "${VANTAGE_ROOT}/bash_modules"
 
 # Enable health check module
 echo "Loading health check module..."
@@ -47,7 +47,7 @@ failing_module_health() {
     return 1
 }
 register_health_check "failing_test" failing_module_health
-SENTINEL_LOADED_MODULES["failing_test"]=1
+VANTAGE_LOADED_MODULES["failing_test"]=1
 health_check check failing_test
 
 # 6. Show final status

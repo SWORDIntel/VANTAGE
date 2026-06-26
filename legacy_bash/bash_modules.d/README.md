@@ -1,6 +1,6 @@
-# SENTINEL Module Directory
+# VANTAGE Module Directory
 
-`bash_modules.d/` contains loadable SENTINEL shell modules.
+`bash_modules.d/` contains loadable VANTAGE shell modules.
 
 ## Rules
 

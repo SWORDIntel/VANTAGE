@@ -1,17 +1,17 @@
 # FABRIC Integration (Optional)
 
-SENTINEL can integrate with a larger multi-service ecosystem (“the Fabric”). This integration is **optional** and **disabled by default**.
+VANTAGE can integrate with a larger multi-service ecosystem (“the Fabric”). This integration is **optional** and **disabled by default**.
 
-## Design contract (what SENTINEL does)
+## Design contract (what VANTAGE does)
 
-- **Outbound-only telemetry** (one-way): SENTINEL only *emits* events. It does **not** read commands/requests from the Fabric.
+- **Outbound-only telemetry** (one-way): VANTAGE only *emits* events. It does **not** read commands/requests from the Fabric.
 - **Non-blocking**: telemetry sends use short timeouts and run best-effort; failures are dropped and do not slow shell startup.
 - **Configurable docs root**: a configurable documentation root can be opened by aliases (`fabric-open-doc`).
 - **Pipeline lifecycle naming**: lightweight wrappers for a standard lifecycle naming scheme are available when Fabric is enabled.
 
 ## Enabling Fabric integration
 
-1. Copy `config.yaml.dist` → `config.yaml` (repo root) and edit:
+1. Copy `config/config.yaml.dist` → `config.yaml` (repo root) and edit:
 
 ```yaml
 fabric:
@@ -50,7 +50,7 @@ Current low-volume hook points included:
 
 ### What is never emitted by default
 
-SENTINEL’s telemetry is designed to avoid secrets by default. In particular, the built-in hooks do **not** include:
+VANTAGE’s telemetry is designed to avoid secrets by default. In particular, the built-in hooks do **not** include:
 - API tokens, credentials, private keys
 - full command histories
 - full environment dumps
@@ -65,7 +65,7 @@ Set:
 - `fabric.telemetry.transport: "unix"`
 - `fabric.telemetry.unix_socket: "/tmp/fabric-events.sock"`
 
-SENTINEL will attempt to send via `nc -U` (or `socat` if available) with a short timeout.
+VANTAGE will attempt to send via `nc -U` (or `socat` if available) with a short timeout.
 
 #### HTTP
 
@@ -73,7 +73,7 @@ Set:
 - `fabric.telemetry.transport: "http"`
 - `fabric.telemetry.http_endpoint: "http://127.0.0.1:PORT/events"`
 
-SENTINEL will POST the JSON line using `curl` with short connect/max timeouts.
+VANTAGE will POST the JSON line using `curl` with short connect/max timeouts.
 
 ## Troubleshooting
 

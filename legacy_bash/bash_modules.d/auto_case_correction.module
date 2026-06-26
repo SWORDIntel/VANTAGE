@@ -1,18 +1,18 @@
 #!/usr/bin/env bash
-# SENTINEL - Auto Case Correction Module
+# VANTAGE - Auto Case Correction Module
 # Version: 1.0.0
 # Description: Automatically corrects accidental capitalizations in commands
 # Example: GIT PULL -> git pull, DOCKER PS -> docker ps
 # Dependencies: none
-# Maintainer: SENTINEL Team
+# Maintainer: VANTAGE Team
 # Works with: Both kitty and non-kitty pathways
 
 # Prevent multiple loading
-[[ -n "${_SENTINEL_AUTO_CASE_CORRECTION_LOADED}" ]] && return 0
-export _SENTINEL_AUTO_CASE_CORRECTION_LOADED=1
+[[ -n "${_VANTAGE_AUTO_CASE_CORRECTION_LOADED}" ]] && return 0
+export _VANTAGE_AUTO_CASE_CORRECTION_LOADED=1
 
 # Check if module is enabled (enabled by default)
-if [[ "${SENTINEL_AUTO_CASE_CORRECTION_ENABLED:-1}" != "1" ]]; then
+if [[ "${VANTAGE_AUTO_CASE_CORRECTION_ENABLED:-1}" != "1" ]]; then
     return 0
 fi
 
@@ -63,7 +63,7 @@ _is_accidentally_capitalized() {
 }
 
 # Command not found handler - intercepts commands that don't exist
-_sentinel_command_not_found_handler() {
+_vantage_command_not_found_handler() {
     local cmd="$1"
     shift
     local args="$*"
@@ -98,7 +98,7 @@ _sentinel_command_not_found_handler() {
 # The DEBUG trap approach can interfere with command execution, so we avoid it
 
 # Initialize the module
-_sentinel_init_case_correction() {
+_vantage_init_case_correction() {
     # Only enable in interactive shells
     [[ $- != *i* ]] && return 0
     
@@ -110,7 +110,7 @@ _sentinel_init_case_correction() {
     # Set our command_not_found_handle (bash 4.0+)
     # This will catch commands that don't exist and check if lowercase version exists
     command_not_found_handle() {
-        _sentinel_command_not_found_handler "$@"
+        _vantage_command_not_found_handler "$@"
     }
     
     # Note: For commands that exist but are wrong case (e.g., "GIT" when "git" exists),
@@ -119,7 +119,7 @@ _sentinel_init_case_correction() {
     # case-sensitive, the behavior is system-dependent and we rely on command_not_found_handle.
     
     # Log initialization only in debug mode
-    [[ "${SENTINEL_DEBUG:-0}" == "1" ]] && echo "[SENTINEL] Auto case correction enabled" >&2
+    [[ "${VANTAGE_DEBUG:-0}" == "1" ]] && echo "[VANTAGE] Auto case correction enabled" >&2
 }
 
 # Export helper functions
@@ -128,4 +128,4 @@ export -f _is_accidentally_capitalized
 export -f _command_exists_lowercase
 
 # Initialize
-_sentinel_init_case_correction
+_vantage_init_case_correction

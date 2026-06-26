@@ -1,31 +1,31 @@
 #!/usr/bin/env bash
 ### BEGIN MODULE INFO
-# Name:                  SENTINEL Module: hashcat
+# Name:                  VANTAGE Module: hashcat
 # Short-Description:     Hashcat wrapper with auto-detection and cracking workflows
 # Description:           Provides an advanced hashcat interface with hash type detection,
 #                        rule and wordlist management, and streamlined workflows for 
 #                        targeted and thorough password cracking operations.
 # Author:                John
 # Email:                 intel@swordintelligence.airforce
-# URL:                   https://github.com/SWORDIntel/SENTINEL/
+# URL:                   https://github.com/SWORDIntel/VANTAGE/
 
 # Prevent multiple loading
-[[ -n "${_SENTINEL_HASHCAT_LOADED}" ]] && return 0
-export _SENTINEL_HASHCAT_LOADED=1
+[[ -n "${_VANTAGE_HASHCAT_LOADED}" ]] && return 0
+export _VANTAGE_HASHCAT_LOADED=1
 # Version:               1.0.0
 # Stability:             stable
 # Tags:                  cracking, hashcat, automation, password-recovery, opsec
-# Provides:              sentinel_hashcat_interface
+# Provides:              vantage_hashcat_interface
 # Requires:              hashcat, find, grep, head, awk, optional:wget,curl,7z
 # Conflicts:             none
 ### END MODULE INFO
 
 
 # Module metadata
-SENTINEL_MODULE_VERSION="1.0"
-SENTINEL_MODULE_DESCRIPTION="Advanced hashcat wrapper with hash type detection and automated cracking workflows"
-SENTINEL_MODULE_AUTHOR="John"
-SENTINEL_MODULE_DEPENDENCIES=""
+VANTAGE_MODULE_VERSION="1.0"
+VANTAGE_MODULE_DESCRIPTION="Advanced hashcat wrapper with hash type detection and automated cracking workflows"
+VANTAGE_MODULE_AUTHOR="John"
+VANTAGE_MODULE_DEPENDENCIES=""
 
 # Check if we're being sourced
 if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
@@ -365,7 +365,7 @@ find_rule() {
 
 # Function to show hashcat usage and module-specific commands
 hash_help() {
-    echo -e "${GREEN}SENTINEL Hashcat Module${NC} - Version ${SENTINEL_MODULE_VERSION}"
+    echo -e "${GREEN}VANTAGE Hashcat Module${NC} - Version ${VANTAGE_MODULE_VERSION}"
     echo "==========================================="
     echo -e "${CYAN}Hash Detection:${NC}"
     echo "  hashdetect <hash or file>    - Detect hash type and suggest hashcat mode"
@@ -900,7 +900,7 @@ alias rule='find_rule'
 alias hchelp='hash_help'
 
 # Display module loaded message
-if [[ "${SENTINEL_QUIET_MODE:-0}" != "1" && "${SENTINEL_SUPPRESS_MODULE_MESSAGES:-0}" != "1" ]]; then
+if [[ "${VANTAGE_QUIET_MODE:-0}" != "1" && "${VANTAGE_SUPPRESS_MODULE_MESSAGES:-0}" != "1" ]]; then
     echo -e "${GREEN}[+]${NC} Hashcat module loaded with auto-detection and cracking workflows."
     echo -e "    Type ${CYAN}hchelp${NC} to see available commands."
 fi

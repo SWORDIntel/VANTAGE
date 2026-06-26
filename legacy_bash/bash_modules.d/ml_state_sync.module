@@ -5,7 +5,7 @@
 # Description:           Synchronizes state between bash and Python ML components
 #                        using the python_integration module.
 # Author:                Team 5 Agent 1
-# URL:                   https://github.com/SWORDIntel/SENTINEL/
+# URL:                   https://github.com/SWORDIntel/VANTAGE/
 # Version:               1.0.0
 # Stability:             stable
 # Tags:                  ml, state-sync, integration
@@ -14,17 +14,17 @@
 # Conflicts:             none
 ### END MODULE INFO
 
-[[ -n "${_SENTINEL_ML_STATE_SYNC_LOADED:-}" ]] && return 0
-export _SENTINEL_ML_STATE_SYNC_LOADED=1
+[[ -n "${_VANTAGE_ML_STATE_SYNC_LOADED:-}" ]] && return 0
+export _VANTAGE_ML_STATE_SYNC_LOADED=1
 
 # Check if python_integration module is loaded
-if ! declare -f sentinel_state_get &>/dev/null; then
+if ! declare -f vantage_state_get &>/dev/null; then
     echo "[ML_STATE_SYNC] Error: python_integration module not loaded"
     return 1
 fi
 
 # ML component state directory
-ML_STATE_DIR="${SENTINEL_STATE_DIR}/ml"
+ML_STATE_DIR="${VANTAGE_STATE_DIR}/ml"
 mkdir -p "${ML_STATE_DIR}"
 
 # Sync command history for ML training
@@ -52,7 +52,7 @@ print(json.dumps(commands, indent=2))
     
     if [[ -s "$temp_file" ]]; then
         mv "$temp_file" "$history_file"
-        sentinel_state_set "ml_last_history_sync" "$(date +%s)"
+        vantage_state_set "ml_last_history_sync" "$(date +%s)"
         echo "[ML_STATE_SYNC] Command history synchronized"
     fi
 }
@@ -75,16 +75,16 @@ context = {
     'shell': os.environ.get('SHELL', 'unknown'),
     'term': os.environ.get('TERM', 'unknown'),
     'pwd': os.getcwd(),
-    'sentinel_version': os.environ.get('SENTINEL_VERSION', 'unknown'),
+    'vantage_version': os.environ.get('VANTAGE_VERSION', 'unknown'),
     'python_version': '.'.join(map(str, sys.version_info[:3])),
-    'ml_enabled': os.environ.get('SENTINEL_ML_ENABLED', '0'),
+    'ml_enabled': os.environ.get('VANTAGE_ML_ENABLED', '0'),
     'timestamp': int(${EPOCHSECONDS:-$(date +%s)})
 }
 
 print(json.dumps(context, indent=2))
 " > "$context_file"
     
-    sentinel_state_set "ml_last_context_sync" "$(date +%s)"
+    vantage_state_set "ml_last_context_sync" "$(date +%s)"
     echo "[ML_STATE_SYNC] Environment context synchronized"
 }
 
@@ -120,14 +120,14 @@ metadata = {
 print(json.dumps(metadata, indent=2))
 " > "$metadata_file"
         
-        sentinel_state_set "ml_model_count" "$(jq -r '.count' "$metadata_file" 2>/dev/null || echo 0)"
+        vantage_state_set "ml_model_count" "$(jq -r '.count' "$metadata_file" 2>/dev/null || echo 0)"
         echo "[ML_STATE_SYNC] Model metadata synchronized"
     fi
 }
 
 # Automatic sync function
 ml_auto_sync() {
-    local last_sync=$(sentinel_state_get "ml_last_auto_sync" || echo 0)
+    local last_sync=$(vantage_state_get "ml_last_auto_sync" || echo 0)
     local current_time=$(date +%s)
     local sync_interval=300  # 5 minutes
     
@@ -135,7 +135,7 @@ ml_auto_sync() {
         sync_command_history
         sync_environment_context
         sync_model_metadata
-        sentinel_state_set "ml_last_auto_sync" "$current_time"
+        vantage_state_set "ml_last_auto_sync" "$current_time"
     fi
 }
 
@@ -145,16 +145,16 @@ ml_sync_all() {
     sync_command_history
     sync_environment_context
     sync_model_metadata
-    sentinel_state_set "ml_last_manual_sync" "$(date +%s)"
+    vantage_state_set "ml_last_manual_sync" "$(date +%s)"
     echo "[ML_STATE_SYNC] Full synchronization complete"
 }
 
 # Get ML state summary
 ml_state_summary() {
     echo "=== ML State Summary ==="
-    echo "Last auto sync: $(date -d @$(sentinel_state_get ml_last_auto_sync || echo 0) 2>/dev/null || echo 'Never')"
-    echo "Last manual sync: $(date -d @$(sentinel_state_get ml_last_manual_sync || echo 0) 2>/dev/null || echo 'Never')"
-    echo "Model count: $(sentinel_state_get ml_model_count || echo 0)"
+    echo "Last auto sync: $(date -d @$(vantage_state_get ml_last_auto_sync || echo 0) 2>/dev/null || echo 'Never')"
+    echo "Last manual sync: $(date -d @$(vantage_state_get ml_last_manual_sync || echo 0) 2>/dev/null || echo 'Never')"
+    echo "Model count: $(vantage_state_get ml_model_count || echo 0)"
     echo "State directory: ${ML_STATE_DIR}"
     
     if [[ -f "${ML_STATE_DIR}/environment_context.json" ]]; then

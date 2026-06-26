@@ -1,4 +1,4 @@
-# Python Integration Module for SENTINEL
+# Python Integration Module for VANTAGE
 
 ## Quick Start
 
@@ -15,32 +15,32 @@
 3. **Use in your modules:**
    ```bash
    # Check if integration is loaded
-   if ! declare -f sentinel_state_get &>/dev/null; then
+   if ! declare -f vantage_state_get &>/dev/null; then
        echo "Error: python_integration required"
        return 1
    fi
    
    # Use the features
-   sentinel_state_set "mykey" "myvalue"
-   result=$(sentinel_python_exec "myscript.py")
+   vantage_state_set "mykey" "myvalue"
+   result=$(vantage_python_exec "myscript.py")
    ```
 
 ## Key Features
 
 ### State Management
-- `sentinel_state_get/set/delete` - Manage shared state
-- `sentinel_config_get/set` - Manage configuration
+- `vantage_state_get/set/delete` - Manage shared state
+- `vantage_config_get/set` - Manage configuration
 
 ### Python Execution
-- `sentinel_python_exec` - Execute Python with error handling
-- `sentinel_python_module_install/list` - Manage Python dependencies
+- `vantage_python_exec` - Execute Python with error handling
+- `vantage_python_module_install/list` - Manage Python dependencies
 
 ### IPC Communication
-- `sentinel_ipc_create_channel` - Create communication channel
-- `sentinel_ipc_send/receive` - Send/receive messages
+- `vantage_ipc_create_channel` - Create communication channel
+- `vantage_ipc_send/receive` - Send/receive messages
 
 ### ML Integration
-- `sentinel_ml_sync_state` - Synchronize ML component state
+- `vantage_ml_sync_state` - Synchronize ML component state
 - Automatic state persistence
 
 ## Example Modules
@@ -50,32 +50,32 @@
 
 ## Python Side
 
-From Python, use the sentinel_integration library:
+From Python, use the vantage_integration library:
 
 ```python
-from sentinel_integration import sentinel
+from vantage_integration import vantage
 
 # Access bash functionality
-result = sentinel.bash_exec('ls -la')
-sentinel.set_state('key', 'value')
-config = sentinel.get_config('setting', 'default')
+result = vantage.bash_exec('ls -la')
+vantage.set_state('key', 'value')
+config = vantage.get_config('setting', 'default')
 ```
 
 ## Files Created
 
-- `~/.config/sentinel/state/` - State storage
-- `~/.config/sentinel/config/` - Configuration files
-- `~/.config/sentinel/ipc/` - IPC channels
-- `~/.config/sentinel/lib/sentinel_integration.py` - Python library
-- `~/.local/share/sentinel/logs/` - Log files
+- `~/.config/vantage/state/` - State storage
+- `~/.config/vantage/config/` - Configuration files
+- `~/.config/vantage/ipc/` - IPC channels
+- `~/.config/vantage/lib/vantage_integration.py` - Python library
+- `~/.local/share/vantage/logs/` - Log files
 
 ## Troubleshooting
 
 1. **Module not loaded:** Source python_integration.module first
-2. **Python errors:** Check logs in ~/.local/share/sentinel/logs/
+2. **Python errors:** Check logs in ~/.local/share/vantage/logs/
 3. **IPC timeout:** Increase timeout parameter or check channel names
 4. **State not persisting:** Check directory permissions
 
 ## Advanced Usage
 
-See `/opt/github/SENTINEL/docs/internal/improvement_project/team5_integration/python_bash_integration.md` for comprehensive documentation.
+See `/opt/github/VANTAGE/docs/internal/improvement_project/team5_integration/python_bash_integration.md` for comprehensive documentation.

@@ -11,11 +11,11 @@ function M.apply_to_config(config)
         key = 'S',
         mods = 'CTRL|SHIFT',
         action = wezterm.action.PromptInputLine {
-            description = 'Sentinel SSH (Enter Host):',
+            description = 'Vantage SSH (Enter Host):',
             action = wezterm.action_callback(function(window, pane, line)
                 if line and line ~= '' then
                     local cmd = string.format(
-                        "scp -q -r ~/.config/sentinel %s:/tmp/sentinel_payload 2>/dev/null && ssh -t %s 'bash --rcfile /tmp/sentinel_payload/thin_bashrc'",
+                        "scp -q -r ~/.config/vantage %s:/tmp/vantage_payload 2>/dev/null && ssh -t %s 'bash --rcfile /tmp/vantage_payload/thin_bashrc'",
                         line, line
                     )
                     window:perform_action(

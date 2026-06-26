@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# SENTINEL Filesystem Search Functions
+# VANTAGE Filesystem Search Functions
 # Enhanced search capabilities for finding large files and directories
 # Last Update: 2023-10-15
 # Find large files in a directory
@@ -161,7 +161,7 @@ def main():
         
         # Draw header
         stdscr.clear()
-        stdscr.addstr(0, 0, f"SENTINEL File Search - Finding files larger than {min_size_mb}MB in {directory}", curses.A_BOLD | curses.color_pair(1))
+        stdscr.addstr(0, 0, f"VANTAGE File Search - Finding files larger than {min_size_mb}MB in {directory}", curses.A_BOLD | curses.color_pair(1))
         stdscr.addstr(1, 0, "Searching, please wait...")
         stdscr.refresh()
         
@@ -170,7 +170,7 @@ def main():
         
         # Draw results
         stdscr.clear()
-        stdscr.addstr(0, 0, f"SENTINEL File Search - Found {len(files)} files larger than {min_size_mb}MB in {directory}", curses.A_BOLD | curses.color_pair(1))
+        stdscr.addstr(0, 0, f"VANTAGE File Search - Found {len(files)} files larger than {min_size_mb}MB in {directory}", curses.A_BOLD | curses.color_pair(1))
         stdscr.addstr(1, 0, "Press 'q' to exit", curses.color_pair(2))
         
         y = 3

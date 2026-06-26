@@ -1,32 +1,32 @@
 #!/usr/bin/env bash
-# SENTINEL - Command Chain Prediction Module
+# VANTAGE - Command Chain Prediction Module
 # Version: 2.0.0
 # Description: Predicts commands likely to be executed next based on usage patterns
 # Dependencies: ble.sh (optional, enhances functionality), hmac.module
-# Maintainer: SENTINEL Team
+# Maintainer: VANTAGE Team
 
 # Module dependencies
-SENTINEL_MODULE_DEPENDENCIES="logging"
+VANTAGE_MODULE_DEPENDENCIES="logging"
 
 [ -n "$BASH_VERSION" ] || { echo "This script requires bash"; return 0; }
-if [ -n "${_SENTINEL_COMMAND_CHAINS_LOADED}" ]; then
-    [[ "${SENTINEL_DEBUG:-0}" == "1" ]] && echo "DEBUG: command_chains already loaded"
+if [ -n "${_VANTAGE_COMMAND_CHAINS_LOADED}" ]; then
+    [[ "${VANTAGE_DEBUG:-0}" == "1" ]] && echo "DEBUG: command_chains already loaded"
     return 0
 fi
-export _SENTINEL_COMMAND_CHAINS_LOADED=1
+export _VANTAGE_COMMAND_CHAINS_LOADED=1
 
 # Ensure logging is available
-if ! type -t sentinel_log_info &>/dev/null; then
+if ! type -t vantage_log_info &>/dev/null; then
     source "${BASH_SOURCE%/*}/logging.module" 2>/dev/null || true
 fi
-if ! type -t sentinel_log_info &>/dev/null; then
-    [[ "${SENTINEL_DEBUG:-0}" == "1" ]] && echo "ERROR: sentinel_log_info not loaded in command_chains"
+if ! type -t vantage_log_info &>/dev/null; then
+    [[ "${VANTAGE_DEBUG:-0}" == "1" ]] && echo "ERROR: vantage_log_info not loaded in command_chains"
     # Define fallback logging functions
-    sentinel_log_info() { :; }
-    sentinel_log_warning() { :; }
-    sentinel_log_error() { :; }
+    vantage_log_info() { :; }
+    vantage_log_warning() { :; }
+    vantage_log_error() { :; }
 else
-    [[ "${SENTINEL_DEBUG:-0}" == "1" ]] && echo "DEBUG: sentinel_log_info loaded in command_chains"
+    [[ "${VANTAGE_DEBUG:-0}" == "1" ]] && echo "DEBUG: vantage_log_info loaded in command_chains"
 fi
 
 # Set strict error handling
@@ -34,9 +34,9 @@ set -o pipefail
 
 # FEATURE: Command Chain Predictions
 # Predicts what commands are likely to be executed next based on usage history
-_sentinel_command_chain_predictor() {
+_vantage_command_chain_predictor() {
     # Directory for storing chain data
-    local chain_dir=~/.sentinel/autocomplete/chains
+    local chain_dir=~/.vantage/autocomplete/chains
     mkdir -p "$chain_dir"
     
     # Main database file for command chains
@@ -48,7 +48,7 @@ _sentinel_command_chain_predictor() {
     fi
     
     # Get latest commands from history
-    _sentinel_update_chain_database() {
+    _vantage_update_chain_database() {
         # Read the last 1000 commands from history
         local cmds=$(HISTTIMEFORMAT="" history 1000 | awk '{$1=""; print substr($0,2)}')
         
@@ -86,7 +86,7 @@ _sentinel_command_chain_predictor() {
     }
     
     # Get suggestions for the current command
-    _sentinel_suggest_next_command() {
+    _vantage_suggest_next_command() {
         local current_cmd="$1"
         
         # Skip empty commands
@@ -125,29 +125,29 @@ _sentinel_command_chain_predictor() {
             if [[ -n "$top_next" ]]; then
                 # Register a special chain command
                 if type -t ble-sabbrev &>/dev/null; then
-                    ble-sabbrev "!!:next=sentinel_run_verified_command '$top_next' # Most likely next command after $current_cmd"
+                    ble-sabbrev "!!:next=vantage_run_verified_command '$top_next' # Most likely next command after $current_cmd"
                 else
                     # Fallback for when ble.sh is not available
-                    alias "!!:next"="sentinel_run_verified_command '$top_next' # Most likely next command after $current_cmd"
+                    alias "!!:next"="vantage_run_verified_command '$top_next' # Most likely next command after $current_cmd"
                 fi
-                echo -e "\033[0;90mTip: Type '!!:next' to run the next likely command: $top_next\033[0m" > ~/.sentinel/autocomplete/chain_suggestion
+                echo -e "\033[0;90mTip: Type '!!:next' to run the next likely command: $top_next\033[0m" > ~/.vantage/autocomplete/chain_suggestion
             fi
         fi
     }
     
     # Register command chain hook to run after a command completes
-    _sentinel_register_chain_hook() {
-        if [[ "$PROMPT_COMMAND" != *"_sentinel_command_chain_hook"* ]]; then
-            PROMPT_COMMAND="_sentinel_command_chain_hook;${PROMPT_COMMAND:-:}"
+    _vantage_register_chain_hook() {
+        if [[ "$PROMPT_COMMAND" != *"_vantage_command_chain_hook"* ]]; then
+            PROMPT_COMMAND="_vantage_command_chain_hook;${PROMPT_COMMAND:-:}"
         fi
     }
     
     # Command chain hook executed when prompt displays
-    _sentinel_command_chain_hook() {
+    _vantage_command_chain_hook() {
         # Periodically update the chain database (every ~20 commands)
         local random=$((RANDOM % 20))
         if [[ $random -eq 0 ]]; then
-            ( _sentinel_update_chain_database >/dev/null 2>&1 & ) 2>/dev/null
+            ( _vantage_update_chain_database >/dev/null 2>&1 & ) 2>/dev/null
         fi
         
         # Get the last executed command
@@ -155,47 +155,47 @@ _sentinel_command_chain_predictor() {
         
         # Suggest next command if last command was successful
         if [[ $? -eq 0 && -n "$last_cmd" ]]; then
-            _sentinel_suggest_next_command "$last_cmd" >/dev/null 2>&1
+            _vantage_suggest_next_command "$last_cmd" >/dev/null 2>&1
             
             # Display suggestion if file exists and terminal is interactive
-            if [[ -f ~/.sentinel/autocomplete/chain_suggestion && -t 1 ]]; then
-                cat ~/.sentinel/autocomplete/chain_suggestion
-                rm ~/.sentinel/autocomplete/chain_suggestion
+            if [[ -f ~/.vantage/autocomplete/chain_suggestion && -t 1 ]]; then
+                cat ~/.vantage/autocomplete/chain_suggestion
+                rm ~/.vantage/autocomplete/chain_suggestion
             fi
         fi
     }
     
     # Initialize the command chain system
-    _sentinel_initialize_command_chains() {
+    _vantage_initialize_command_chains() {
         # Ensure database directory exists
         mkdir -p "$chain_dir"
         
         # Register the hook
-        _sentinel_register_chain_hook
+        _vantage_register_chain_hook
         
         # Do initial analysis in background
-        ( _sentinel_update_chain_database >/dev/null 2>&1 & ) 2>/dev/null
+        ( _vantage_update_chain_database >/dev/null 2>&1 & ) 2>/dev/null
     }
     
     # Start the system
-    _sentinel_initialize_command_chains
+    _vantage_initialize_command_chains
 }
 
 # Logging functions
 _chains_log_error() {
     local msg="$1"
-    mkdir -p ~/.sentinel/logs
-    echo "[$(date '+%Y-%m-%d %H:%M:%S')] ERROR: $msg" >> ~/.sentinel/logs/errors-$(date +%Y%m%d).log
+    mkdir -p ~/.vantage/logs
+    echo "[$(date '+%Y-%m-%d %H:%M:%S')] ERROR: $msg" >> ~/.vantage/logs/errors-$(date +%Y%m%d).log
 }
 
 _chains_log_warning() {
     local msg="$1"
-    mkdir -p ~/.sentinel/logs
-    echo "[$(date '+%Y-%m-%d %H:%M:%S')] WARNING: $msg" >> ~/.sentinel/logs/warnings-$(date +%Y%m%d).log
+    mkdir -p ~/.vantage/logs
+    echo "[$(date '+%Y-%m-%d %H:%M:%S')] WARNING: $msg" >> ~/.vantage/logs/warnings-$(date +%Y%m%d).log
 }
 
 # Initialize the command chain prediction system
-sentinel_init_command_chains() {
+vantage_init_command_chains() {
     # Skip if not in interactive shell
     [[ $- != *i* ]] && return 0
     
@@ -203,10 +203,10 @@ sentinel_init_command_chains() {
     set -o pipefail
     
     # Create required directories
-    mkdir -p ~/.sentinel/autocomplete/chains
+    mkdir -p ~/.vantage/autocomplete/chains
     
     # Initialize the command chain predictor
-    _sentinel_command_chain_predictor
+    _vantage_command_chain_predictor
     
     # Log startup
     _chains_log_warning "Command chain prediction system initialized"
@@ -215,17 +215,17 @@ sentinel_init_command_chains() {
 }
 
 # Run initialization
-sentinel_init_command_chains 
+vantage_init_command_chains 
 
 # Helper function to safely bind keys only if widget exists
-_sentinel_safe_ble_bind() {
+_vantage_safe_ble_bind() {
     local mode="$1"
     local key="$2"
     local widget="$3"
     if ble-bind -l | grep -q "^$widget$"; then
         ble-bind -m "$mode" -f "$key" "$widget" 2>/dev/null || true
     else
-        sentinel_log_warning "command_chains" "BLE.sh widget not found: $widget (skipping keybind for $key in $mode)"
+        vantage_log_warning "command_chains" "BLE.sh widget not found: $widget (skipping keybind for $key in $mode)"
     fi
 }
 
@@ -236,8 +236,8 @@ chmod 700 "$chain_dir" 2>/dev/null || true
 # SECURITY NOTE: There is a minor risk of race conditions with concurrent shells updating the same file. For high-security environments, use flock or similar locking. Log files may contain sensitive data; rotate and protect accordingly.
 
 # Add syslog fallback for logging if logging.module is not available
-if ! type -t sentinel_log_info &>/dev/null; then
-    sentinel_log_info() { logger -t SENTINEL "[INFO] $*"; }
-    sentinel_log_warning() { logger -t SENTINEL "[WARN] $*"; }
-    sentinel_log_error() { logger -t SENTINEL "[ERROR] $*"; }
+if ! type -t vantage_log_info &>/dev/null; then
+    vantage_log_info() { logger -t VANTAGE "[INFO] $*"; }
+    vantage_log_warning() { logger -t VANTAGE "[WARN] $*"; }
+    vantage_log_error() { logger -t VANTAGE "[ERROR] $*"; }
 fi 

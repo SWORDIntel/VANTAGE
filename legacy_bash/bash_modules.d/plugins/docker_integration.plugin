@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
-# SENTINEL - Docker Integration Plugin
+# VANTAGE - Docker Integration Plugin
 # Version: 1.0.0
 # Description: Enhanced Docker integration with security and monitoring
 # Dependencies: external_tools
 
 # Plugin metadata
-SENTINEL_PLUGIN_NAME="docker_integration"
-SENTINEL_PLUGIN_VERSION="1.0.0"
-SENTINEL_PLUGIN_DESCRIPTION="Docker container management with security features"
+VANTAGE_PLUGIN_NAME="docker_integration"
+VANTAGE_PLUGIN_VERSION="1.0.0"
+VANTAGE_PLUGIN_DESCRIPTION="Docker container management with security features"
 
 # Docker configuration
 DOCKER_SCAN_ENABLED="${DOCKER_SCAN_ENABLED:-1}"
@@ -17,16 +17,16 @@ DOCKER_LOG_DRIVER="${DOCKER_LOG_DRIVER:-json-file}"
 DOCKER_LOG_OPTS="${DOCKER_LOG_OPTS:-max-size=10m,max-file=3}"
 
 # Security scanning with multiple tools
-sentinel_docker_scan() {
+vantage_docker_scan() {
     local image="$1"
     local scan_type="${2:-all}"
     
     [[ -z "$image" ]] && {
-        echo "Usage: sentinel_docker_scan <image> [scan-type]"
+        echo "Usage: vantage_docker_scan <image> [scan-type]"
         return 1
     }
     
-    sentinel_log_info "docker_integration" "Scanning image: $image"
+    vantage_log_info "docker_integration" "Scanning image: $image"
     
     case "$scan_type" in
         trivy|all)
@@ -51,7 +51,7 @@ sentinel_docker_scan() {
 }
 
 # Safe container run with security options
-sentinel_docker_run() {
+vantage_docker_run() {
     local image="$1"
     shift
     local extra_args=()
@@ -80,7 +80,7 @@ sentinel_docker_run() {
 }
 
 # Docker compose with validation
-sentinel_docker_compose() {
+vantage_docker_compose() {
     local command="$1"
     shift
     local compose_file="${COMPOSE_FILE:-docker-compose.yml}"
@@ -88,7 +88,7 @@ sentinel_docker_compose() {
     # Validate compose file first
     if [[ "$command" == "up" && -f "$compose_file" ]]; then
         if ! docker-compose config -q; then
-            sentinel_log_error "docker_integration" "Invalid compose file"
+            vantage_log_error "docker_integration" "Invalid compose file"
             return 1
         fi
         
@@ -97,7 +97,7 @@ sentinel_docker_compose() {
             echo "Scanning compose services..."
             docker-compose config --services | while read -r service; do
                 local image=$(docker-compose config | yq eval ".services.$service.image" -)
-                [[ "$image" != "null" ]] && sentinel_docker_scan "$image" docker
+                [[ "$image" != "null" ]] && vantage_docker_scan "$image" docker
             done
         fi
     fi
@@ -107,7 +107,7 @@ sentinel_docker_compose() {
 }
 
 # Container monitoring
-sentinel_docker_monitor() {
+vantage_docker_monitor() {
     local container="${1:-all}"
     local interval="${2:-5}"
     
@@ -117,7 +117,7 @@ sentinel_docker_monitor() {
     
     # Optimize for kitty if available
     local clear_cmd="clear"
-    if type sentinel_is_kitty &>/dev/null && sentinel_is_kitty; then
+    if type vantage_is_kitty &>/dev/null && vantage_is_kitty; then
         # Use kitty's clear for better performance
         clear_cmd="clear"
     fi
@@ -141,7 +141,7 @@ sentinel_docker_monitor() {
 }
 
 # Docker cleanup utilities
-sentinel_docker_cleanup() {
+vantage_docker_cleanup() {
     local cleanup_type="${1:-safe}"
     
     case "$cleanup_type" in
@@ -167,7 +167,7 @@ sentinel_docker_cleanup() {
             fi
             ;;
         *)
-            echo "Usage: sentinel_docker_cleanup [safe|volumes|all]"
+            echo "Usage: vantage_docker_cleanup [safe|volumes|all]"
             return 1
             ;;
     esac
@@ -179,14 +179,14 @@ sentinel_docker_cleanup() {
 }
 
 # Docker image builder with caching
-sentinel_docker_build() {
+vantage_docker_build() {
     local dockerfile="${1:-Dockerfile}"
     local tag="$2"
     local context="${3:-.}"
     local extra_args=()
     
     [[ -z "$tag" ]] && {
-        echo "Usage: sentinel_docker_build [dockerfile] <tag> [context]"
+        echo "Usage: vantage_docker_build [dockerfile] <tag> [context]"
         return 1
     }
     
@@ -195,8 +195,8 @@ sentinel_docker_build() {
     extra_args+=("--no-cache-filter" "security_updates")  # Force security updates
     
     # Add labels
-    extra_args+=("--label" "sentinel.build.date=$(date -u +%Y-%m-%dT%H:%M:%SZ)")
-    extra_args+=("--label" "sentinel.build.user=$USER")
+    extra_args+=("--label" "vantage.build.date=$(date -u +%Y-%m-%dT%H:%M:%SZ)")
+    extra_args+=("--label" "vantage.build.user=$USER")
     
     # Scan Dockerfile for issues
     if command -v hadolint >/dev/null 2>&1; then
@@ -209,23 +209,23 @@ sentinel_docker_build() {
     
     # Scan built image
     if [[ "$DOCKER_SCAN_ENABLED" == "1" ]]; then
-        sentinel_docker_scan "$tag"
+        vantage_docker_scan "$tag"
     fi
 }
 
 # Container shell with security
-sentinel_docker_shell() {
+vantage_docker_shell() {
     local container="$1"
     local shell="${2:-/bin/sh}"
     
     [[ -z "$container" ]] && {
-        echo "Usage: sentinel_docker_shell <container> [shell]"
+        echo "Usage: vantage_docker_shell <container> [shell]"
         return 1
     }
     
     # Check if container is running
     if ! docker ps --format '{{.Names}}' | grep -q "^${container}$"; then
-        sentinel_log_error "docker_integration" "Container not running: $container"
+        vantage_log_error "docker_integration" "Container not running: $container"
         return 1
     fi
     
@@ -236,7 +236,7 @@ sentinel_docker_shell() {
 }
 
 # Docker registry operations
-sentinel_docker_registry() {
+vantage_docker_registry() {
     local operation="$1"
     shift
     
@@ -248,13 +248,13 @@ sentinel_docker_registry() {
         pull)
             local image="$1"
             docker pull "$image"
-            [[ "$DOCKER_SCAN_ENABLED" == "1" ]] && sentinel_docker_scan "$image"
+            [[ "$DOCKER_SCAN_ENABLED" == "1" ]] && vantage_docker_scan "$image"
             ;;
         push)
             local image="$1"
             # Scan before push
             if [[ "$DOCKER_SCAN_ENABLED" == "1" ]]; then
-                sentinel_docker_scan "$image" || {
+                vantage_docker_scan "$image" || {
                     read -p "Security issues found. Push anyway? [y/N] " -n 1 -r
                     echo
                     [[ ! $REPLY =~ ^[Yy]$ ]] && return 1
@@ -263,14 +263,14 @@ sentinel_docker_registry() {
             docker push "$image"
             ;;
         *)
-            echo "Usage: sentinel_docker_registry [search|pull|push] <args>"
+            echo "Usage: vantage_docker_registry [search|pull|push] <args>"
             return 1
             ;;
     esac
 }
 
 # MCP handler for Docker operations
-sentinel_docker_mcp_handler() {
+vantage_docker_mcp_handler() {
     local operation="$1"
     shift
     
@@ -282,13 +282,13 @@ sentinel_docker_mcp_handler() {
             docker images --format json
             ;;
         run)
-            sentinel_docker_run "$@"
+            vantage_docker_run "$@"
             ;;
         scan)
-            sentinel_docker_scan "$@"
+            vantage_docker_scan "$@"
             ;;
         cleanup)
-            sentinel_docker_cleanup "$@"
+            vantage_docker_cleanup "$@"
             ;;
         *)
             echo '{"error": "Unknown docker operation"}'
@@ -297,41 +297,41 @@ sentinel_docker_mcp_handler() {
 }
 
 # Initialize Docker integration
-sentinel_docker_integration_init() {
+vantage_docker_integration_init() {
     # Register docker with external tools
-    if type sentinel_tool_register >/dev/null 2>&1; then
-        sentinel_tool_register "docker" "$(which docker)" '{"type": "container", "category": "infrastructure"}'
+    if type vantage_tool_register >/dev/null 2>&1; then
+        vantage_tool_register "docker" "$(which docker)" '{"type": "container", "category": "infrastructure"}'
         
         # Create aliases
-        sentinel_tool_alias "dps" "docker" "ps"
-        sentinel_tool_alias "di" "docker" "images"
-        sentinel_tool_alias "dex" "docker" "exec -it"
-        sentinel_tool_alias "dlog" "docker" "logs -f"
+        vantage_tool_alias "dps" "docker" "ps"
+        vantage_tool_alias "di" "docker" "images"
+        vantage_tool_alias "dex" "docker" "exec -it"
+        vantage_tool_alias "dlog" "docker" "logs -f"
     fi
     
     # Register MCP handler
-    if [[ "$SENTINEL_MCP_ENABLED" == "1" ]]; then
-        echo "docker:sentinel_docker_mcp_handler" >> "$SENTINEL_TOOLS_DIR/mcp_handlers.txt"
+    if [[ "$VANTAGE_MCP_ENABLED" == "1" ]]; then
+        echo "docker:vantage_docker_mcp_handler" >> "$VANTAGE_TOOLS_DIR/mcp_handlers.txt"
     fi
     
     # Check Docker daemon
     if docker info >/dev/null 2>&1; then
-        sentinel_log_info "docker_integration" "Docker integration plugin loaded"
+        vantage_log_info "docker_integration" "Docker integration plugin loaded"
     else
-        sentinel_log_warning "docker_integration" "Docker daemon not accessible"
+        vantage_log_warning "docker_integration" "Docker daemon not accessible"
     fi
 }
 
 # Export functions
-export -f sentinel_docker_scan
-export -f sentinel_docker_run
-export -f sentinel_docker_compose
-export -f sentinel_docker_monitor
-export -f sentinel_docker_cleanup
-export -f sentinel_docker_build
-export -f sentinel_docker_shell
-export -f sentinel_docker_registry
-export -f sentinel_docker_mcp_handler
+export -f vantage_docker_scan
+export -f vantage_docker_run
+export -f vantage_docker_compose
+export -f vantage_docker_monitor
+export -f vantage_docker_cleanup
+export -f vantage_docker_build
+export -f vantage_docker_shell
+export -f vantage_docker_registry
+export -f vantage_docker_mcp_handler
 
 # Initialize plugin
-sentinel_docker_integration_init
+vantage_docker_integration_init

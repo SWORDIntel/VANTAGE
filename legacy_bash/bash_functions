@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# SENTINEL Core Functions
+# VANTAGE Core Functions
 # Enhanced shell functions for improved productivity and security
 # Last Update: 2023-08-14
 
@@ -14,7 +14,7 @@
 load_cached_config() {
     local config_file="$1"
     shift
-    local cache_dir="${SENTINEL_CACHE_DIR:-$HOME/.sentinel/cache}/config"
+    local cache_dir="${VANTAGE_CACHE_DIR:-$HOME/.vantage/cache}/config"
     local config_key=$(echo "$config_file" | tr '/' '_' | tr '.' '_' 2>/dev/null) || {
         # If tr fails, use a simple basename approach with fallback
         config_key=$(basename "$config_file" 2>/dev/null || echo "config_${RANDOM}")
@@ -144,7 +144,7 @@ load_cached_config() {
     # Try to create cache file but don't fail if it doesn't work
     {
         # Create cache file with header - with error handling
-        echo "# SENTINEL Configuration Cache" > "$cache_file" 2>/dev/null
+        echo "# VANTAGE Configuration Cache" > "$cache_file" 2>/dev/null
         echo "# Original: $config_file" >> "$cache_file" 2>/dev/null
         echo "# Generated: $(date 2>/dev/null || echo "unknown_time")" >> "$cache_file" 2>/dev/null
         echo "" >> "$cache_file" 2>/dev/null
@@ -194,7 +194,7 @@ load_cached_config() {
 # Usage: load_module_config <module_name>
 load_module_config() {
     local module_name="$1"
-    local module_dir="${SENTINEL_MODULES_PATH:-$HOME/.bash_modules.d}"
+    local module_dir="${VANTAGE_MODULES_PATH:-$HOME/.bash_modules.d}"
     local module_file=""
     local debug=0
     [[ "$2" == "--debug" ]] && debug=1
@@ -223,7 +223,7 @@ load_module_config() {
     
     # Check if module cache is enabled and exists
     if [[ "${CONFIG[MODULE_CACHE]}" == "1" ]]; then
-        local cache_dir="${SENTINEL_CACHE_DIR:-$HOME/cache}/modules"
+        local cache_dir="${VANTAGE_CACHE_DIR:-$HOME/cache}/modules"
         local cache_file="$cache_dir/${module_file//\//_}.cache"
         mkdir -p "$cache_dir"
         
@@ -245,7 +245,7 @@ load_module_config() {
     
     # Cache the module if enabled
     if [[ "${CONFIG[MODULE_CACHE]}" == "1" ]]; then
-        local cache_dir="${SENTINEL_CACHE_DIR:-$HOME/cache}/modules"
+        local cache_dir="${VANTAGE_CACHE_DIR:-$HOME/cache}/modules"
         local cache_file="$cache_dir/${module_file//\//_}.cache"
         
         # Extract all function declarations from the module
@@ -260,7 +260,7 @@ load_module_config() {
 # Usage: get_module_dependencies <module_name>
 get_module_dependencies() {
     local module_name="$1"
-    local cache_dir="${SENTINEL_CACHE_DIR:-$HOME/cache}/modules"
+    local cache_dir="${VANTAGE_CACHE_DIR:-$HOME/cache}/modules"
     local deps_file="${cache_dir}/${module_name}.deps"
     
     # Validate module name to prevent path traversal
@@ -273,7 +273,7 @@ get_module_dependencies() {
         cat "$deps_file"
     else
         # Try to extract without loading the module
-        local module_dir="${SENTINEL_MODULES_PATH:-$HOME/.bash_modules.d}"
+        local module_dir="${VANTAGE_MODULES_PATH:-$HOME/.bash_modules.d}"
         local module_file=""
         
         # Find the module file
@@ -294,7 +294,7 @@ get_module_dependencies() {
         # Extract dependencies securely using grep and awk for safer parsing
         if [[ -f "$module_file" ]]; then
             # Look for a properly formatted dependency line
-            awk -F '"' '/SENTINEL_MODULE_DEPENDENCIES=/ {if (NF >= 3) print $2}' "$module_file" | head -n1
+            awk -F '"' '/VANTAGE_MODULE_DEPENDENCIES=/ {if (NF >= 3) print $2}' "$module_file" | head -n1
         fi
     fi
 }
@@ -571,8 +571,8 @@ rm() {
         esac
     done
 
-    # Default to secure mode if configured in SENTINEL
-    if [[ "${SENTINEL_SECURE_RM:-1}" == "1" ]]; then
+    # Default to secure mode if configured in VANTAGE
+    if [[ "${VANTAGE_SECURE_RM:-1}" == "1" ]]; then
         secure_mode=1
     fi
 
@@ -700,11 +700,11 @@ _secure_shred() {
 
 # Function to toggle secure rm mode
 secure_rm_toggle() {
-    if [[ "${SENTINEL_SECURE_RM:-1}" == "1" ]]; then
-        SENTINEL_SECURE_RM=0
+    if [[ "${VANTAGE_SECURE_RM:-1}" == "1" ]]; then
+        VANTAGE_SECURE_RM=0
         echo "Secure rm mode is now OFF. Files deleted with rm will use standard deletion."
     else
-        SENTINEL_SECURE_RM=1
+        VANTAGE_SECURE_RM=1
         echo "Secure rm mode is now ON. Files deleted with rm will be securely erased."
     fi
 }
@@ -713,7 +713,7 @@ secure_rm_toggle() {
 secure_clean() {
     local scope="${1:-all}"
     
-    echo "SENTINEL: Starting manual secure cleanup (scope: $scope)..."
+    echo "VANTAGE: Starting manual secure cleanup (scope: $scope)..."
     
     case "$scope" in
         history)
@@ -781,16 +781,16 @@ secure_clean() {
 }
 
 # Function to toggle module verbosity
-sentinel_quiet() {
+vantage_quiet() {
     if [[ "$1" == "on" ]]; then
-        SENTINEL_QUIET_MODULES=1
-        echo "SENTINEL quiet mode: ON - Minimal module output"
+        VANTAGE_QUIET_MODULES=1
+        echo "VANTAGE quiet mode: ON - Minimal module output"
     elif [[ "$1" == "off" ]]; then
-        SENTINEL_QUIET_MODULES=0
-        echo "SENTINEL quiet mode: OFF - Verbose module output"
+        VANTAGE_QUIET_MODULES=0
+        echo "VANTAGE quiet mode: OFF - Verbose module output"
     else
-        echo "SENTINEL quiet mode is currently: $([[ "${SENTINEL_QUIET_MODULES:-1}" == "1" ]] && echo "ON" || echo "OFF")"
-        echo "Usage: sentinel_quiet [on|off]"
+        echo "VANTAGE quiet mode is currently: $([[ "${VANTAGE_QUIET_MODULES:-1}" == "1" ]] && echo "ON" || echo "OFF")"
+        echo "Usage: vantage_quiet [on|off]"
     fi
 }
 

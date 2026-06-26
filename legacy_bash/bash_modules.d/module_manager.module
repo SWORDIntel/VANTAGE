@@ -1,45 +1,45 @@
 #!/usr/bin/env bash
-# SENTINEL - Module Manager
+# VANTAGE - Module Manager
 # Version: 1.0.0
 # Description: Enhanced module system with dependency resolution and cache integration
 # Dependencies: config_cache
-# Maintainer: SENTINEL Team
+# Maintainer: VANTAGE Team
 
 # Prevent multiple loading
-[[ -n "${_SENTINEL_MODULE_MANAGER_LOADED}" ]] && return 0
-export _SENTINEL_MODULE_MANAGER_LOADED=1
+[[ -n "${_VANTAGE_MODULE_MANAGER_LOADED}" ]] && return 0
+export _VANTAGE_MODULE_MANAGER_LOADED=1
 
 # Module metadata for dependency resolution
-SENTINEL_MODULE_DESCRIPTION="Enhanced module management system"
-SENTINEL_MODULE_VERSION="1.0.0"
-SENTINEL_MODULE_DEPENDENCIES="config_cache logging"
+VANTAGE_MODULE_DESCRIPTION="Enhanced module management system"
+VANTAGE_MODULE_VERSION="1.0.0"
+VANTAGE_MODULE_DEPENDENCIES="config_cache logging"
 
 # Ensure module cache directory exists
-SENTINEL_MODULE_CACHE_DIR="${SENTINEL_CACHE_DIR:-$HOME/.sentinel/cache}/modules"
-mkdir -p "$SENTINEL_MODULE_CACHE_DIR"
+VANTAGE_MODULE_CACHE_DIR="${VANTAGE_CACHE_DIR:-$HOME/.vantage/cache}/modules"
+mkdir -p "$VANTAGE_MODULE_CACHE_DIR"
 
 # Set default configuration
-: "${SENTINEL_MODULE_DEBUG:=0}"           # Debug mode
-: "${SENTINEL_MODULE_AUTOLOAD:=1}"        # Automatically load required modules
-: "${SENTINEL_MODULE_CACHE_ENABLED:=1}"   # Enable module caching
-: "${SENTINEL_MODULE_VERIFY:=1}"          # Enable security verification
+: "${VANTAGE_MODULE_DEBUG:=0}"           # Debug mode
+: "${VANTAGE_MODULE_AUTOLOAD:=1}"        # Automatically load required modules
+: "${VANTAGE_MODULE_CACHE_ENABLED:=1}"   # Enable module caching
+: "${VANTAGE_MODULE_VERIFY:=1}"          # Enable security verification
 
 # Log initialization if available
-if type sentinel_log_info &>/dev/null; then
-    sentinel_log_info "module_manager" "Module manager initialized"
+if type vantage_log_info &>/dev/null; then
+    vantage_log_info "module_manager" "Module manager initialized"
 else
-    [[ $SENTINEL_MODULE_DEBUG -eq 1 ]] && echo "Module manager initialized" >&2
+    [[ $VANTAGE_MODULE_DEBUG -eq 1 ]] && echo "Module manager initialized" >&2
 fi
 
 # Function to find a module file
 # Usage: find_module_file <module_name>
 find_module_file() {
     local module_name="$1"
-    local module_dir="${SENTINEL_MODULES_PATH:-$HOME/.bash_modules.d}"
+    local module_dir="${VANTAGE_MODULES_PATH:-$HOME/.bash_modules.d}"
     
     # Check module cache first
-    local cache_file="${SENTINEL_MODULE_CACHE_DIR}/${module_name}.path"
-    if [[ -f "$cache_file" && "$SENTINEL_MODULE_CACHE_ENABLED" == "1" ]]; then
+    local cache_file="${VANTAGE_MODULE_CACHE_DIR}/${module_name}.path"
+    if [[ -f "$cache_file" && "$VANTAGE_MODULE_CACHE_ENABLED" == "1" ]]; then
         local cached_path=$(cat "$cache_file")
         if [[ -f "$cached_path" ]]; then
             echo "$cached_path"
@@ -58,7 +58,7 @@ find_module_file() {
         if [[ -n "$found_file" ]]; then
             echo "$found_file"
             # Cache the path for future lookups
-            if [[ "$SENTINEL_MODULE_CACHE_ENABLED" == "1" ]]; then
+            if [[ "$VANTAGE_MODULE_CACHE_ENABLED" == "1" ]]; then
                 echo "$found_file" > "$cache_file"
             fi
         fi
@@ -76,18 +76,18 @@ get_module_dependencies() {
     fi
     
     # Check dependency cache first
-    local cache_file="${SENTINEL_MODULE_CACHE_DIR}/${module_name}.deps"
-    if [[ -f "$cache_file" && "$SENTINEL_MODULE_CACHE_ENABLED" == "1" ]]; then
+    local cache_file="${VANTAGE_MODULE_CACHE_DIR}/${module_name}.deps"
+    if [[ -f "$cache_file" && "$VANTAGE_MODULE_CACHE_ENABLED" == "1" ]]; then
         cat "$cache_file"
         return 0
     fi
     
     # Extract dependencies without loading the module
-    if grep -q "SENTINEL_MODULE_DEPENDENCIES=" "$module_file"; then
-        local deps=$(grep "SENTINEL_MODULE_DEPENDENCIES=" "$module_file" | head -n1 | sed 's/.*="\(.*\)".*/\1/')
+    if grep -q "VANTAGE_MODULE_DEPENDENCIES=" "$module_file"; then
+        local deps=$(grep "VANTAGE_MODULE_DEPENDENCIES=" "$module_file" | head -n1 | sed 's/.*="\(.*\)".*/\1/')
         
         # Cache dependencies for future use
-        if [[ "$SENTINEL_MODULE_CACHE_ENABLED" == "1" ]]; then
+        if [[ "$VANTAGE_MODULE_CACHE_ENABLED" == "1" ]]; then
             echo "$deps" > "$cache_file"
         fi
         
@@ -103,9 +103,9 @@ is_module_loaded() {
     normalized_name="${normalized_name//[^A-Z0-9]/_}"
 
     local loader_guard="_MODULE_${normalized_name}_LOADED"
-    local module_guard="_SENTINEL_${normalized_name}_LOADED"
+    local module_guard="_VANTAGE_${normalized_name}_LOADED"
 
-    [[ "${SENTINEL_LOADED_MODULES[$module_name]:-}" == "1" ]] && return 0
+    [[ "${VANTAGE_LOADED_MODULES[$module_name]:-}" == "1" ]] && return 0
     [[ -n "${!loader_guard:-}" ]] && return 0
     [[ -n "${!module_guard:-}" ]] && return 0
     return 1
@@ -120,7 +120,7 @@ smart_module_load() {
     local loading_chain="${4:-$module_name}"
     
     # Use error recovery if available
-    if type sentinel_with_circuit_breaker &>/dev/null 2>&1; then
+    if type vantage_with_circuit_breaker &>/dev/null 2>&1; then
         _smart_module_load_with_recovery "$@"
     else
         _smart_module_load_internal "$@"
@@ -133,7 +133,7 @@ _smart_module_load_with_recovery() {
     shift
     
     # Load with circuit breaker protection
-    sentinel_with_circuit_breaker "module_$module_name" _smart_module_load_internal "$module_name" "$@"
+    vantage_with_circuit_breaker "module_$module_name" _smart_module_load_internal "$module_name" "$@"
 }
 
 # Original module loading logic
@@ -145,21 +145,21 @@ _smart_module_load_internal() {
     
     # Skip if already loaded and not forced
     if is_module_loaded "$module_name" && [[ "$force" != "1" ]]; then
-        [[ $SENTINEL_MODULE_DEBUG -eq 1 ]] && echo "Module '$module_name' already loaded" >&2
+        [[ $VANTAGE_MODULE_DEBUG -eq 1 ]] && echo "Module '$module_name' already loaded" >&2
         return 0
     fi
     
     # Check if module file exists
     if [[ -z "$module_file" || ! -f "$module_file" ]]; then
-        if type sentinel_log_error &>/dev/null; then
-            sentinel_log_error "module_manager" "Module '$module_name' not found"
+        if type vantage_log_error &>/dev/null; then
+            vantage_log_error "module_manager" "Module '$module_name' not found"
         else
             echo "Error: Module '$module_name' not found" >&2
         fi
         
         # Try fallback if available
-        if type sentinel_trigger_fallback &>/dev/null 2>&1; then
-            sentinel_trigger_fallback "$module_name"
+        if type vantage_trigger_fallback &>/dev/null 2>&1; then
+            vantage_trigger_fallback "$module_name"
         fi
         
         return 1
@@ -171,8 +171,8 @@ _smart_module_load_internal() {
         for dep in $deps; do
             # Check for circular dependencies
             if [[ "$loading_chain" == *"$dep"* ]]; then
-                if type sentinel_log_error &>/dev/null; then
-                    sentinel_log_error "module_manager" "Circular dependency detected: $loading_chain -> $dep"
+                if type vantage_log_error &>/dev/null; then
+                    vantage_log_error "module_manager" "Circular dependency detected: $loading_chain -> $dep"
                 else
                     echo "Error: Circular dependency detected: $loading_chain -> $dep" >&2
                 fi
@@ -181,31 +181,31 @@ _smart_module_load_internal() {
             
             # Load dependency
             if ! is_module_loaded "$dep"; then
-                if type sentinel_log_info &>/dev/null; then
-                    sentinel_log_info "module_manager" "Loading dependency: $dep for $module_name"
+                if type vantage_log_info &>/dev/null; then
+                    vantage_log_info "module_manager" "Loading dependency: $dep for $module_name"
                 else
-                    [[ $SENTINEL_MODULE_DEBUG -eq 1 ]] && echo "Loading dependency: $dep for $module_name" >&2
+                    [[ $VANTAGE_MODULE_DEBUG -eq 1 ]] && echo "Loading dependency: $dep for $module_name" >&2
                 fi
                 
                 _smart_module_load_internal "$dep" "$force" "" "${loading_chain} -> $dep"
                 
                 # If dependency failed to load, check degradation mode
                 if ! is_module_loaded "$dep"; then
-                    if type sentinel_feature_available &>/dev/null 2>&1; then
+                    if type vantage_feature_available &>/dev/null 2>&1; then
                         # Check if we can continue without this dependency
                         local dep_criticality="important"
                         [[ "$dep" =~ ^(logging|config_cache|shell_security)$ ]] && dep_criticality="core"
                         
-                        if ! sentinel_feature_available "module_$dep" "$dep_criticality"; then
-                            if type sentinel_log_warning &>/dev/null; then
-                                sentinel_log_warning "module_manager" "Skipping dependency '$dep' in degraded mode"
+                        if ! vantage_feature_available "module_$dep" "$dep_criticality"; then
+                            if type vantage_log_warning &>/dev/null; then
+                                vantage_log_warning "module_manager" "Skipping dependency '$dep' in degraded mode"
                             fi
                             continue
                         fi
                     fi
                     
-                    if type sentinel_log_error &>/dev/null; then
-                        sentinel_log_error "module_manager" "Failed to load dependency '$dep' for '$module_name'"
+                    if type vantage_log_error &>/dev/null; then
+                        vantage_log_error "module_manager" "Failed to load dependency '$dep' for '$module_name'"
                     else
                         echo "Error: Failed to load dependency '$dep' for '$module_name'" >&2
                     fi
@@ -216,9 +216,9 @@ _smart_module_load_internal() {
     fi
     
     # Load the module
-    if [[ "$SENTINEL_MODULE_CACHE_ENABLED" == "1" && -n "$(which config_cache_load 2>/dev/null)" ]]; then
+    if [[ "$VANTAGE_MODULE_CACHE_ENABLED" == "1" && -n "$(which config_cache_load 2>/dev/null)" ]]; then
         # Load through config cache if available
-        config_cache_load "$module_file" ${SENTINEL_MODULE_DEBUG:+--debug}
+        config_cache_load "$module_file" ${VANTAGE_MODULE_DEBUG:+--debug}
     else
         # Direct load
         source "$module_file"
@@ -233,15 +233,15 @@ _smart_module_load_internal() {
 
     # Keep the legacy loader registry in sync with the enhanced loader.
     # Several modules and tests still inspect this array directly.
-    if declare -p SENTINEL_LOADED_MODULES >/dev/null 2>&1; then
-        SENTINEL_LOADED_MODULES["$module_name"]="1"
+    if declare -p VANTAGE_LOADED_MODULES >/dev/null 2>&1; then
+        VANTAGE_LOADED_MODULES["$module_name"]="1"
     fi
 
     # Log success
-    if type sentinel_log_info &>/dev/null; then
-        sentinel_log_info "module_manager" "Module '$module_name' loaded successfully"
+    if type vantage_log_info &>/dev/null; then
+        vantage_log_info "module_manager" "Module '$module_name' loaded successfully"
     else
-        [[ $SENTINEL_MODULE_DEBUG -eq 1 ]] && echo "Module '$module_name' loaded successfully" >&2
+        [[ $VANTAGE_MODULE_DEBUG -eq 1 ]] && echo "Module '$module_name' loaded successfully" >&2
     fi
     
     return 0
@@ -289,8 +289,8 @@ sort_modules_by_dependency() {
     
     # Add any remaining modules (possible circular dependencies)
     if [[ -n "$remaining_modules" ]]; then
-        if type sentinel_log_warning &>/dev/null; then
-            sentinel_log_warning "module_manager" "Possible circular dependencies in: $remaining_modules"
+        if type vantage_log_warning &>/dev/null; then
+            vantage_log_warning "module_manager" "Possible circular dependencies in: $remaining_modules"
         fi
         ordered_modules="$ordered_modules $remaining_modules"
     fi
@@ -322,10 +322,10 @@ load_all_enabled_modules() {
     local enabled_modules=$(grep -v '^#' "$modules_file" | grep -v '^$' | xargs)
     
     # Log the operation
-    if type sentinel_log_info &>/dev/null; then
-        sentinel_log_info "module_manager" "Loading enabled modules: $enabled_modules"
+    if type vantage_log_info &>/dev/null; then
+        vantage_log_info "module_manager" "Loading enabled modules: $enabled_modules"
     else
-        [[ $SENTINEL_MODULE_DEBUG -eq 1 ]] && echo "Loading enabled modules: $enabled_modules" >&2
+        [[ $VANTAGE_MODULE_DEBUG -eq 1 ]] && echo "Loading enabled modules: $enabled_modules" >&2
     fi
     
     # Sort and load modules
@@ -334,7 +334,7 @@ load_all_enabled_modules() {
 
 # Enhanced module listing with dependency information
 module_list_with_deps() {
-    local module_dir="${SENTINEL_MODULES_PATH:-$HOME/.bash_modules.d}"
+    local module_dir="${VANTAGE_MODULES_PATH:-$HOME/.bash_modules.d}"
     local modules_file="${HOME}/.bash_modules"
     local show_deps="${1:-1}"
     
@@ -354,14 +354,14 @@ module_list_with_deps() {
         
         # Extract description
         local description=""
-        if grep -q "SENTINEL_MODULE_DESCRIPTION=" "$module_file"; then
-            description=$(grep "SENTINEL_MODULE_DESCRIPTION=" "$module_file" | head -n1 | sed 's/.*="\(.*\)".*/\1/')
+        if grep -q "VANTAGE_MODULE_DESCRIPTION=" "$module_file"; then
+            description=$(grep "VANTAGE_MODULE_DESCRIPTION=" "$module_file" | head -n1 | sed 's/.*="\(.*\)".*/\1/')
         fi
         
         # Extract version
         local version=""
-        if grep -q "SENTINEL_MODULE_VERSION=" "$module_file"; then
-            version=$(grep "SENTINEL_MODULE_VERSION=" "$module_file" | head -n1 | sed 's/.*="\(.*\)".*/\1/')
+        if grep -q "VANTAGE_MODULE_VERSION=" "$module_file"; then
+            version=$(grep "VANTAGE_MODULE_VERSION=" "$module_file" | head -n1 | sed 's/.*="\(.*\)".*/\1/')
         fi
         
         # Output module info
@@ -380,15 +380,15 @@ module_list_with_deps() {
 # Initialize the module manager
 module_manager_init() {
     # Verify module cache directory
-    if [[ ! -d "$SENTINEL_MODULE_CACHE_DIR" ]]; then
-        mkdir -p "$SENTINEL_MODULE_CACHE_DIR"
+    if [[ ! -d "$VANTAGE_MODULE_CACHE_DIR" ]]; then
+        mkdir -p "$VANTAGE_MODULE_CACHE_DIR"
     fi
     
     # Rebuild module cache if requested
     if [[ "$1" == "--rebuild-cache" ]]; then
-        rm -f "${SENTINEL_MODULE_CACHE_DIR}"/*.path "${SENTINEL_MODULE_CACHE_DIR}"/*.deps
-        if type sentinel_log_info &>/dev/null; then
-            sentinel_log_info "module_manager" "Module cache rebuilt"
+        rm -f "${VANTAGE_MODULE_CACHE_DIR}"/*.path "${VANTAGE_MODULE_CACHE_DIR}"/*.deps
+        if type vantage_log_info &>/dev/null; then
+            vantage_log_info "module_manager" "Module cache rebuilt"
         else
             echo "Module cache rebuilt" >&2
         fi

@@ -1,4 +1,4 @@
-# SENTINEL Enabled Modules
+# VANTAGE Enabled Modules
 # Only safe modules with error handling
 # Format: One module name per line, no extensions
 
@@ -26,11 +26,11 @@ obfuscate
 
 # DISABLED MODULES - Do not remove these comments as they serve as documentation
 # autocomplete       # Known to cause terminal crashes - using simple_completion.sh instead
-# sentinel_gitstar   # Only loaded when SENTINEL_GITSTAR_ENABLED=1 is set
+# vantage_gitstar   # Only loaded when VANTAGE_GITSTAR_ENABLED=1 is set
 
 # ML and enhanced functionality modules
-sentinel_ml
-sentinel_osint
-sentinel_cybersec_ml
-sentinel_gitstar
-sentinel_chat
+vantage_ml
+vantage_osint
+vantage_cybersec_ml
+vantage_gitstar
+vantage_chat

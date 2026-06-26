@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Test script for SENTINEL parallel module loading system
+# Test script for VANTAGE parallel module loading system
 
 set -o pipefail
 
@@ -14,10 +14,10 @@ TESTS_PASSED=0
 TESTS_FAILED=0
 
 # Test base directory
-TEST_DIR="/tmp/sentinel_parallel_test_$$"
+TEST_DIR="/tmp/vantage_parallel_test_$$"
 mkdir -p "$TEST_DIR/modules"
 
-echo "=== SENTINEL Parallel Loading Test Suite ==="
+echo "=== VANTAGE Parallel Loading Test Suite ==="
 echo "Test directory: $TEST_DIR"
 echo
 
@@ -43,9 +43,9 @@ create_test_modules() {
     # Module A - no dependencies
     cat > "$TEST_DIR/modules/module_a.module" << 'EOF'
 #!/usr/bin/env bash
-SENTINEL_MODULE_DESCRIPTION="Test module A"
-SENTINEL_MODULE_VERSION="1.0.0"
-SENTINEL_MODULE_DEPENDENCIES=""
+VANTAGE_MODULE_DESCRIPTION="Test module A"
+VANTAGE_MODULE_VERSION="1.0.0"
+VANTAGE_MODULE_DEPENDENCIES=""
 
 module_a_loaded=1
 sleep 0.1  # Simulate some work
@@ -54,9 +54,9 @@ EOF
     # Module B - depends on A
     cat > "$TEST_DIR/modules/module_b.module" << 'EOF'
 #!/usr/bin/env bash
-SENTINEL_MODULE_DESCRIPTION="Test module B"
-SENTINEL_MODULE_VERSION="1.0.0"
-SENTINEL_MODULE_DEPENDENCIES="module_a"
+VANTAGE_MODULE_DESCRIPTION="Test module B"
+VANTAGE_MODULE_VERSION="1.0.0"
+VANTAGE_MODULE_DEPENDENCIES="module_a"
 
 if [[ "${module_a_loaded:-0}" != "1" ]]; then
     echo "ERROR: module_a not loaded before module_b" >&2
@@ -69,9 +69,9 @@ EOF
     # Module C - depends on A
     cat > "$TEST_DIR/modules/module_c.module" << 'EOF'
 #!/usr/bin/env bash
-SENTINEL_MODULE_DESCRIPTION="Test module C"
-SENTINEL_MODULE_VERSION="1.0.0"
-SENTINEL_MODULE_DEPENDENCIES="module_a"
+VANTAGE_MODULE_DESCRIPTION="Test module C"
+VANTAGE_MODULE_VERSION="1.0.0"
+VANTAGE_MODULE_DEPENDENCIES="module_a"
 
 if [[ "${module_a_loaded:-0}" != "1" ]]; then
     echo "ERROR: module_a not loaded before module_c" >&2
@@ -84,9 +84,9 @@ EOF
     # Module D - depends on B and C
     cat > "$TEST_DIR/modules/module_d.module" << 'EOF'
 #!/usr/bin/env bash
-SENTINEL_MODULE_DESCRIPTION="Test module D"
-SENTINEL_MODULE_VERSION="1.0.0"
-SENTINEL_MODULE_DEPENDENCIES="module_b module_c"
+VANTAGE_MODULE_DESCRIPTION="Test module D"
+VANTAGE_MODULE_VERSION="1.0.0"
+VANTAGE_MODULE_DEPENDENCIES="module_b module_c"
 
 if [[ "${module_b_loaded:-0}" != "1" || "${module_c_loaded:-0}" != "1" ]]; then
     echo "ERROR: Dependencies not loaded before module_d" >&2
@@ -99,9 +99,9 @@ EOF
     # Module E - no dependencies (can load in parallel with A)
     cat > "$TEST_DIR/modules/module_e.module" << 'EOF'
 #!/usr/bin/env bash
-SENTINEL_MODULE_DESCRIPTION="Test module E"
-SENTINEL_MODULE_VERSION="1.0.0"
-SENTINEL_MODULE_DEPENDENCIES=""
+VANTAGE_MODULE_DESCRIPTION="Test module E"
+VANTAGE_MODULE_VERSION="1.0.0"
+VANTAGE_MODULE_DEPENDENCIES=""
 
 module_e_loaded=1
 sleep 0.1
@@ -110,28 +110,28 @@ EOF
     chmod +x "$TEST_DIR/modules/"*.module
 }
 
-export SENTINEL_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")"/.. && pwd)"
+export VANTAGE_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")"/.. && pwd)"
 
 # Test 1: Module metadata extraction
 test_metadata_extraction() {
     info "Test 1: Module metadata extraction"
     
     # Source the parallel loader
-    export SENTINEL_MODULES_PATH="$TEST_DIR/modules"
-    source "${SENTINEL_ROOT}/bash_modules.d/parallel_loader.module"
+    export VANTAGE_MODULES_PATH="$TEST_DIR/modules"
+    source "${VANTAGE_ROOT}/bash_modules.d/parallel_loader.module"
     clear_module_cache
     
     # Test metadata loading
     _load_module_metadata "module_a" "$TEST_DIR/modules/module_a.module"
     
-    if [[ -n "${SENTINEL_MODULE_METADATA_CACHE[module_a]}" ]]; then
+    if [[ -n "${VANTAGE_MODULE_METADATA_CACHE[module_a]}" ]]; then
         pass "Metadata extracted successfully"
     else
         fail "Metadata extraction failed"
     fi
     
     # Check cache file creation
-    if [[ -f "$SENTINEL_MODULE_CACHE_DIR/module_a.meta" ]]; then
+    if [[ -f "$VANTAGE_MODULE_CACHE_DIR/module_a.meta" ]]; then
         pass "Cache file created"
     else
         fail "Cache file not created"
@@ -146,14 +146,14 @@ test_dependency_graph() {
     _build_dependency_graph "$TEST_DIR/modules"
     
     # Check dependencies
-    if [[ "${SENTINEL_MODULE_DEPS_GRAPH[module_d]}" == "module_b module_c" ]]; then
+    if [[ "${VANTAGE_MODULE_DEPS_GRAPH[module_d]}" == "module_b module_c" ]]; then
         pass "Dependencies correctly identified"
     else
         fail "Dependencies not correctly identified"
     fi
     
     # Check reverse dependencies
-    if [[ "${SENTINEL_MODULE_REVERSE_DEPS[module_a]}" =~ "module_b" ]]; then
+    if [[ "${VANTAGE_MODULE_REVERSE_DEPS[module_a]}" =~ "module_b" ]]; then
         pass "Reverse dependencies correctly built"
     else
         fail "Reverse dependencies not correctly built"
@@ -241,7 +241,7 @@ test_cache_performance() {
     info "Cache miss time: ${cache_miss_time}ms"
     info "Cache hit time: ${cache_hit_time}ms"
     
-    if [[ "${SENTINEL_MODULE_CACHE_HITS[module_a]:-0}" == "1" ]]; then
+    if [[ "${VANTAGE_MODULE_CACHE_HITS[module_a]:-0}" == "1" ]]; then
         pass "Cache hit recorded successfully"
     else
         fail "Cache hit was not recorded"
@@ -262,8 +262,8 @@ module_e
 EOF
 
     # Clear loaded modules
-    unset SENTINEL_LOADED_MODULES
-    declare -A SENTINEL_LOADED_MODULES
+    unset VANTAGE_LOADED_MODULES
+    declare -A VANTAGE_LOADED_MODULES
     
     # Measure sequential loading time
     local start_time=$(date +%s%N)
@@ -275,8 +275,8 @@ EOF
     
     # Clear and test parallel loading
     unset module_a_loaded module_b_loaded module_c_loaded module_d_loaded module_e_loaded
-    unset SENTINEL_LOADED_MODULES
-    declare -A SENTINEL_LOADED_MODULES
+    unset VANTAGE_LOADED_MODULES
+    declare -A VANTAGE_LOADED_MODULES
     
     start_time=$(date +%s%N)
     parallel_load_modules "$TEST_DIR/enabled_modules"
@@ -308,16 +308,16 @@ test_error_handling() {
     # Create a module with circular dependency
     cat > "$TEST_DIR/modules/module_circular1.module" << 'EOF'
 #!/usr/bin/env bash
-SENTINEL_MODULE_DESCRIPTION="Circular dependency test 1"
-SENTINEL_MODULE_VERSION="1.0.0"
-SENTINEL_MODULE_DEPENDENCIES="module_circular2"
+VANTAGE_MODULE_DESCRIPTION="Circular dependency test 1"
+VANTAGE_MODULE_VERSION="1.0.0"
+VANTAGE_MODULE_DEPENDENCIES="module_circular2"
 EOF
 
     cat > "$TEST_DIR/modules/module_circular2.module" << 'EOF'
 #!/usr/bin/env bash
-SENTINEL_MODULE_DESCRIPTION="Circular dependency test 2"
-SENTINEL_MODULE_VERSION="1.0.0"
-SENTINEL_MODULE_DEPENDENCIES="module_circular1"
+VANTAGE_MODULE_DESCRIPTION="Circular dependency test 2"
+VANTAGE_MODULE_VERSION="1.0.0"
+VANTAGE_MODULE_DEPENDENCIES="module_circular1"
 EOF
 
     chmod +x "$TEST_DIR/modules/module_circular"*.module

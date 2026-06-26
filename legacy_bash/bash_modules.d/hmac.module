@@ -1,20 +1,20 @@
 #!/usr/bin/env bash
-# SENTINEL - HMAC Security Module
+# VANTAGE - HMAC Security Module
 # Version: 1.0.0
-# Description: Provides HMAC-based security functions for SENTINEL modules
+# Description: Provides HMAC-based security functions for VANTAGE modules
 # Dependencies: openssl
-# Maintainer: SENTINEL Team
+# Maintainer: VANTAGE Team
 
 # Prevent double loading
-[[ -n "${_SENTINEL_HMAC_MODULE_LOADED}" ]] && return 0
-export _SENTINEL_HMAC_MODULE_LOADED=1
+[[ -n "${_VANTAGE_HMAC_MODULE_LOADED}" ]] && return 0
+export _VANTAGE_HMAC_MODULE_LOADED=1
 
 # Set strict error handling
 set -o pipefail
 
 # Configuration
-HMAC_KEY="${SENTINEL_HMAC_KEY:-$(cat /etc/machine-id 2>/dev/null || hostname | sha256sum | cut -d' ' -f1)}"
-HMAC_LOG_DIR="${HOME}/.sentinel/logs"
+HMAC_KEY="${VANTAGE_HMAC_KEY:-$(cat /etc/machine-id 2>/dev/null || hostname | sha256sum | cut -d' ' -f1)}"
+HMAC_LOG_DIR="${HOME}/.vantage/logs"
 
 # Ensure log directory exists
 mkdir -p "$HMAC_LOG_DIR" 2>/dev/null || true
@@ -29,7 +29,7 @@ _hmac_log() {
 
 # Debug logging wrapper
 _hmac_debug() {
-    [[ "${DEBUG_SENTINEL:-0}" == "1" ]] && _hmac_log "DEBUG" "$1"
+    [[ "${DEBUG_VANTAGE:-0}" == "1" ]] && _hmac_log "DEBUG" "$1"
 }
 
 # Info logging wrapper
@@ -48,7 +48,7 @@ _hmac_error() {
 }
 
 # Calculate HMAC for a string
-sentinel_hmac_string() {
+vantage_hmac_string() {
     local data="$1"
     local hmac_key="${2:-$HMAC_KEY}"
     
@@ -65,7 +65,7 @@ sentinel_hmac_string() {
 }
 
 # Calculate HMAC for a file
-sentinel_hmac_file() {
+vantage_hmac_file() {
     local file="$1"
     local hmac_key="${2:-$HMAC_KEY}"
     
@@ -86,13 +86,13 @@ sentinel_hmac_file() {
 }
 
 # Verify HMAC for a string
-sentinel_verify_hmac_string() {
+vantage_verify_hmac_string() {
     local data="$1"
     local expected_hmac="$2"
     local hmac_key="${3:-$HMAC_KEY}"
     
     local calculated_hmac
-    calculated_hmac=$(sentinel_hmac_string "$data" "$hmac_key") || return 1
+    calculated_hmac=$(vantage_hmac_string "$data" "$hmac_key") || return 1
     
     if [[ "$calculated_hmac" == "$expected_hmac" ]]; then
         return 0
@@ -103,7 +103,7 @@ sentinel_verify_hmac_string() {
 }
 
 # Verify HMAC for a file
-sentinel_verify_hmac_file() {
+vantage_verify_hmac_file() {
     local file="$1"
     local expected_hmac="$2"
     local hmac_key="${3:-$HMAC_KEY}"
@@ -114,7 +114,7 @@ sentinel_verify_hmac_file() {
     fi
     
     local calculated_hmac
-    calculated_hmac=$(sentinel_hmac_file "$file" "$hmac_key") || return 1
+    calculated_hmac=$(vantage_hmac_file "$file" "$hmac_key") || return 1
     
     if [[ "$calculated_hmac" == "$expected_hmac" ]]; then
         return 0
@@ -125,7 +125,7 @@ sentinel_verify_hmac_file() {
 }
 
 # Secure command verification and execution
-sentinel_run_verified_command() {
+vantage_run_verified_command() {
     local command="$1"
     local hmac_key="${2:-$HMAC_KEY}"
     
@@ -176,8 +176,8 @@ sentinel_run_verified_command() {
 }
 
 # Export functions
-export -f sentinel_hmac_string sentinel_hmac_file sentinel_verify_hmac_string \
-       sentinel_verify_hmac_file sentinel_run_verified_command 2>/dev/null || true
+export -f vantage_hmac_string vantage_hmac_file vantage_verify_hmac_string \
+       vantage_verify_hmac_file vantage_run_verified_command 2>/dev/null || true
 
 # Initialization message
 _hmac_debug "HMAC Security Module loaded successfully" 

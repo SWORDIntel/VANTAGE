@@ -8,10 +8,10 @@
 export LANG=en_US.utf8
 export LC_ALL=en_US.utf8
 
-# Determine SENTINEL_ROOT dynamically if not already set
-if [[ -z "${SENTINEL_ROOT}" ]]; then
-    # Assuming this script is at the root of the SENTINEL project
-    export SENTINEL_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# Determine VANTAGE_ROOT dynamically if not already set
+if [[ -z "${VANTAGE_ROOT}" ]]; then
+    # Assuming this script is at the root of the VANTAGE project
+    export VANTAGE_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 fi
 
 #========================================================================
@@ -37,7 +37,7 @@ fi
 # MODULE-SPECIFIC CONFIGURATIONS
 #========================================================================
 
-# SENTINEL Feature Module Toggles
+# VANTAGE Feature Module Toggles
 # -------------------------------
 # These are now managed in config.yaml
 
@@ -55,25 +55,25 @@ fi
 # Source centralized configuration
 
 # Don't re-source bash_modules if already loaded (prevents infinite loops)
-if [[ -z "${_SENTINEL_MODULES_LOADED}" ]]; then
+if [[ -z "${_VANTAGE_MODULES_LOADED}" ]]; then
     # Source the main bash_modules first to get core functions
-    if [[ -f "${SENTINEL_ROOT}/bash_modules" ]]; then
-        export SENTINEL_SKIP_AUTO_LOAD=1  # Prevent duplicate loading
-        source "${SENTINEL_ROOT}/bash_modules"
+    if [[ -f "${VANTAGE_ROOT}/bash_modules" ]]; then
+        export VANTAGE_SKIP_AUTO_LOAD=1  # Prevent duplicate loading
+        source "${VANTAGE_ROOT}/bash_modules"
     fi
 fi
 
 # Source module manager and parallel loader only if not already loaded
-if [[ -z "${_SENTINEL_MODULE_MANAGER_LOADED}" ]] && [[ -f "${SENTINEL_ROOT}/bash_modules.d/module_manager.module" ]]; then
-    source "${SENTINEL_ROOT}/bash_modules.d/module_manager.module"
+if [[ -z "${_VANTAGE_MODULE_MANAGER_LOADED}" ]] && [[ -f "${VANTAGE_ROOT}/bash_modules.d/module_manager.module" ]]; then
+    source "${VANTAGE_ROOT}/bash_modules.d/module_manager.module"
 fi
-if [[ -z "${_SENTINEL_PARALLEL_LOADER_LOADED}" ]] && [[ -f "${SENTINEL_ROOT}/bash_modules.d/parallel_loader.module" ]]; then
-    source "${SENTINEL_ROOT}/bash_modules.d/parallel_loader.module"
+if [[ -z "${_VANTAGE_PARALLEL_LOADER_LOADED}" ]] && [[ -f "${VANTAGE_ROOT}/bash_modules.d/parallel_loader.module" ]]; then
+    source "${VANTAGE_ROOT}/bash_modules.d/parallel_loader.module"
 fi
 
 # Load all enabled modules in parallel only if function exists and modules not already loaded
-if type parallel_load_modules &>/dev/null && [[ -z "${_SENTINEL_PARALLEL_MODULES_LOADED}" ]]; then
-    export _SENTINEL_PARALLEL_MODULES_LOADED=1
+if type parallel_load_modules &>/dev/null && [[ -z "${_VANTAGE_PARALLEL_MODULES_LOADED}" ]]; then
+    export _VANTAGE_PARALLEL_MODULES_LOADED=1
     parallel_load_modules "${HOME}/.bash_modules"
 fi
 
@@ -176,21 +176,21 @@ export PATH="$BUN_INSTALL/bin:$PATH"
 export ZFORGE_WORKSPACE="${ZFORGE_WORKSPACE:-${HOME}/zforge_workspace}"
 
 # Silence module status messages
-export SENTINEL_QUIET_STATUS=1
-export SENTINEL_VERBOSE=0
-export SENTINEL_DEBUG=0
-export SENTINEL_DEBUG_MODULES=0
-export SENTINEL_QUIET_MODE=1
-export SENTINEL_DISABLE_STARTUP_MESSAGES=1
-export SENTINEL_SUPPRESS_MODULE_MESSAGES=1
+export VANTAGE_QUIET_STATUS=1
+export VANTAGE_VERBOSE=0
+export VANTAGE_DEBUG=0
+export VANTAGE_DEBUG_MODULES=0
+export VANTAGE_QUIET_MODE=1
+export VANTAGE_DISABLE_STARTUP_MESSAGES=1
+export VANTAGE_SUPPRESS_MODULE_MESSAGES=1
 
 # Create function to show critical startup info only
-sentinel_startup_summary() {
-    if [[ "${SENTINEL_QUIET_MODE:-0}" == "1" ]]; then
+vantage_startup_summary() {
+    if [[ "${VANTAGE_QUIET_MODE:-0}" == "1" ]]; then
         return 0
     fi
     
-    echo -e "\033[32m[SENTINEL]\033[0m Ready - $(date +'%H:%M:%S')"
+    echo -e "\033[32m[VANTAGE]\033[0m Ready - $(date +'%H:%M:%S')"
     
     # Show only critical status
     local critical_info=""
@@ -206,32 +206,32 @@ sentinel_startup_summary() {
     fi
     
     # Show module count
-    local module_count=$(echo "${!SENTINEL_LOADED_MODULES[@]}" | wc -w 2>/dev/null || echo "0")
+    local module_count=$(echo "${!VANTAGE_LOADED_MODULES[@]}" | wc -w 2>/dev/null || echo "0")
     critical_info+=" | ${module_count} modules"
     
     if [[ -n "$critical_info" ]]; then
-        echo -e "\033[32m[SENTINEL]\033[0m${critical_info}"
+        echo -e "\033[32m[VANTAGE]\033[0m${critical_info}"
     fi
 }
 
 # OpenVINO Check (after Python venv setup)
 DSENV_PATH="${HOME}/datascience/envs/dsenv"
-SENTINEL_VENV_PATH="${HOME}/venv"
+VANTAGE_VENV_PATH="${HOME}/venv"
 
 # OpenVINO Check (only show warnings/errors, not success messages)
-if [[ "${SENTINEL_QUIET_MODE:-0}" != "1" ]]; then
+if [[ "${VANTAGE_QUIET_MODE:-0}" != "1" ]]; then
     if [[ -n "${VIRTUAL_ENV}" && "${VIRTUAL_ENV}" == "${DSENV_PATH}" ]]; then
         # dsenv is active - only warn if OpenVINO not found
         if ! python -c "import openvino" >/dev/null 2>&1; then
-            echo "[SENTINEL] Warning: dsenv active but OpenVINO Python package not found."
+            echo "[VANTAGE] Warning: dsenv active but OpenVINO Python package not found."
         fi
-    elif [[ -n "${VIRTUAL_ENV}" && "${VIRTUAL_ENV}" == "${SENTINEL_VENV_PATH}" ]]; then
-        # SENTINEL venv - expected that OpenVINO won't be available
-        if ! "${SENTINEL_VENV_PATH}/bin/python" -c "import openvino" >/dev/null 2>&1; then
-            echo "[SENTINEL] SENTINEL venv active. For OpenVINO, activate dsenv: source ${DSENV_PATH}/bin/activate"
+    elif [[ -n "${VIRTUAL_ENV}" && "${VIRTUAL_ENV}" == "${VANTAGE_VENV_PATH}" ]]; then
+        # VANTAGE venv - expected that OpenVINO won't be available
+        if ! "${VANTAGE_VENV_PATH}/bin/python" -c "import openvino" >/dev/null 2>&1; then
+            echo "[VANTAGE] VANTAGE venv active. For OpenVINO, activate dsenv: source ${DSENV_PATH}/bin/activate"
         fi
     elif [[ -z "${VIRTUAL_ENV}" ]]; then
-        echo "[SENTINEL] No virtual environment active. Activate dsenv for OpenVINO: source ${DSENV_PATH}/bin/activate"
+        echo "[VANTAGE] No virtual environment active. Activate dsenv for OpenVINO: source ${DSENV_PATH}/bin/activate"
     fi
 fi
 

@@ -1,8 +1,8 @@
-# SENTINEL Parallel Module Loading Implementation
+# VANTAGE Parallel Module Loading Implementation
 
 ## Overview
 
-The SENTINEL parallel module loading system enhances the bash startup performance by loading independent modules concurrently while respecting dependency constraints. This implementation provides:
+The VANTAGE parallel module loading system enhances the bash startup performance by loading independent modules concurrently while respecting dependency constraints. This implementation provides:
 
 1. **Dependency Graph Analysis**: Automatic detection and resolution of module dependencies
 2. **Parallel Loading Groups**: Modules are grouped by dependency level for concurrent loading
@@ -46,7 +46,7 @@ Modules are organized into parallel loading groups based on their dependency lev
 Modules declare dependencies using:
 
 ```bash
-SENTINEL_MODULE_DEPENDENCIES="logging config_cache"
+VANTAGE_MODULE_DEPENDENCIES="logging config_cache"
 ```
 
 ### Parallel Loading Algorithm
@@ -63,8 +63,8 @@ SENTINEL_MODULE_DEPENDENCIES="logging config_cache"
 
 ### Process Management
 
-- Maximum parallel jobs: Configurable via `SENTINEL_PARALLEL_MAX_JOBS` (default: 4)
-- Timeout protection: `SENTINEL_PARALLEL_TIMEOUT` (default: 30 seconds)
+- Maximum parallel jobs: Configurable via `VANTAGE_PARALLEL_MAX_JOBS` (default: 4)
+- Timeout protection: `VANTAGE_PARALLEL_TIMEOUT` (default: 30 seconds)
 - Background loading using bash `&` operator
 - Synchronization using `wait` command
 
@@ -91,13 +91,13 @@ Level 1: [B, D] (parallel) ───> 200ms
 
 ```bash
 # Maximum parallel loading jobs
-export SENTINEL_PARALLEL_MAX_JOBS=4
+export VANTAGE_PARALLEL_MAX_JOBS=4
 
 # Timeout for module loading (seconds)
-export SENTINEL_PARALLEL_TIMEOUT=30
+export VANTAGE_PARALLEL_TIMEOUT=30
 
 # Enable debug output
-export SENTINEL_DEBUG_MODULES=1
+export VANTAGE_DEBUG_MODULES=1
 ```
 
 ### Usage
@@ -136,7 +136,7 @@ The system tracks:
 
 ### Debug Output
 
-Enable with `SENTINEL_DEBUG_MODULES=1`:
+Enable with `VANTAGE_DEBUG_MODULES=1`:
 ```
 DEBUG: Loading group 1: logging config_cache
 DEBUG: Loaded logging in 45ms
@@ -154,8 +154,8 @@ Total time: 412ms
 Modules loaded: 15
 Cache hits: 8
 Slowest modules:
-  sentinel_ml: 125ms
-  sentinel_osint: 98ms
+  vantage_ml: 125ms
+  vantage_osint: 98ms
   autocomplete: 87ms
 ```
 
@@ -172,7 +172,7 @@ Slowest modules:
 ### Common Issues
 
 1. **Modules not loading in parallel**
-   - Check `SENTINEL_PARALLEL_MAX_JOBS` setting
+   - Check `VANTAGE_PARALLEL_MAX_JOBS` setting
    - Verify dependency declarations
    - Enable debug mode to see loading order
 

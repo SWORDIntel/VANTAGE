@@ -1,5 +1,5 @@
 local wezterm = require 'wezterm'
-local notifications = require 'sentinel.notifications'
+local notifications = require 'vantage.notifications'
 
 local M = {}
 M.checked = false
@@ -22,7 +22,7 @@ function M.setup(config)
         if #missing > 0 then
             notifications.send_toast(window, "Health Check Failed", "Missing core binaries: " .. table.concat(missing, ", "), "CRITICAL")
         else
-            notifications.send_toast(window, "SENTINEL Core", "All modules and dependencies online.", "SUCCESS")
+            notifications.send_toast(window, "VANTAGE Core", "All modules and dependencies online.", "SUCCESS")
         end
     end)
 end

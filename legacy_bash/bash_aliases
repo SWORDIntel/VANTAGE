@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# SENTINEL Core Aliases
+# VANTAGE Core Aliases
 # Enhanced shell aliases for improved productivity and security
 
 # Load additional alias files from directory
@@ -62,7 +62,7 @@ alias update-system='if command -v apt &>/dev/null; then
 
 # Sourcing with optional internet check
 alias sourcebash='source ~/.bashrc && check_internet_and_update && echo ".bashrc sourced and apt updated if connected."'
-alias sentinel-config='~/.sentinel/sentinel_config_helper.sh'
+alias vantage-config='~/.vantage/vantage_config_helper.sh'
 
 # Monero unified wallet
 export MONERO_WALLET="$HOME/Monero/wallets/MyWallet/MyWallet"

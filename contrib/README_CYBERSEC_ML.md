@@ -1,6 +1,6 @@
-# SENTINEL Cybersecurity ML Analyzer
+# VANTAGE Cybersecurity ML Analyzer
 
-Advanced machine learning module for cybersecurity analysis in the SENTINEL framework.
+Advanced machine learning module for cybersecurity analysis in the VANTAGE framework.
 
 ## Overview
 
@@ -34,12 +34,12 @@ The module requires several Python packages:
 
 ### Installation Command
 
-Install dependencies through the SENTINEL framework:
+Install dependencies through the VANTAGE framework:
 
 ```bash
 cyberinstall
 # or
-sentinel_cybersec_install_deps
+vantage_cybersec_install_deps
 ```
 
 ## Usage
@@ -178,7 +178,7 @@ When available, large language models provide:
 
 ## Configuration
 
-The module can be configured by editing `~/.sentinel/cybersec/config.json`:
+The module can be configured by editing `~/.vantage/cybersec/config.json`:
 
 ```json
 {
@@ -213,7 +213,7 @@ The module can be configured by editing `~/.sentinel/cybersec/config.json`:
 
 ## License
 
-This module is part of the SENTINEL framework and is subject to the same license terms.
+This module is part of the VANTAGE framework and is subject to the same license terms.
 
 ## Contributing
 
@@ -226,4 +226,4 @@ Contributions are welcome! Ways to contribute:
 5. Add support for additional languages
 6. Enhance documentation
 
-For more details, see the main SENTINEL project documentation. 
+For more details, see the main VANTAGE project documentation. 

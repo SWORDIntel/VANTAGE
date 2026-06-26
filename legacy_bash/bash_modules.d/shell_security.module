@@ -10,8 +10,8 @@
 # URL:
 
 # Prevent multiple loading
-[[ -n "${_SENTINEL_SHELL_SECURITY_LOADED}" ]] && return 0
-export _SENTINEL_SHELL_SECURITY_LOADED=1
+[[ -n "${_VANTAGE_SHELL_SECURITY_LOADED}" ]] && return 0
+export _VANTAGE_SHELL_SECURITY_LOADED=1
 # Version:		0.0
 # Stability:		alpha
 # Tags:			security

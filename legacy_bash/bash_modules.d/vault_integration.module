@@ -1,14 +1,14 @@
 #!/usr/bin/env bash
-# SENTINEL - Vault Integration Module
+# VANTAGE - Vault Integration Module
 # Version: 1.0.0
 # Description: Provides helper functions for interacting with HashiCorp Vault.
 # Dependencies: logging
 
 # --- Module Metadata ---
-SENTINEL_MODULE_NAME="vault_integration"
-SENTINEL_MODULE_DESCRIPTION="Vault integration helper functions"
-SENTINEL_MODULE_VERSION="1.0.0"
-SENTINEL_MODULE_DEPENDENCIES="logging"
+VANTAGE_MODULE_NAME="vault_integration"
+VANTAGE_MODULE_DESCRIPTION="Vault integration helper functions"
+VANTAGE_MODULE_VERSION="1.0.0"
+VANTAGE_MODULE_DEPENDENCIES="logging"
 
 # --- Core Functions ---
 
@@ -18,16 +18,16 @@ vault_read() {
     local secret_path="$1"
 
     if [[ -z "$secret_path" ]]; then
-        sentinel_log_error "vault_integration" "Secret path is required."
+        vantage_log_error "vault_integration" "Secret path is required."
         return 1
     fi
 
     if ! command -v vault &> /dev/null; then
-        sentinel_log_error "vault_integration" "vault is not installed. Please install it to use this feature."
+        vantage_log_error "vault_integration" "vault is not installed. Please install it to use this feature."
         return 1
     fi
 
-    sentinel_log_info "vault_integration" "Reading secret from: $secret_path"
+    vantage_log_info "vault_integration" "Reading secret from: $secret_path"
 
     vault read -field=value "$secret_path"
 }
@@ -40,21 +40,21 @@ vault_exec() {
     local cmd="$@"
 
     if [[ -z "$secret_path" ]]; then
-        sentinel_log_error "vault_integration" "Secret path is required."
+        vantage_log_error "vault_integration" "Secret path is required."
         return 1
     fi
 
     if [[ -z "$cmd" ]]; then
-        sentinel_log_error "vault_integration" "Command is required."
+        vantage_log_error "vault_integration" "Command is required."
         return 1
     fi
 
     if ! command -v vault &> /dev/null; then
-        sentinel_log_error "vault_integration" "vault is not installed. Please install it to use this feature."
+        vantage_log_error "vault_integration" "vault is not installed. Please install it to use this feature."
         return 1
     fi
 
-    sentinel_log_info "vault_integration" "Executing command with secrets from: $secret_path"
+    vantage_log_info "vault_integration" "Executing command with secrets from: $secret_path"
 
     local secrets
     secrets=$(vault read -format=json "$secret_path" | jq -r '.data | to_entries | .[] | "export \(.key)=\(.value)"')

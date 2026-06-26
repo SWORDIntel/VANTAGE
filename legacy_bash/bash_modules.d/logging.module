@@ -1,47 +1,47 @@
 #!/usr/bin/env bash
-# SENTINEL - Logging Module
+# VANTAGE - Logging Module
 # Version: 1.1.0
-# Description: Provides centralized logging functionality for all SENTINEL modules
+# Description: Provides centralized logging functionality for all VANTAGE modules
 # Dependencies: config_loader (for centralized configuration)
-# Maintainer: SENTINEL Team
+# Maintainer: VANTAGE Team
 
 # Prevent double loading
-[[ -n "${_SENTINEL_LOGGING_LOADED}" ]] && return 0
-export _SENTINEL_LOGGING_LOADED=1
+[[ -n "${_VANTAGE_LOGGING_LOADED}" ]] && return 0
+export _VANTAGE_LOGGING_LOADED=1
 
 # Log directory location
-SENTINEL_LOG_DIR=~/.sentinel/logs
+VANTAGE_LOG_DIR=~/.vantage/logs
 
 # Define log levels
-: "${SENTINEL_LOG_LEVEL_DEBUG:=0}"
-: "${SENTINEL_LOG_LEVEL_INFO:=1}"
-: "${SENTINEL_LOG_LEVEL_WARNING:=2}"
-: "${SENTINEL_LOG_LEVEL_ERROR:=3}"
-: "${SENTINEL_LOG_LEVEL_CRITICAL:=4}"
-: "${SENTINEL_LOG_LEVEL:=1}"
+: "${VANTAGE_LOG_LEVEL_DEBUG:=0}"
+: "${VANTAGE_LOG_LEVEL_INFO:=1}"
+: "${VANTAGE_LOG_LEVEL_WARNING:=2}"
+: "${VANTAGE_LOG_LEVEL_ERROR:=3}"
+: "${VANTAGE_LOG_LEVEL_CRITICAL:=4}"
+: "${VANTAGE_LOG_LEVEL:=1}"
 
 # Use centralized config, or fall back to defaults if not available/loaded
-if [[ -n "$SENTINEL_CONFIG_FILE" && -f "$SENTINEL_CONFIG_FILE" ]]; then
+if [[ -n "$VANTAGE_CONFIG_FILE" && -f "$VANTAGE_CONFIG_FILE" ]]; then
     # Config already loaded, use existing values (do nothing)
     :
 else
     # Default values if config_loader wasn't loaded first
-    : "${SENTINEL_LOG_RETENTION_DAYS:=30}"
-    : "${SENTINEL_LOG_COLORS_ENABLED:=true}"
-    : "${SENTINEL_LOG_ROTATION_SIZE:=1024}"  # 1MB
+    : "${VANTAGE_LOG_RETENTION_DAYS:=30}"
+    : "${VANTAGE_LOG_COLORS_ENABLED:=true}"
+    : "${VANTAGE_LOG_ROTATION_SIZE:=1024}"  # 1MB
 fi
 
 # Main logging function with error handling to prevent terminal crashes
-sentinel_log() {
+vantage_log() {
     # Support both current and legacy call signatures:
-    #   sentinel_log <numeric-level> <component> <message> [exit_code]
-    #   sentinel_log <text-level> <message>
-    #   sentinel_log <component> <message>
-    #   sentinel_log <message>
+    #   vantage_log <numeric-level> <component> <message> [exit_code]
+    #   vantage_log <text-level> <message>
+    #   vantage_log <component> <message>
+    #   vantage_log <message>
     local level component message exit_code
     case "${1:-}" in
         '' )
-            level=${SENTINEL_LOG_LEVEL_INFO:-1}
+            level=${VANTAGE_LOG_LEVEL_INFO:-1}
             component="unknown"
             message=""
             exit_code=0
@@ -49,42 +49,42 @@ sentinel_log() {
         ''|*[!0-9]*)
             case "${1,,}" in
                 debug)
-                    level=${SENTINEL_LOG_LEVEL_DEBUG:-0}
+                    level=${VANTAGE_LOG_LEVEL_DEBUG:-0}
                     component=${2:-"unknown"}
                     message=${3:-${2:-""}}
                     [[ $# -ge 3 ]] || component="unknown"
                     exit_code=${4:-0}
                     ;;
                 info)
-                    level=${SENTINEL_LOG_LEVEL_INFO:-1}
+                    level=${VANTAGE_LOG_LEVEL_INFO:-1}
                     component=${2:-"unknown"}
                     message=${3:-${2:-""}}
                     [[ $# -ge 3 ]] || component="unknown"
                     exit_code=${4:-0}
                     ;;
                 warning|warn)
-                    level=${SENTINEL_LOG_LEVEL_WARNING:-2}
+                    level=${VANTAGE_LOG_LEVEL_WARNING:-2}
                     component=${2:-"unknown"}
                     message=${3:-${2:-""}}
                     [[ $# -ge 3 ]] || component="unknown"
                     exit_code=${4:-0}
                     ;;
                 error)
-                    level=${SENTINEL_LOG_LEVEL_ERROR:-3}
+                    level=${VANTAGE_LOG_LEVEL_ERROR:-3}
                     component=${2:-"unknown"}
                     message=${3:-${2:-""}}
                     [[ $# -ge 3 ]] || component="unknown"
                     exit_code=${4:-0}
                     ;;
                 critical)
-                    level=${SENTINEL_LOG_LEVEL_CRITICAL:-4}
+                    level=${VANTAGE_LOG_LEVEL_CRITICAL:-4}
                     component=${2:-"unknown"}
                     message=${3:-${2:-""}}
                     [[ $# -ge 3 ]] || component="unknown"
                     exit_code=${4:-0}
                     ;;
                 *)
-                    level=${SENTINEL_LOG_LEVEL_INFO:-1}
+                    level=${VANTAGE_LOG_LEVEL_INFO:-1}
                     component=${2:-"unknown"}
                     message=${2:-$1}
                     [[ $# -ge 2 ]] || component="unknown"
@@ -93,7 +93,7 @@ sentinel_log() {
             esac
             ;;
         *)
-            level=${1:-${SENTINEL_LOG_LEVEL_INFO:-1}}
+            level=${1:-${VANTAGE_LOG_LEVEL_INFO:-1}}
             component=${2:-"unknown"}
             message=${3:-""}
             exit_code=${4:-0}
@@ -101,9 +101,9 @@ sentinel_log() {
     esac
     
     # Early return if log level is below configured level
-    # Example: If SENTINEL_LOG_LEVEL=2 (WARNING), DEBUG(0) and INFO(1) are skipped
-    [[ "$level" =~ ^[0-9]+$ ]] || level=${SENTINEL_LOG_LEVEL_INFO:-1}
-    [[ $level -lt ${SENTINEL_LOG_LEVEL:-1} ]] && return 0
+    # Example: If VANTAGE_LOG_LEVEL=2 (WARNING), DEBUG(0) and INFO(1) are skipped
+    [[ "$level" =~ ^[0-9]+$ ]] || level=${VANTAGE_LOG_LEVEL_INFO:-1}
+    [[ $level -lt ${VANTAGE_LOG_LEVEL:-1} ]] && return 0
     
     # Generate timestamp safely
     local timestamp
@@ -112,14 +112,14 @@ sentinel_log() {
     # Generate log_file path safely
     local date_suffix
     date_suffix=$(date +%Y%m%d 2>/dev/null) || date_suffix="unknown"
-    local log_file="${SENTINEL_LOG_DIR:-$HOME/.sentinel/logs}/${component}-${date_suffix}.log"
+    local log_file="${VANTAGE_LOG_DIR:-$HOME/.vantage/logs}/${component}-${date_suffix}.log"
     
     # Ensure log directory exists with error handling
-    mkdir -p "${SENTINEL_LOG_DIR:-$HOME/.sentinel/logs}" 2>/dev/null || {
+    mkdir -p "${VANTAGE_LOG_DIR:-$HOME/.vantage/logs}" 2>/dev/null || {
         # If we can't create the log directory, use a fallback approach
         if [[ -d "/tmp" ]]; then
             # Use /tmp as fallback
-            log_file="/tmp/sentinel-${component}-${date_suffix}.log"
+            log_file="/tmp/vantage-${component}-${date_suffix}.log"
         else
             # If we can't log anywhere, just return
             return $exit_code
@@ -129,19 +129,19 @@ sentinel_log() {
     # Convert level to text safely
     local level_text="UNKNOWN"
     case $level in
-        $SENTINEL_LOG_LEVEL_DEBUG)
+        $VANTAGE_LOG_LEVEL_DEBUG)
             level_text="DEBUG"
             ;;
-        $SENTINEL_LOG_LEVEL_INFO)
+        $VANTAGE_LOG_LEVEL_INFO)
             level_text="INFO"
             ;;
-        $SENTINEL_LOG_LEVEL_WARNING)
+        $VANTAGE_LOG_LEVEL_WARNING)
             level_text="WARNING"
             ;;
-        $SENTINEL_LOG_LEVEL_ERROR)
+        $VANTAGE_LOG_LEVEL_ERROR)
             level_text="ERROR"
             ;;
-        $SENTINEL_LOG_LEVEL_CRITICAL)
+        $VANTAGE_LOG_LEVEL_CRITICAL)
             level_text="CRITICAL"
             ;;
     esac
@@ -153,15 +153,15 @@ sentinel_log() {
     echo "$log_entry" >> "$log_file" 2>/dev/null || true
     
     # For errors and critical messages, also output to stderr if we're in a terminal
-    if [[ $level -ge ${SENTINEL_LOG_LEVEL_ERROR:-3} ]]; then
+    if [[ $level -ge ${VANTAGE_LOG_LEVEL_ERROR:-3} ]]; then
         # Only output to terminal if it exists
         if [[ -t 2 ]]; then
-            if [[ "${SENTINEL_LOG_COLORS_ENABLED:-false}" == "true" ]]; then
+            if [[ "${VANTAGE_LOG_COLORS_ENABLED:-false}" == "true" ]]; then
                 # Color coding for terminal output with error handling
                 local color="\033[0m" # Default
-                if [[ $level -eq ${SENTINEL_LOG_LEVEL_ERROR:-3} ]]; then
+                if [[ $level -eq ${VANTAGE_LOG_LEVEL_ERROR:-3} ]]; then
                     color="\033[1;31m" # Red
-                elif [[ $level -eq ${SENTINEL_LOG_LEVEL_CRITICAL:-4} ]]; then
+                elif [[ $level -eq ${VANTAGE_LOG_LEVEL_CRITICAL:-4} ]]; then
                     color="\033[1;35m" # Purple for critical
                 fi
                 # Use printf instead of echo -e for better portability
@@ -180,10 +180,10 @@ sentinel_log() {
             file_size=$(stat -c %s "$log_file" 2>/dev/null || echo "0")
             
             # Only proceed if we got a valid size and rotation is configured
-            if [[ $file_size =~ ^[0-9]+$ && ${SENTINEL_LOG_ROTATION_SIZE:-1024} -gt 0 ]]; then
+            if [[ $file_size =~ ^[0-9]+$ && ${VANTAGE_LOG_ROTATION_SIZE:-1024} -gt 0 ]]; then
                 # Convert to KB for comparison
                 file_size=$(( file_size / 1024 ))
-                if [[ $file_size -gt ${SENTINEL_LOG_ROTATION_SIZE:-1024} ]]; then
+                if [[ $file_size -gt ${VANTAGE_LOG_ROTATION_SIZE:-1024} ]]; then
                     # Rotate log file with error handling
                     mv "$log_file" "${log_file}.1" 2>/dev/null || true
                 fi
@@ -195,68 +195,68 @@ sentinel_log() {
 }
 
 # Specific logging functions for each level
-sentinel_log_debug() {
+vantage_log_debug() {
     local component=$1
     local message=$2
-    sentinel_log $SENTINEL_LOG_LEVEL_DEBUG "$component" "$message"
+    vantage_log $VANTAGE_LOG_LEVEL_DEBUG "$component" "$message"
 }
 
-sentinel_log_info() {
+vantage_log_info() {
     local component=$1
     local message=$2
-    sentinel_log $SENTINEL_LOG_LEVEL_INFO "$component" "$message"
+    vantage_log $VANTAGE_LOG_LEVEL_INFO "$component" "$message"
 }
 
-sentinel_log_warning() {
+vantage_log_warning() {
     local component=$1
     local message=$2
-    sentinel_log $SENTINEL_LOG_LEVEL_WARNING "$component" "$message"
+    vantage_log $VANTAGE_LOG_LEVEL_WARNING "$component" "$message"
 }
 
-sentinel_log_error() {
+vantage_log_error() {
     local component=$1
     local message=$2
-    sentinel_log $SENTINEL_LOG_LEVEL_ERROR "$component" "$message"
+    vantage_log $VANTAGE_LOG_LEVEL_ERROR "$component" "$message"
 }
 
-sentinel_log_critical() {
+vantage_log_critical() {
     local component=$1
     local message=$2
-    sentinel_log $SENTINEL_LOG_LEVEL_CRITICAL "$component" "$message"
+    vantage_log $VANTAGE_LOG_LEVEL_CRITICAL "$component" "$message"
 }
 
 # Function to clean up old log files
-sentinel_log_cleanup() {
+vantage_log_cleanup() {
     # Allow override of default retention period
-    local retention_days="${1:-$SENTINEL_LOG_RETENTION_DAYS}"
+    local retention_days="${1:-$VANTAGE_LOG_RETENTION_DAYS}"
     
     # Ensure log directory exists
-    if [[ ! -d "$SENTINEL_LOG_DIR" ]]; then
-        mkdir -p "$SENTINEL_LOG_DIR"
+    if [[ ! -d "$VANTAGE_LOG_DIR" ]]; then
+        mkdir -p "$VANTAGE_LOG_DIR"
     fi
     
     # Remove logs older than retention_days
-    find "$SENTINEL_LOG_DIR" -type f -name "*.log*" -mtime "+${retention_days}" -delete 2>/dev/null
+    find "$VANTAGE_LOG_DIR" -type f -name "*.log*" -mtime "+${retention_days}" -delete 2>/dev/null
     
     # Log the cleanup action
-    sentinel_log_info "logging" "Cleaned up log files older than $retention_days days"
+    vantage_log_info "logging" "Cleaned up log files older than $retention_days days"
 }
 
 # Function to display recent logs
-# Usage: sentinel_show_logs [component] [lines=20]
-sentinel_show_logs() {
+# Usage: vantage_show_logs [component] [lines=20]
+vantage_show_logs() {
     local component="${1:-all}"
     local lines="${2:-20}"
     
-    local log_pattern="$SENTINEL_LOG_DIR/${component}-*.log"
+    local log_pattern="$VANTAGE_LOG_DIR/${component}-*.log"
     
-    if [[ ! -d "$SENTINEL_LOG_DIR" ]]; then
+    if [[ ! -d "$VANTAGE_LOG_DIR" ]]; then
         echo "Log directory not found. No logs to display."
         return 0
     fi
     
     if [[ "$component" == "all" ]]; then
-        log_pattern="$SENTINEL_LOG_DIR/*.log"
+        log_pattern="$VANTAGE_LOG_DIR/*.log"
     fi
     
     if ! ls $log_pattern 1>/dev/null 2>&1; then
@@ -268,7 +268,7 @@ sentinel_show_logs() {
     echo "=== Recent logs for $component (last $lines lines) ==="
     
     # Use colors if enabled and we're in a terminal
-    if [[ "$SENTINEL_LOG_COLORS_ENABLED" == "true" && -t 1 ]]; then
+    if [[ "$VANTAGE_LOG_COLORS_ENABLED" == "true" && -t 1 ]]; then
         # More sophisticated colorization
         ls -t $log_pattern | head -1 | xargs tail -n $lines | 
         sed -E 's/\[(DEBUG)\]/[\\033[1;34m\1\\033[0m]/g' | 
@@ -284,8 +284,8 @@ sentinel_show_logs() {
     echo "=== End of logs ==="
 }
 
-# Usage: sentinel_log_exception <component> <message> [exit_code]
-sentinel_log_exception() {
+# Usage: vantage_log_exception <component> <message> [exit_code]
+vantage_log_exception() {
     local component=$1
     local message=$2
     local exit_code=${3:-1}
@@ -305,35 +305,35 @@ sentinel_log_exception() {
     local exception_msg="Exception: $message$stack_trace"
     
     # Log the exception
-    sentinel_log_error "$component" "$exception_msg"
+    vantage_log_error "$component" "$exception_msg"
     
     return $exit_code
 }
 
 # Initialize the logging system
-sentinel_init_logging() {
+vantage_init_logging() {
     # Create log directory if it doesn't exist
-    mkdir -p "$SENTINEL_LOG_DIR"
+    mkdir -p "$VANTAGE_LOG_DIR"
     
     # Schedule log cleanup in background to avoid slowing down shell startup
-    (sentinel_log_cleanup >/dev/null 2>&1 &)
+    (vantage_log_cleanup >/dev/null 2>&1 &)
     
     # Log that the logging system is initialized
-    sentinel_log_info "logging" "Logging system initialized (level=${SENTINEL_LOG_LEVEL})"
+    vantage_log_info "logging" "Logging system initialized (level=${VANTAGE_LOG_LEVEL})"
     
     return 0
 }
 
 # Export functions
-export -f sentinel_log
-export -f sentinel_log_debug
-export -f sentinel_log_info
-export -f sentinel_log_warning
-export -f sentinel_log_error
-export -f sentinel_log_critical
-export -f sentinel_log_cleanup
-export -f sentinel_show_logs
-export -f sentinel_log_exception
+export -f vantage_log
+export -f vantage_log_debug
+export -f vantage_log_info
+export -f vantage_log_warning
+export -f vantage_log_error
+export -f vantage_log_critical
+export -f vantage_log_cleanup
+export -f vantage_show_logs
+export -f vantage_log_exception
 
 # Initialize logging system
-sentinel_init_logging 
+vantage_init_logging 

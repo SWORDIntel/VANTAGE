@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# SENTINEL - Configuration Migration Script
+# VANTAGE - Configuration Migration Script
 # Version: 1.0.0
 # Description: Migrate configuration from multiple files to centralized config
 # This script extracts configuration from various files and merges them into
@@ -18,12 +18,12 @@ NC="\033[0m" # No Color
 
 # Paths
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
-SENTINEL_DIR="${SENTINEL_ROOT:-$(cd -- "$SCRIPT_DIR/../.." && pwd -P)}"
-POSTCUSTOM="${SENTINEL_DIR}/bashrc.postcustom"
-BASH_MODULES="${SENTINEL_DIR}/bash_modules"
-MODULES_DIR="${SENTINEL_DIR}/bash_modules.d"
-SENTINEL_CONFIG_DIR="${HOME}/.sentinel"
-BACKUP_DIR="${SENTINEL_CONFIG_DIR}/backups/$(date +%Y%m%d%H%M%S)"
+VANTAGE_DIR="${VANTAGE_ROOT:-$(cd -- "$SCRIPT_DIR/../.." && pwd -P)}"
+POSTCUSTOM="${VANTAGE_DIR}/bashrc.postcustom"
+BASH_MODULES="${VANTAGE_DIR}/bash_modules"
+MODULES_DIR="${VANTAGE_DIR}/bash_modules.d"
+VANTAGE_CONFIG_DIR="${HOME}/.vantage"
+BACKUP_DIR="${VANTAGE_CONFIG_DIR}/backups/$(date +%Y%m%d%H%M%S)"
 BASH_LOGOUT_MODULE="${MODULES_DIR}/logout.module"
 UPDATE_SCRIPT="${BACKUP_DIR}/update_postcustom.sh"
 
@@ -44,7 +44,7 @@ print_banner() {
     echo "╚══════╝╚══════╝╚═╝  ╚═══╝   ╚═╝   ╚═╝╚═╝  ╚═══╝╚══════╝╚══════╝ "
     echo -e "${NC}"
     echo -e "${BOLD}Configuration Migration Tool${NC}\n"
-    echo -e "This script will migrate your SENTINEL configuration from multiple files"
+    echo -e "This script will migrate your VANTAGE configuration from multiple files"
     echo -e "to the new centralized configuration system.\n"
 }
 
@@ -99,7 +99,7 @@ extract_postcustom_config() {
     # Create update script header
     cat > "$UPDATE_SCRIPT" << EOL
 #!/usr/bin/env bash
-# SENTINEL - Postcustom Update Script
+# VANTAGE - Postcustom Update Script
 # Generated on $(date)
 # This script will update your bashrc.postcustom to use the new configuration system
 
@@ -110,8 +110,8 @@ cp "$POSTCUSTOM" "${POSTCUSTOM}.bak.\$(date +%Y%m%d%H%M%S)"
 EOL
     chmod +x "$UPDATE_SCRIPT"
     
-    # Find all SENTINEL_ variables and extract them
-    grep -E '^[[:space:]]*export[[:space:]]+SENTINEL_[A-Z_]+=.*' "$POSTCUSTOM" | while read -r line; do
+    # Find all VANTAGE_ variables and extract them
+    grep -E '^[[:space:]]*export[[:space:]]+VANTAGE_[A-Z_]+=.*' "$POSTCUSTOM" | while read -r line; do
         # Extract variable name and value
         local var_name=$(echo "$line" | awk -F'=' '{print $1}' | awk '{print $2}')
         local var_value=$(echo "$line" | cut -d'=' -f2- | sed 's/^[[:space:]]*//')
@@ -158,11 +158,11 @@ EOL
     cat >> "$UPDATE_SCRIPT" << EOL
 
 # Add sourcing statement if it doesn't exist
-if ! grep -q "source \\\$HOME/.sentinel/sentinel_config.sh" "$POSTCUSTOM"; then
+if ! grep -q "source \\\$HOME/.vantage/vantage_config.sh" "$POSTCUSTOM"; then
     echo "" >> "$POSTCUSTOM"
     echo "# Source centralized configuration" >> "$POSTCUSTOM"
-    echo "if [[ -f \\\$HOME/.sentinel/sentinel_config.sh ]]; then" >> "$POSTCUSTOM"
-    echo "    source \\\$HOME/.sentinel/sentinel_config.sh" >> "$POSTCUSTOM"
+    echo "if [[ -f \\\$HOME/.vantage/vantage_config.sh ]]; then" >> "$POSTCUSTOM"
+    echo "    source \\\$HOME/.vantage/vantage_config.sh" >> "$POSTCUSTOM"
     echo "fi" >> "$POSTCUSTOM"
 fi
 
@@ -185,20 +185,20 @@ extract_bash_logout_config() {
     
     # Look for secure deletion settings
     local secure_vars=(
-        "SENTINEL_SECURE_BASH_HISTORY" 
-        "SENTINEL_SECURE_SSH_KNOWN_HOSTS"
-        "SENTINEL_SECURE_CLEAN_CACHE"
-        "SENTINEL_SECURE_BROWSER_CACHE"
-        "SENTINEL_SECURE_RECENT"
-        "SENTINEL_SECURE_VIM_UNDO"
-        "SENTINEL_SECURE_CLIPBOARD"
-        "SENTINEL_SECURE_CLEAR_SCREEN"
-        "SENTINEL_SECURE_DIRS"
+        "VANTAGE_SECURE_BASH_HISTORY" 
+        "VANTAGE_SECURE_SSH_KNOWN_HOSTS"
+        "VANTAGE_SECURE_CLEAN_CACHE"
+        "VANTAGE_SECURE_BROWSER_CACHE"
+        "VANTAGE_SECURE_RECENT"
+        "VANTAGE_SECURE_VIM_UNDO"
+        "VANTAGE_SECURE_CLIPBOARD"
+        "VANTAGE_SECURE_CLEAR_SCREEN"
+        "VANTAGE_SECURE_DIRS"
     )
     
     for var_name in "${secure_vars[@]}"; do
         # Look for if statements checking these variables
-        # For example: if [[ "$SENTINEL_SECURE_BASH_HISTORY" == "1" ]]; then
+        # For example: if [[ "$VANTAGE_SECURE_BASH_HISTORY" == "1" ]]; then
         if grep -q "$var_name" "$BASH_LOGOUT_MODULE"; then
             # Check if it's active in the logout module
             if grep -qE "if[[:space:]]*\[\[[[:space:]]*\\\$\{?$var_name\}?[[:space:]]*==[[:space:]]*[\"']?1[\"']?" "$BASH_LOGOUT_MODULE"; then
@@ -232,7 +232,7 @@ extract_module_configs() {
                 
                 # Skip if we don't want to migrate this variable
                 case "$var_name" in
-                    SENTINEL_*|HASHCAT_*|OBFUSCATE_*|DISTCC_*|CCACHE_*)
+                    VANTAGE_*|HASHCAT_*|OBFUSCATE_*|DISTCC_*|CCACHE_*)
                         # These are variables we want to migrate
                         ;;
                     *)
@@ -288,7 +288,7 @@ main() {
     apply_update
     
     echo -e "${BOLD}Next steps:${NC}"
-    echo "1. Review your centralized configuration: sentinel_config"
+    echo "1. Review your centralized configuration: vantage_config"
     echo "2. Reload your bash environment: source ~/.bashrc"
     echo "3. Verify that everything works as expected"
     echo

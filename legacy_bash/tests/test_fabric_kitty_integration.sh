@@ -10,7 +10,7 @@ trap 'rm -rf "$tmp_home"' EXIT
 
 export HOME="$tmp_home"
 export XDG_CONFIG_HOME="$HOME/.config"
-export SENTINEL_SKIP_PYTHON_VENV=1
+export VANTAGE_SKIP_PYTHON_VENV=1
 
 # Ensure installer sees "headless" and does not attempt GUI/kitty activation
 unset DISPLAY WAYLAND_DISPLAY
@@ -32,7 +32,7 @@ snapshot_hashes() {
     "$HOME/bashrc.postcustom"
     "$HOME/waveterm.rc"
     "$HOME/.bash_modules"
-    "$HOME/.local/bin/sentinel-tty"
+    "$HOME/.local/bin/vantage-tty"
   )
   local f
   for f in "${files[@]}"; do
@@ -51,7 +51,7 @@ run_install
 [[ -f "$HOME/bash_modules.d/fabric_integration.module" ]] || fail "fabric module not installed"
 
 # Kitty integration must not activate on headless (no DISPLAY/WAYLAND_DISPLAY)
-[[ ! -f "$HOME/.local/bin/sentinel-tty" ]] || fail "sentinel-tty should not be installed in headless/non-interactive"
+[[ ! -f "$HOME/.local/bin/vantage-tty" ]] || fail "vantage-tty should not be installed in headless/non-interactive"
 [[ ! -f "$XDG_CONFIG_HOME/kitty/kitty.conf" ]] || fail "kitty.conf should not be written in headless mode"
 
 snap1="$(snapshot_hashes)"
@@ -76,8 +76,8 @@ if [[ "$hash1" != "$hash2" ]]; then
   fail "install is not idempotent for stable outputs"
 fi
 
-# Ensure .bashrc only has one SENTINEL integration block (idempotent patching)
-count="$(rg -n "# SENTINEL Framework Integration" "$HOME/.bashrc" | wc -l | tr -d ' ')"
+# Ensure .bashrc only has one VANTAGE integration block (idempotent patching)
+count="$(rg -n "# VANTAGE Framework Integration" "$HOME/.bashrc" | wc -l | tr -d ' ')"
 [[ "$count" -le 1 ]] || fail ".bashrc integration duplicated ($count)"
 
 # Telemetry emit must be a no-op when disabled and not block

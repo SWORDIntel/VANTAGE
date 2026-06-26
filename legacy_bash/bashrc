@@ -3,47 +3,47 @@
 # MINIMAL BASHRC with proper organization and no duplicates
 # Version: 2.1 - With AI/NPU Stack Integration
 
-# SENTINEL_ROOT is expected to be set by the installer.
+# VANTAGE_ROOT is expected to be set by the installer.
 # If it's not set, we'll fall back to a reasonable default.
-export SENTINEL_ROOT="${SENTINEL_ROOT:-$HOME/.sentinel}"
+export VANTAGE_ROOT="${VANTAGE_ROOT:-$HOME/.vantage}"
 
 # Cache dir used early for safe config exports
-export SENTINEL_CACHE_DIR="${SENTINEL_CACHE_DIR:-$HOME/.cache/sentinel}"
-mkdir -p "${SENTINEL_CACHE_DIR}/config" 2>/dev/null || true
+export VANTAGE_CACHE_DIR="${VANTAGE_CACHE_DIR:-$HOME/.cache/vantage}"
+mkdir -p "${VANTAGE_CACHE_DIR}/config" 2>/dev/null || true
 
 # Load configuration from YAML file using the first available Python
-if [ -f "${SENTINEL_ROOT}/config.yaml" ] || [ -f "${SENTINEL_ROOT}/config.yaml.dist" ]; then
-    SENTINEL_PYTHON_BIN="${SENTINEL_PYTHON:-}"
-    if [ ! -x "${SENTINEL_PYTHON_BIN}" ]; then
-        SENTINEL_PYTHON_BIN="${HOME}/venv/bin/python"
+if [ -f "${VANTAGE_ROOT}/config.yaml" ] || [ -f "${VANTAGE_ROOT}/config/config.yaml.dist" ]; then
+    VANTAGE_PYTHON_BIN="${VANTAGE_PYTHON:-}"
+    if [ ! -x "${VANTAGE_PYTHON_BIN}" ]; then
+        VANTAGE_PYTHON_BIN="${HOME}/venv/bin/python"
     fi
 
-    if [ ! -x "${SENTINEL_PYTHON_BIN}" ]; then
-        SENTINEL_PYTHON_BIN="$(command -v python3 || command -v python || true)"
+    if [ ! -x "${VANTAGE_PYTHON_BIN}" ]; then
+        VANTAGE_PYTHON_BIN="$(command -v python3 || command -v python || true)"
     fi
 
-    if [ -x "${SENTINEL_PYTHON_BIN}" ]; then
-        _sentinel_config_exports="${SENTINEL_CACHE_DIR}/config/config_exports.sh"
-        _sentinel_cfg_src="${SENTINEL_ROOT}/config.yaml"
-        _sentinel_cfg_dist="${SENTINEL_ROOT}/config.yaml.dist"
-        _sentinel_cfg_newest="${_sentinel_cfg_dist}"
-        [[ -f "${_sentinel_cfg_src}" ]] && _sentinel_cfg_newest="${_sentinel_cfg_src}"
+    if [ -x "${VANTAGE_PYTHON_BIN}" ]; then
+        _vantage_config_exports="${VANTAGE_CACHE_DIR}/config/config_exports.sh"
+        _vantage_cfg_src="${VANTAGE_ROOT}/config.yaml"
+        _vantage_cfg_dist="${VANTAGE_ROOT}/config/config.yaml.dist"
+        _vantage_cfg_newest="${_vantage_cfg_dist}"
+        [[ -f "${_vantage_cfg_src}" ]] && _vantage_cfg_newest="${_vantage_cfg_src}"
 
-        if [[ ! -f "${_sentinel_config_exports}" || "${_sentinel_cfg_newest}" -nt "${_sentinel_config_exports}" ]]; then
+        if [[ ! -f "${_vantage_config_exports}" || "${_vantage_cfg_newest}" -nt "${_vantage_config_exports}" ]]; then
             (
                 umask 077
-                _sentinel_tmp="$(mktemp "${SENTINEL_CACHE_DIR}/config/.config_exports.XXXXXX" 2>/dev/null || mktemp)"
-                if "${SENTINEL_PYTHON_BIN}" "${SENTINEL_ROOT}/installer/config.py" --output "${_sentinel_tmp}" 2>/dev/null; then
-                    chmod 600 "${_sentinel_tmp}" 2>/dev/null || true
-                    mv -f "${_sentinel_tmp}" "${_sentinel_config_exports}" 2>/dev/null || true
+                _vantage_tmp="$(mktemp "${VANTAGE_CACHE_DIR}/config/.config_exports.XXXXXX" 2>/dev/null || mktemp)"
+                if "${VANTAGE_PYTHON_BIN}" "${VANTAGE_ROOT}/installer/config.py" --output "${_vantage_tmp}" 2>/dev/null; then
+                    chmod 600 "${_vantage_tmp}" 2>/dev/null || true
+                    mv -f "${_vantage_tmp}" "${_vantage_config_exports}" 2>/dev/null || true
                 else
-                    rm -f "${_sentinel_tmp}" 2>/dev/null || true
+                    rm -f "${_vantage_tmp}" 2>/dev/null || true
                 fi
             ) 2>/dev/null || true
         fi
 
         # shellcheck disable=SC1090
-        [[ -f "${_sentinel_config_exports}" ]] && source "${_sentinel_config_exports}" 2>/dev/null || true
+        [[ -f "${_vantage_config_exports}" ]] && source "${_vantage_config_exports}" 2>/dev/null || true
     fi
 fi
 
@@ -64,17 +64,17 @@ declare -A CONFIG=(
 )
 
 # Quiet mode environment variables (set early)
-export SENTINEL_QUIET_OUTPUT=1
-export SENTINEL_QUIET_STATUS=1
-export SENTINEL_DISABLE_FANCY_OUTPUT=1
-export SENTINEL_DEBUG=0
+export VANTAGE_QUIET_OUTPUT=1
+export VANTAGE_QUIET_STATUS=1
+export VANTAGE_DISABLE_FANCY_OUTPUT=1
+export VANTAGE_DEBUG=0
 
 # ============================================================================
 # SECTION 2: OS/PLATFORM DETECTION AND CORE EXPORTS
 # ============================================================================
 
 # Broad OS detection with server-friendly defaults
-sentinel_detect_platform() {
+vantage_detect_platform() {
   local uname_out os_id os_like pkg_manager=""
   uname_out=$(uname -s 2>/dev/null || echo "Unknown")
 
@@ -113,7 +113,7 @@ sentinel_detect_platform() {
   export PKG_MGR="${pkg_manager:-none}"
 }
 
-sentinel_detect_platform
+vantage_detect_platform
 
 # Editor and pager settings
 export EDITOR="vim"
@@ -121,8 +121,8 @@ export VISUAL="vim"
 export PAGER="less"
 export LESS="-R"
 
-#SENTINEL-specific directories
-export SENTINEL_DATASCIENCE_DIR="${SENTINEL_DATASCIENCE_DIR:-$HOME/datascience}"
+#VANTAGE-specific directories
+export VANTAGE_DATASCIENCE_DIR="${VANTAGE_DATASCIENCE_DIR:-$HOME/datascience}"
 
 # ============================================================================
 # SECTION 3: PATH MANAGEMENT
@@ -158,8 +158,8 @@ export PATH="/usr/local/bin:/usr/bin:/bin:/usr/local/sbin:/usr/sbin:/sbin"
 [[ -d "$HOME/go/go/bin" ]] && PATH="$HOME/go/go/bin:$PATH"
 
 # Add custom AI/ML build paths
-[[ -d "$SENTINEL_DATASCIENCE_DIR/mtl/bin" ]] && PATH="$SENTINEL_DATASCIENCE_DIR/mtl/bin:$PATH"
-[[ -d "$SENTINEL_DATASCIENCE_DIR" ]] && PATH="$SENTINEL_DATASCIENCE_DIR:$PATH"
+[[ -d "$VANTAGE_DATASCIENCE_DIR/mtl/bin" ]] && PATH="$VANTAGE_DATASCIENCE_DIR/mtl/bin:$PATH"
+[[ -d "$VANTAGE_DATASCIENCE_DIR" ]] && PATH="$VANTAGE_DATASCIENCE_DIR:$PATH"
 
 # Add common Python locations
 for python_dir in "/usr/local/bin" "${PYTHON_INSTALL_DIR:-${HOME}/.python}/bin" "${HOME}/.local/bin"; do
@@ -214,17 +214,17 @@ umask 027
 # ============================================================================
 
 # Detect terminal capabilities and set high-contrast prompt colors for dark themes
-sentinel_set_colors() {
+vantage_set_colors() {
     local term=${TERM:-dumb}
     local color_cap=0
 
-    export SENTINEL_COLORS_ENABLED=0
+    export VANTAGE_COLORS_ENABLED=0
     if [[ -t 1 && "$term" != "dumb" ]]; then
         color_cap=$(tput colors 2>/dev/null || echo 0)
     fi
 
     if (( color_cap >= 8 )); then
-        export SENTINEL_COLORS_ENABLED=1
+        export VANTAGE_COLORS_ENABLED=1
         C_RESET='\[\e[0m\]'
         C_BOLD_WHITE='\[\e[1;97m\]'
         C_BOLD_CYAN='\[\e[1;36m\]'
@@ -241,18 +241,18 @@ sentinel_set_colors() {
     fi
 
     # Fallback LS_COLORS for servers without dircolors
-    if [[ ${SENTINEL_COLORS_ENABLED} -eq 1 && -z "${LS_COLORS:-}" ]]; then
+    if [[ ${VANTAGE_COLORS_ENABLED} -eq 1 && -z "${LS_COLORS:-}" ]]; then
         export LS_COLORS='di=1;36:ln=1;35:so=1;32:pi=1;33:ex=1;92:bd=1;93:cd=1;94:su=41;30:sg=46;30:tw=42;30:ow=43;30'
     fi
 
-    if [[ ${SENTINEL_COLORS_ENABLED} -eq 1 ]]; then
+    if [[ ${VANTAGE_COLORS_ENABLED} -eq 1 ]]; then
         PS1="${C_BOLD_GREEN}\u${C_RESET}@${C_BOLD_CYAN}\h${C_RESET}:${C_BOLD_BLUE}\w${C_RESET}\\$ "
     else
         PS1='\u@\h:\w\$ '
     fi
 }
 
-sentinel_set_colors
+vantage_set_colors
 
 # Enable color support via dircolors if available (overrides LS_COLORS when set)
 if [ -x /usr/bin/dircolors ]; then
@@ -289,16 +289,16 @@ alias free='free -m'
 alias @aliases='alias'
 
 # AI/ML Stack aliases
-alias ai-env='source $SENTINEL_DATASCIENCE_DIR/activate_ai_env.sh'
-alias npu-test='python $SENTINEL_DATASCIENCE_DIR/test_custom_openvino_npu.py'
-alias ai-bench='python $SENTINEL_DATASCIENCE_DIR/benchmark_ai_stack.py'
-alias numpy-p='$SENTINEL_DATASCIENCE_DIR/numpy_select.py p'
-alias numpy-e='$SENTINEL_DATASCIENCE_DIR/numpy_select.py e'
-alias numpy-auto='$SENTINEL_DATASCIENCE_DIR/numpy_select.py auto'
+alias ai-env='source $VANTAGE_DATASCIENCE_DIR/activate_ai_env.sh'
+alias npu-test='python $VANTAGE_DATASCIENCE_DIR/test_custom_openvino_npu.py'
+alias ai-bench='python $VANTAGE_DATASCIENCE_DIR/benchmark_ai_stack.py'
+alias numpy-p='$VANTAGE_DATASCIENCE_DIR/numpy_select.py p'
+alias numpy-e='$VANTAGE_DATASCIENCE_DIR/numpy_select.py e'
+alias numpy-auto='$VANTAGE_DATASCIENCE_DIR/numpy_select.py auto'
 
 # Benchmark shortcuts
-alias bench-p='$SENTINEL_DATASCIENCE_DIR/numpy_select.py p $SENTINEL_DATASCIENCE_DIR/benchmark_ai_stack.py'
-alias bench-e='$SENTINEL_DATASCIENCE_DIR/numpy_select.py e $SENTINEL_DATASCIENCE_DIR/benchmark_ai_stack.py'
+alias bench-p='$VANTAGE_DATASCIENCE_DIR/numpy_select.py p $VANTAGE_DATASCIENCE_DIR/benchmark_ai_stack.py'
+alias bench-e='$VANTAGE_DATASCIENCE_DIR/numpy_select.py e $VANTAGE_DATASCIENCE_DIR/benchmark_ai_stack.py'
 alias bench-both='echo "[P-Core Benchmark]" && bench-p && echo -e "\n[E-Core Benchmark]" && bench-e'
 
 # NPU monitoring
@@ -414,10 +414,10 @@ datascience() {
     echo "Activating optimized data science environment..."
 
     # Activate virtual environment
-    if [ -f "$SENTINEL_DATASCIENCE_DIR/envs/dsenv/bin/activate" ]; then
-        source "$SENTINEL_DATASCIENCE_DIR/envs/dsenv/bin/activate"
+    if [ -f "$VANTAGE_DATASCIENCE_DIR/envs/dsenv/bin/activate" ]; then
+        source "$VANTAGE_DATASCIENCE_DIR/envs/dsenv/bin/activate"
     else
-        echo "Warning: Data science virtual environment not found at $SENTINEL_DATASCIENCE_DIR/envs/dsenv/bin/activate"
+        echo "Warning: Data science virtual environment not found at $VANTAGE_DATASCIENCE_DIR/envs/dsenv/bin/activate"
         return 1
     fi
 
@@ -439,21 +439,21 @@ datascience() {
     export RUSTFLAGS="-C target-cpu=native -C opt-level=3 -C lto=fat"
 
     # Custom AI/ML library paths
-    for lib_dir in "$SENTINEL_DATASCIENCE_DIR/mtl/lib" "/usr/local/lib"; do
+    for lib_dir in "$VANTAGE_DATASCIENCE_DIR/mtl/lib" "/usr/local/lib"; do
         if [ -d "$lib_dir" ] && [[ ":${LD_LIBRARY_PATH:-}:" != *":$lib_dir:"* ]]; then
             export LD_LIBRARY_PATH="$lib_dir:${LD_LIBRARY_PATH:-}"
         fi
     done
 
-    local mtl_pythonpath="$SENTINEL_DATASCIENCE_DIR/mtl/lib"
+    local mtl_pythonpath="$VANTAGE_DATASCIENCE_DIR/mtl/lib"
     if command -v python3 >/dev/null 2>&1; then
         local py_rel="$(python3 - <<'PY'
 from sys import version_info
 print(f"python{version_info.major}.{version_info.minor}")
 PY
         )"
-        if [ -n "$py_rel" ] && [ -d "$SENTINEL_DATASCIENCE_DIR/mtl/lib/${py_rel}/site-packages" ]; then
-            mtl_pythonpath="$SENTINEL_DATASCIENCE_DIR/mtl/lib/${py_rel}/site-packages"
+        if [ -n "$py_rel" ] && [ -d "$VANTAGE_DATASCIENCE_DIR/mtl/lib/${py_rel}/site-packages" ]; then
+            mtl_pythonpath="$VANTAGE_DATASCIENCE_DIR/mtl/lib/${py_rel}/site-packages"
         fi
     fi
 
@@ -515,9 +515,9 @@ aitest() {
 
         echo -e "\n[2] Library Check"
         echo -n "Custom Level Zero: "
-        [ -f "$SENTINEL_DATASCIENCE_DIR/mtl/lib/libze_loader.so" ] && echo "Found" || echo "Not found"
+        [ -f "$VANTAGE_DATASCIENCE_DIR/mtl/lib/libze_loader.so" ] && echo "Found" || echo "Not found"
         echo -n "NPU Plugin: "
-        [ -f "$SENTINEL_DATASCIENCE_DIR/mtl/lib/libze_intel_npu.so" ] && echo "Found" || echo "Not found"
+        [ -f "$VANTAGE_DATASCIENCE_DIR/mtl/lib/libze_intel_npu.so" ] && echo "Found" || echo "Not found"
     else
         echo "[1] NPU Status Check: NPU device not found"
     fi
@@ -540,18 +540,18 @@ aibench() {
     case "$mode" in
         p|P|pcores)
             echo "[Running P-Core Benchmark (AVX-512)]"
-            $SENTINEL_DATASCIENCE_DIR/numpy_select.py p $SENTINEL_DATASCIENCE_DIR/benchmark_ai_stack.py
+            $VANTAGE_DATASCIENCE_DIR/numpy_select.py p $VANTAGE_DATASCIENCE_DIR/benchmark_ai_stack.py
             ;;
         e|E|ecores)
             echo "[Running E-Core Benchmark (AVX2)]"
-            $SENTINEL_DATASCIENCE_DIR/numpy_select.py e $SENTINEL_DATASCIENCE_DIR/benchmark_ai_stack.py
+            $VANTAGE_DATASCIENCE_DIR/numpy_select.py e $VANTAGE_DATASCIENCE_DIR/benchmark_ai_stack.py
             ;;
         both|all)
             echo "[Running Both P-Core and E-Core Benchmarks]"
             echo "=== P-Core (AVX-512) ==="
-            $SENTINEL_DATASCIENCE_DIR/numpy_select.py p $SENTINEL_DATASCIENCE_DIR/benchmark_ai_stack.py
+            $VANTAGE_DATASCIENCE_DIR/numpy_select.py p $VANTAGE_DATASCIENCE_DIR/benchmark_ai_stack.py
             echo -e "\n=== E-Core (AVX2) ==="
-            $SENTINEL_DATASCIENCE_DIR/numpy_select.py e $SENTINEL_DATASCIENCE_DIR/benchmark_ai_stack.py
+            $VANTAGE_DATASCIENCE_DIR/numpy_select.py e $VANTAGE_DATASCIENCE_DIR/benchmark_ai_stack.py
             ;;
         *)
             echo "Usage: aibench [p|e|both]"
@@ -621,46 +621,46 @@ if ! shopt -oq posix; then
 fi
 
 # ============================================================================
-# SECTION 9: SENTINEL MODULE SYSTEM
+# SECTION 9: VANTAGE MODULE SYSTEM
 # ============================================================================
 
-# SENTINEL environment setup
-export SENTINEL_CACHE_DIR="${SENTINEL_CACHE_DIR:-${HOME}/cache}"
-export SENTINEL_FZF_ENABLED=1
-export SENTINEL_SKIP_AUTO_LOAD=1
-export _SENTINEL_MODULES_LOADED=0
+# VANTAGE environment setup
+export VANTAGE_CACHE_DIR="${VANTAGE_CACHE_DIR:-${HOME}/cache}"
+export VANTAGE_FZF_ENABLED=1
+export VANTAGE_SKIP_AUTO_LOAD=1
+export _VANTAGE_MODULES_LOADED=0
 
 # Set MODULES_DIR for module installer scripts
-export MODULES_DIR="${SENTINEL_ROOT}/bash_modules.d"
+export MODULES_DIR="${VANTAGE_ROOT}/bash_modules.d"
 
 # Create cache directories
-mkdir -p "${SENTINEL_CACHE_DIR}/config" "${SENTINEL_CACHE_DIR}/modules" 2>/dev/null || true
+mkdir -p "${VANTAGE_CACHE_DIR}/config" "${VANTAGE_CACHE_DIR}/modules" 2>/dev/null || true
 
 # Module tracking
 _module_loaded=()
-declare -A _SENTINEL_LOADED_MODULES
+declare -A _VANTAGE_LOADED_MODULES
 
 # Safe module loading function
 safe_load_module_once() {
   local module="$1"
 
   # Skip if already loaded
-  if [[ "${_SENTINEL_LOADED_MODULES[$module]:-0}" == "1" ]]; then
+  if [[ "${_VANTAGE_LOADED_MODULES[$module]:-0}" == "1" ]]; then
     return 0
   fi
 
   # Find and load the module
-  for dir in "${SENTINEL_ROOT}/bash_modules.d" "$HOME/bash_modules.d" "$HOME/.bash_modules.d" "$HOME/Documents/GitHub/SENTINEL/bash_modules.d"; do
+  for dir in "${VANTAGE_ROOT}/bash_modules.d" "$HOME/bash_modules.d" "$HOME/.bash_modules.d" "$HOME/Documents/GitHub/VANTAGE/bash_modules.d"; do
     if [[ -f "$dir/${module}.module" ]]; then
       # Special cases
-      [[ "$module" == "fzf" ]] && export SENTINEL_FZF_ENABLED=1
-      [[ "$module" == "obfuscate" ]] && export _SENTINEL_OBFUSCATE_LOADED=1
+      [[ "$module" == "fzf" ]] && export VANTAGE_FZF_ENABLED=1
+      [[ "$module" == "obfuscate" ]] && export _VANTAGE_OBFUSCATE_LOADED=1
 
       # Source with error handling
       { source "$dir/${module}.module"; } 2>/dev/null || true
 
       # Mark as loaded
-      _SENTINEL_LOADED_MODULES[$module]=1
+      _VANTAGE_LOADED_MODULES[$module]=1
       return 0
     fi
   done
@@ -681,10 +681,10 @@ load_module() {
 
   # Find and load module
   local locations=(
-    "${SENTINEL_ROOT}/bash_modules.d/${module_name}.module"
+    "${VANTAGE_ROOT}/bash_modules.d/${module_name}.module"
     "$HOME/bash_modules.d/${module_name}.module"
     "$HOME/.bash_modules.d/${module_name}.module"
-    "$HOME/Documents/GitHub/SENTINEL/bash_modules.d/${module_name}.module"
+    "$HOME/Documents/GitHub/VANTAGE/bash_modules.d/${module_name}.module"
   )
 
   for location in "${locations[@]}"; do
@@ -728,8 +728,8 @@ fi
 
 # Source the main bash_modules file
 for bash_modules_path in \
-    "${SENTINEL_ROOT}/bash_modules" \
-    "$HOME/Documents/GitHub/SENTINEL/bash_modules" \
+    "${VANTAGE_ROOT}/bash_modules" \
+    "$HOME/Documents/GitHub/VANTAGE/bash_modules" \
     "$HOME/bash_modules"; do
   if [[ -f "$bash_modules_path" ]]; then
     { source "$bash_modules_path"; } 2>/dev/null || true
@@ -738,14 +738,14 @@ for bash_modules_path in \
 done
 
 # Load enabled modules
-if [[ "$_SENTINEL_MODULES_LOADED" == "0" ]] && [[ -f "$HOME/.enabled_modules" ]]; then
+if [[ "$_VANTAGE_MODULES_LOADED" == "0" ]] && [[ -f "$HOME/.enabled_modules" ]]; then
   load_enabled_modules "$HOME/.enabled_modules" 2>/dev/null || {
     # Fallback: load critical modules directly in dependency order
     for critical_module in "logging" "config_cache" "module_manager"; do
       load_module "$critical_module" 2>/dev/null || true
     done
   }
-  export _SENTINEL_MODULES_LOADED=1
+  export _VANTAGE_MODULES_LOADED=1
 fi
 
 # Load essential modules directly
@@ -776,12 +776,12 @@ for openvino_setup in "${OPENVINO_SETUPVARS:-}" \
 done
 
 # Custom AI Stack Environment Setup
-if [ -f "$SENTINEL_DATASCIENCE_DIR/mtl/setup_npu_env.sh" ]; then
-    source "$SENTINEL_DATASCIENCE_DIR/mtl/setup_npu_env.sh" 2>/dev/null || true
+if [ -f "$VANTAGE_DATASCIENCE_DIR/mtl/setup_npu_env.sh" ]; then
+    source "$VANTAGE_DATASCIENCE_DIR/mtl/setup_npu_env.sh" 2>/dev/null || true
 fi
 
-if [ -f "$SENTINEL_DATASCIENCE_DIR/mtl/setup_openvino.sh" ]; then
-    source "$SENTINEL_DATASCIENCE_DIR/mtl/setup_openvino.sh" 2>/dev/null || true
+if [ -f "$VANTAGE_DATASCIENCE_DIR/mtl/setup_openvino.sh" ]; then
+    source "$VANTAGE_DATASCIENCE_DIR/mtl/setup_openvino.sh" 2>/dev/null || true
 fi
 
 # Set NPU environment variable for Meteor Lake
@@ -792,15 +792,15 @@ if [ -e /dev/accel/accel0 ]; then
 fi
 
 # Add Level Zero library path when available
-for lib_dir in "$SENTINEL_DATASCIENCE_DIR/mtl/lib" "/usr/local/lib"; do
+for lib_dir in "$VANTAGE_DATASCIENCE_DIR/mtl/lib" "/usr/local/lib"; do
     if [ -d "$lib_dir" ] && [[ ":${LD_LIBRARY_PATH:-}:" != *":$lib_dir:"* ]]; then
         export LD_LIBRARY_PATH="$lib_dir:${LD_LIBRARY_PATH:-}"
     fi
 done
 
 # Activate data science environment by default (as in original)
-if [ -f "$SENTINEL_DATASCIENCE_DIR/envs/dsenv/bin/activate" ]; then
-    source "$SENTINEL_DATASCIENCE_DIR/envs/dsenv/bin/activate" 2>/dev/null || true
+if [ -f "$VANTAGE_DATASCIENCE_DIR/envs/dsenv/bin/activate" ]; then
+    source "$VANTAGE_DATASCIENCE_DIR/envs/dsenv/bin/activate" 2>/dev/null || true
 fi
 
 # ============================================================

@@ -1,8 +1,8 @@
 # Index of External Git Readmes
 
-This section refers to a collection of README files from various external Git repositories that are stored within the SENTINEL project's `gitstar/readmes/` directory.
+This section refers to a collection of README files from various external Git repositories that are stored within the VANTAGE project's `gitstar/readmes/` directory.
 
-These files are typically from projects that are relevant to, inspire, or are dependencies/tools used by SENTINEL. They form part of the project's knowledge base.
+These files are typically from projects that are relevant to, inspire, or are dependencies/tools used by VANTAGE. They form part of the project's knowledge base.
 
 **Location:** `gitstar/readmes/`
 

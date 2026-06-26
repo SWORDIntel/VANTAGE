@@ -13,8 +13,8 @@ function M.toggle_chat_sidebar(window, pane)
     local chat_pane = pane:split {
         direction = 'Right',
         size = 30,
-        -- Launch the sentinel chat module. We source bashrc so the function is available.
-        args = { 'bash', '-c', 'source ~/.bashrc; if type sentinel_chat >/dev/null 2>&1; then sentinel_chat; else echo "sentinel_chat module not found"; sleep 10; fi' },
+        -- Launch the vantage chat module. We source bashrc so the function is available.
+        args = { 'bash', '-c', 'source ~/.bashrc; if type vantage_chat >/dev/null 2>&1; then vantage_chat; else echo "vantage_chat module not found"; sleep 10; fi' },
     }
     
     -- Optional: set a user var so we know this is the chat pane

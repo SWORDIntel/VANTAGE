@@ -11,33 +11,33 @@ _SAFE_ENV_RE = re.compile(r"^[A-Z_][A-Z0-9_]*$")
 _SECTION_KEY_MAP: dict[str, dict[str, str]] = {
     "performance": {
         "lazy_load": "LAZY_LOAD",
-        "parallel_loading": "SENTINEL_PARALLEL_LOADING",
-        "parallel_max_jobs": "SENTINEL_PARALLEL_MAX_JOBS",
+        "parallel_loading": "VANTAGE_PARALLEL_LOADING",
+        "parallel_max_jobs": "VANTAGE_PARALLEL_MAX_JOBS",
     },
     "security": {
-        "module_verify": "SENTINEL_MODULE_VERIFY",
-        "tools_allowed_commands": "SENTINEL_TOOLS_ALLOWED_COMMANDS",
-        "secure_bash_history": "SENTINEL_SECURE_BASH_HISTORY",
-        "secure_ssh_known_hosts": "SENTINEL_SECURE_SSH_KNOWN_HOSTS",
-        "secure_clean_cache": "SENTINEL_SECURE_CLEAN_CACHE",
-        "secure_browser_cache": "SENTINEL_SECURE_BROWSER_CACHE",
-        "secure_recent": "SENTINEL_SECURE_RECENT",
-        "secure_vim_undo": "SENTINEL_SECURE_VIM_UNDO",
-        "secure_clipboard": "SENTINEL_SECURE_CLIPBOARD",
-        "clear_screen_on_logout": "SENTINEL_CLEAR_SCREEN_ON_LOGOUT",
-        "secure_dirs": "SENTINEL_SECURE_DIRS",
-        "workspace_temp": "SENTINEL_WORKSPACE_TEMP",
+        "module_verify": "VANTAGE_MODULE_VERIFY",
+        "tools_allowed_commands": "VANTAGE_TOOLS_ALLOWED_COMMANDS",
+        "secure_bash_history": "VANTAGE_SECURE_BASH_HISTORY",
+        "secure_ssh_known_hosts": "VANTAGE_SECURE_SSH_KNOWN_HOSTS",
+        "secure_clean_cache": "VANTAGE_SECURE_CLEAN_CACHE",
+        "secure_browser_cache": "VANTAGE_SECURE_BROWSER_CACHE",
+        "secure_recent": "VANTAGE_SECURE_RECENT",
+        "secure_vim_undo": "VANTAGE_SECURE_VIM_UNDO",
+        "secure_clipboard": "VANTAGE_SECURE_CLIPBOARD",
+        "clear_screen_on_logout": "VANTAGE_CLEAR_SCREEN_ON_LOGOUT",
+        "secure_dirs": "VANTAGE_SECURE_DIRS",
+        "workspace_temp": "VANTAGE_WORKSPACE_TEMP",
     },
     "modules": {
-        "debug": "SENTINEL_MODULE_DEBUG",
-        "autoload": "SENTINEL_MODULE_AUTOLOAD",
-        "cache_enabled": "SENTINEL_MODULE_CACHE_ENABLED",
-        "enabled_modules": "SENTINEL_MODULES_ENABLED",
-        "lazy_load_modules": "SENTINEL_LAZY_LOAD_MODULES",
-        "core_modules": "SENTINEL_CORE_MODULES",
+        "debug": "VANTAGE_MODULE_DEBUG",
+        "autoload": "VANTAGE_MODULE_AUTOLOAD",
+        "cache_enabled": "VANTAGE_MODULE_CACHE_ENABLED",
+        "enabled_modules": "VANTAGE_MODULES_ENABLED",
+        "lazy_load_modules": "VANTAGE_LAZY_LOAD_MODULES",
+        "core_modules": "VANTAGE_CORE_MODULES",
     },
     "obfuscation": {
-        "enabled": "SENTINEL_OBFUSCATE_ENABLED",
+        "enabled": "VANTAGE_OBFUSCATE_ENABLED",
         "output_dir": "OBFUSCATE_OUTPUT_DIR",
     },
     "hashcat": {
@@ -167,7 +167,7 @@ def export_variables(config, *, emit_output: bool = True) -> list[str]:
     return lines
 
 def _default_root() -> Path:
-    env_root = os.environ.get("SENTINEL_ROOT", "")
+    env_root = os.environ.get("VANTAGE_ROOT", "")
     if env_root:
         p = Path(env_root).expanduser()
         if p.exists():
@@ -184,7 +184,7 @@ def main() -> int:
 
     root = _default_root()
     config_path = Path(args.config).expanduser() if args.config else (root / "config.yaml")
-    dist_path = root / "config.yaml.dist"
+    dist_path = root / "config" / "config.yaml.dist"
 
     if config_path.exists():
         config = parse_yaml(config_path)

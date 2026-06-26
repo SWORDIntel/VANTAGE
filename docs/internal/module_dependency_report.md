@@ -1,15 +1,15 @@
-# SENTINEL Module Dependency Analysis Report
+# VANTAGE Module Dependency Analysis Report
 
 ## Summary
 
-All module dependencies in SENTINEL have been verified and are properly resolved. The module loading system correctly handles dependency resolution, loading required modules before dependent modules.
+All module dependencies in VANTAGE have been verified and are properly resolved. The module loading system correctly handles dependency resolution, loading required modules before dependent modules.
 
 ## Modules with Dependencies
 
 ### Declared Dependencies (Correct)
 - **config_cache**: depends on `logging` ✓
 - **module_manager**: depends on `config_cache logging` ✓
-- **sentinel_markov**: depends on `logging config_cache` ✓
+- **vantage_markov**: depends on `logging config_cache` ✓
 - **auto_install**: depends on `logging` ✓
 - **command_chains**: depends on `logging` ✓
 
@@ -25,14 +25,14 @@ The following modules have no declared dependencies and function independently:
 - logging (base module)
 - obfuscate
 - project_suggestions (defines its own logging functions)
-- sentinel_chat
-- sentinel_context
-- sentinel_cybersec_ml
-- sentinel_gitstar
-- sentinel_ml_enhanced
-- sentinel_ml
-- sentinel_osint
-- sentinel_smallllm
+- vantage_chat
+- vantage_context
+- vantage_cybersec_ml
+- vantage_gitstar
+- vantage_ml_enhanced
+- vantage_ml
+- vantage_osint
+- vantage_smallllm
 - shell_security
 - skeleton
 - snippets (defines its own logging functions)
@@ -47,7 +47,7 @@ The current module load order in `.bash_modules` is functional but could be opti
 
 The module system uses a recursive dependency resolution algorithm:
 
-1. When loading a module, it first checks for `SENTINEL_MODULE_DEPENDENCIES`
+1. When loading a module, it first checks for `VANTAGE_MODULE_DEPENDENCIES`
 2. For each dependency, it recursively calls `module_enable` to load it
 3. Circular dependencies are prevented by checking if a module is already loaded
 4. Maximum recursion depth of 5 prevents infinite loops
@@ -57,7 +57,7 @@ The module system uses a recursive dependency resolution algorithm:
 All dependency tests pass:
 - ✓ config_cache correctly loads logging first
 - ✓ module_manager correctly loads both config_cache and logging
-- ✓ sentinel_markov correctly loads both logging and config_cache
+- ✓ vantage_markov correctly loads both logging and config_cache
 - ✓ auto_install correctly loads logging
 - ✓ command_chains correctly loads logging
 
@@ -70,13 +70,13 @@ All dependency tests pass:
 
 ## Files Modified
 
-- `/opt/github/SENTINEL/bash_modules.d/auto_install.module` - Added `SENTINEL_MODULE_DEPENDENCIES="logging"`
-- `/opt/github/SENTINEL/bash_modules.d/command_chains.module` - Added `SENTINEL_MODULE_DEPENDENCIES="logging"`
-- `/opt/github/SENTINEL/bash_modules.d/module_manager.module` - Updated to `SENTINEL_MODULE_DEPENDENCIES="config_cache logging"`
+- `/opt/github/VANTAGE/bash_modules.d/auto_install.module` - Added `VANTAGE_MODULE_DEPENDENCIES="logging"`
+- `/opt/github/VANTAGE/bash_modules.d/command_chains.module` - Added `VANTAGE_MODULE_DEPENDENCIES="logging"`
+- `/opt/github/VANTAGE/bash_modules.d/module_manager.module` - Updated to `VANTAGE_MODULE_DEPENDENCIES="config_cache logging"`
 
 ## Test Scripts Created
 
-- `/opt/github/SENTINEL/check_module_dependencies.sh` - Analyzes all modules for missing dependencies
-- `/opt/github/SENTINEL/test_module_loading.sh` - Tests module loading with dependencies
-- `/opt/github/SENTINEL/test_clean_module_loading.sh` - Clean test of dependency resolution
-- `/opt/github/SENTINEL/fix_module_order.sh` - Script to optimize module load order (optional)
+- `/opt/github/VANTAGE/check_module_dependencies.sh` - Analyzes all modules for missing dependencies
+- `/opt/github/VANTAGE/test_module_loading.sh` - Tests module loading with dependencies
+- `/opt/github/VANTAGE/test_clean_module_loading.sh` - Clean test of dependency resolution
+- `/opt/github/VANTAGE/fix_module_order.sh` - Script to optimize module load order (optional)

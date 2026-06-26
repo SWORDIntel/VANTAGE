@@ -2,10 +2,10 @@
 ### BEGIN MODULE INFO
 # Name:                  fabric_integration
 # Short-Description:     Optional Fabric integration (telemetry, docs, pipelines)
-# Description:           Integrates SENTINEL with a larger multi-service ecosystem ("the Fabric")
+# Description:           Integrates VANTAGE with a larger multi-service ecosystem ("the Fabric")
 #                        using outbound-only, non-blocking telemetry and standardized helpers.
-# Author:                SENTINEL Team
-# URL:                   https://github.com/SWORDIntel/SENTINEL/
+# Author:                VANTAGE Team
+# URL:                   https://github.com/SWORDIntel/VANTAGE/
 # Version:               1.0.0
 # Stability:             stable
 # Tags:                  fabric, telemetry, integration
@@ -15,12 +15,12 @@
 ### END MODULE INFO
 
 # Prevent double loading
-[[ -n "${_SENTINEL_FABRIC_INTEGRATION_LOADED:-}" ]] && return 0
-export _SENTINEL_FABRIC_INTEGRATION_LOADED=1
+[[ -n "${_VANTAGE_FABRIC_INTEGRATION_LOADED:-}" ]] && return 0
+export _VANTAGE_FABRIC_INTEGRATION_LOADED=1
 
-SENTINEL_FABRIC_INTEGRATION_VERSION="1.0.0"
+VANTAGE_FABRIC_INTEGRATION_VERSION="1.0.0"
 
-_sentinel_fabric_bool() {
+_vantage_fabric_bool() {
     # Normalize truthy values to 1, else 0
     case "${1:-}" in
         1|true|TRUE|yes|YES|on|ON) echo 1 ;;
@@ -28,7 +28,7 @@ _sentinel_fabric_bool() {
     esac
 }
 
-_sentinel_fabric_json_escape() {
+_vantage_fabric_json_escape() {
     # Minimal JSON string escaper for safe embedding
     local s="${1:-}"
     s="${s//\\/\\\\}"
@@ -39,7 +39,7 @@ _sentinel_fabric_json_escape() {
     printf '%s' "$s"
 }
 
-_sentinel_fabric_detect_env_hints() {
+_vantage_fabric_detect_env_hints() {
     local tty_hint gui_hint headless_hint
     tty_hint="no"
     [[ -t 1 ]] && tty_hint="yes"
@@ -59,15 +59,15 @@ _sentinel_fabric_detect_env_hints() {
     printf 'tty=%s gui=%s headless=%s\n' "$tty_hint" "$gui_hint" "$headless_hint"
 }
 
-sentinel_fabric_emit_event() {
+vantage_fabric_emit_event() {
     # emit_event(type, payload_json)
     # Non-blocking, outbound-only. Drops on failure by default.
     local event_type="${1:-}"
     local payload_json="${2:-{}}"
 
     local fabric_enabled telemetry_enabled
-    fabric_enabled="$(_sentinel_fabric_bool "${FABRIC_ENABLED:-0}")"
-    telemetry_enabled="$(_sentinel_fabric_bool "${FABRIC_TELEMETRY_ENABLED:-0}")"
+    fabric_enabled="$(_vantage_fabric_bool "${FABRIC_ENABLED:-0}")"
+    telemetry_enabled="$(_vantage_fabric_bool "${FABRIC_TELEMETRY_ENABLED:-0}")"
     [[ "$fabric_enabled" == "1" && "$telemetry_enabled" == "1" ]] || return 0
 
     # Validate type to avoid log/transport injection
@@ -81,7 +81,7 @@ sentinel_fabric_emit_event() {
 
     local timeout_ms drop_on_fail transport socket endpoint
     timeout_ms="${FABRIC_TELEMETRY_TIMEOUT_MS:-50}"
-    drop_on_fail="$(_sentinel_fabric_bool "${FABRIC_TELEMETRY_DROP_ON_FAIL:-1}")"
+    drop_on_fail="$(_vantage_fabric_bool "${FABRIC_TELEMETRY_DROP_ON_FAIL:-1}")"
     transport="${FABRIC_TELEMETRY_TRANSPORT:-unix}"
     socket="${FABRIC_TELEMETRY_UNIX_SOCKET:-}"
     endpoint="${FABRIC_TELEMETRY_HTTP_ENDPOINT:-}"
@@ -99,11 +99,11 @@ sentinel_fabric_emit_event() {
     local line
     line=$(
         printf '{"ts":"%s","type":"%s","identity":{"node_id":"%s","device_id":"%s","layer_id":"%s"},"payload":%s}\n' \
-            "$(_sentinel_fabric_json_escape "$ts")" \
-            "$(_sentinel_fabric_json_escape "$event_type")" \
-            "$(_sentinel_fabric_json_escape "$node_id")" \
-            "$(_sentinel_fabric_json_escape "$device_id")" \
-            "$(_sentinel_fabric_json_escape "$layer_id")" \
+            "$(_vantage_fabric_json_escape "$ts")" \
+            "$(_vantage_fabric_json_escape "$event_type")" \
+            "$(_vantage_fabric_json_escape "$node_id")" \
+            "$(_vantage_fabric_json_escape "$device_id")" \
+            "$(_vantage_fabric_json_escape "$layer_id")" \
             "$payload_json"
     )
 
@@ -169,8 +169,8 @@ sentinel_fabric_emit_event() {
 
 fabric-env() {
     local fabric_enabled telemetry_enabled
-    fabric_enabled="$(_sentinel_fabric_bool "${FABRIC_ENABLED:-0}")"
-    telemetry_enabled="$(_sentinel_fabric_bool "${FABRIC_TELEMETRY_ENABLED:-0}")"
+    fabric_enabled="$(_vantage_fabric_bool "${FABRIC_ENABLED:-0}")"
+    telemetry_enabled="$(_vantage_fabric_bool "${FABRIC_TELEMETRY_ENABLED:-0}")"
 
     echo "FABRIC_ENABLED=${fabric_enabled}"
     echo "FABRIC_DOCS_ROOT=${FABRIC_DOCS_ROOT:-}"
@@ -182,17 +182,17 @@ fabric-env() {
     echo "FABRIC_TELEMETRY_UNIX_SOCKET=${FABRIC_TELEMETRY_UNIX_SOCKET:-}"
     echo "FABRIC_TELEMETRY_HTTP_ENDPOINT=${FABRIC_TELEMETRY_HTTP_ENDPOINT:-}"
     echo "FABRIC_TELEMETRY_TIMEOUT_MS=${FABRIC_TELEMETRY_TIMEOUT_MS:-50}"
-    echo "FABRIC_TELEMETRY_DROP_ON_FAIL=$(_sentinel_fabric_bool "${FABRIC_TELEMETRY_DROP_ON_FAIL:-1}")"
+    echo "FABRIC_TELEMETRY_DROP_ON_FAIL=$(_vantage_fabric_bool "${FABRIC_TELEMETRY_DROP_ON_FAIL:-1}")"
 }
 
 fabric-status() {
     local fabric_enabled telemetry_enabled transport
-    fabric_enabled="$(_sentinel_fabric_bool "${FABRIC_ENABLED:-0}")"
-    telemetry_enabled="$(_sentinel_fabric_bool "${FABRIC_TELEMETRY_ENABLED:-0}")"
+    fabric_enabled="$(_vantage_fabric_bool "${FABRIC_ENABLED:-0}")"
+    telemetry_enabled="$(_vantage_fabric_bool "${FABRIC_TELEMETRY_ENABLED:-0}")"
     transport="${FABRIC_TELEMETRY_TRANSPORT:-unix}"
 
     echo "Fabric integration: $([[ "$fabric_enabled" == "1" ]] && echo "enabled" || echo "disabled")"
-    echo "Environment: $(_sentinel_fabric_detect_env_hints)"
+    echo "Environment: $(_vantage_fabric_detect_env_hints)"
     echo "Telemetry: $([[ "$telemetry_enabled" == "1" ]] && echo "enabled" || echo "disabled") (transport=${transport})"
 }
 
@@ -233,7 +233,7 @@ fabric-open-doc() {
     fi
 
     # Prefer GUI open if available; use kitty for terminal display if in kitty
-    if type sentinel_is_kitty &>/dev/null && sentinel_is_kitty; then
+    if type vantage_is_kitty &>/dev/null && vantage_is_kitty; then
         # Use kitty's image display capabilities
         if [[ -n "${KITTY_WINDOW_ID:-}" ]] && [[ -f "$rel" ]]; then
             kitty +kitten icat --clear --transfer-mode=memory "$rel" 2>/dev/null || cat "$rel"
@@ -258,19 +258,19 @@ fabric-open-doc() {
     fi
 }
 
-_sentinel_fabric_run_pipeline_stage() {
+_vantage_fabric_run_pipeline_stage() {
     local stage="${1:-}"
     shift || true
 
-    if [[ "$(_sentinel_fabric_bool "${FABRIC_ENABLED:-0}")" != "1" ]]; then
+    if [[ "$(_vantage_fabric_bool "${FABRIC_ENABLED:-0}")" != "1" ]]; then
         echo "Fabric integration is disabled (FABRIC_ENABLED=0)." >&2
         return 1
     fi
 
     local -a candidates=(
-        "${SENTINEL_ROOT:-$HOME/.sentinel}/fabric/pipeline/${stage}.sh"
-        "${SENTINEL_ROOT:-$HOME/.sentinel}/fabric/${stage}.sh"
-        "${SENTINEL_ROOT:-$HOME/.sentinel}/scripts/fabric_${stage}.sh"
+        "${VANTAGE_ROOT:-$HOME/.vantage}/fabric/pipeline/${stage}.sh"
+        "${VANTAGE_ROOT:-$HOME/.vantage}/fabric/${stage}.sh"
+        "${VANTAGE_ROOT:-$HOME/.vantage}/scripts/fabric_${stage}.sh"
     )
 
     local p
@@ -286,18 +286,18 @@ _sentinel_fabric_run_pipeline_stage() {
 }
 
 # Standardized lifecycle naming wrappers (only meaningful when fabric is enabled)
-ingest() { _sentinel_fabric_run_pipeline_stage "ingest" "$@"; }
-validate() { _sentinel_fabric_run_pipeline_stage "validate" "$@"; }
-quantize_int8() { _sentinel_fabric_run_pipeline_stage "quantize_int8" "$@"; }
-optimize() { _sentinel_fabric_run_pipeline_stage "optimize" "$@"; }
-map_devices() { _sentinel_fabric_run_pipeline_stage "map_devices" "$@"; }
-compile() { _sentinel_fabric_run_pipeline_stage "compile" "$@"; }
-deploy() { _sentinel_fabric_run_pipeline_stage "deploy" "$@"; }
-monitor() { _sentinel_fabric_run_pipeline_stage "monitor" "$@"; }
+ingest() { _vantage_fabric_run_pipeline_stage "ingest" "$@"; }
+validate() { _vantage_fabric_run_pipeline_stage "validate" "$@"; }
+quantize_int8() { _vantage_fabric_run_pipeline_stage "quantize_int8" "$@"; }
+optimize() { _vantage_fabric_run_pipeline_stage "optimize" "$@"; }
+map_devices() { _vantage_fabric_run_pipeline_stage "map_devices" "$@"; }
+compile() { _vantage_fabric_run_pipeline_stage "compile" "$@"; }
+deploy() { _vantage_fabric_run_pipeline_stage "deploy" "$@"; }
+monitor() { _vantage_fabric_run_pipeline_stage "monitor" "$@"; }
 
-export -f fabric-status fabric-env fabric-open-doc sentinel_fabric_emit_event \
+export -f fabric-status fabric-env fabric-open-doc vantage_fabric_emit_event \
     ingest validate quantize_int8 optimize map_devices compile deploy monitor
 
 # Low-volume hook: module load event (no-op if telemetry disabled)
-sentinel_fabric_emit_event "module_load" "{\"name\":\"fabric_integration\",\"version\":\"${SENTINEL_FABRIC_INTEGRATION_VERSION}\"}"
+vantage_fabric_emit_event "module_load" "{\"name\":\"fabric_integration\",\"version\":\"${VANTAGE_FABRIC_INTEGRATION_VERSION}\"}"
 

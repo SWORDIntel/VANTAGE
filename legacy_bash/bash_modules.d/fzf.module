@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
  
 # Prevent multiple loading
-[[ -n "${_SENTINEL_FZF_LOADED}" ]] && return 0
-export _SENTINEL_FZF_LOADED=1
+[[ -n "${_VANTAGE_FZF_LOADED}" ]] && return 0
+export _VANTAGE_FZF_LOADED=1
 
 # Check if module is enabled via environment variable with robust error handling
 # and silent status check that doesn't print messages
-if [[ "${SENTINEL_FZF_ENABLED:-0}" != "1" ]]; then
+if [[ "${VANTAGE_FZF_ENABLED:-0}" != "1" ]]; then
     # Module is disabled but won't echo about it
     # This line would return, preventing the module from loading
     # when the environment variable is not set
@@ -26,7 +26,7 @@ fi
 
 # --- Kitty integration for FZF ---
 # Optimize FZF for kitty's GPU acceleration when available
-if type sentinel_is_kitty &>/dev/null && sentinel_is_kitty; then
+if type vantage_is_kitty &>/dev/null && vantage_is_kitty; then
     # Enable kitty-specific FZF optimizations
     export FZF_DEFAULT_OPTS="${FZF_DEFAULT_OPTS} --color=bg+:#0d1117,bg:#0d1117,spinner:#30a14e,hl:#30a14e --preview-window=border-sharp"
     
@@ -42,7 +42,7 @@ fi
 # scripts to avoid warnings and errors.
 {
     # Only attempt BLE.sh FZF integration if BLE.sh is actually loaded and verbose mode
-    if type -t bleopt &>/dev/null && [[ "${SENTINEL_VERBOSE:-0}" == "1" ]]; then
+    if type -t bleopt &>/dev/null && [[ "${VANTAGE_VERBOSE:-0}" == "1" ]]; then
         FZF_INIT=~/.local/share/blesh/contrib/integration/fzf-initialize.bash
         if [[ -f "$FZF_INIT" ]]; then
             # Source with comprehensive error handling
@@ -77,7 +77,7 @@ fi
         local fzf_version="$(fzf --version 2>/dev/null || echo 'unknown')"
         
         # Log only if logger command exists
-        { logger -t SENTINEL "[INFO] FZF module loaded (version: $fzf_version)"; } 2>/dev/null || true
+        { logger -t VANTAGE "[INFO] FZF module loaded (version: $fzf_version)"; } 2>/dev/null || true
     fi
 } 2>/dev/null || true
 

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# SENTINEL Installer - Dependency Functions
+# VANTAGE Installer - Dependency Functions
 
 # Python version check using Python itself (more reliable)
 check_python_version() {

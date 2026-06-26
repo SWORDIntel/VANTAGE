@@ -1,51 +1,51 @@
 #!/usr/bin/env bash
-# SENTINEL - External Tools Integration Module
+# VANTAGE - External Tools Integration Module
 # Version: 1.0.0
 # Description: Plugin management and external tool integration system with MCP support
 # Dependencies: logging config_cache shell_security
-# Maintainer: SENTINEL Team
+# Maintainer: VANTAGE Team
 
 # Module metadata
-SENTINEL_MODULE_DESCRIPTION="External tool integration and plugin management system"
-SENTINEL_MODULE_VERSION="1.0.0"
-SENTINEL_MODULE_DEPENDENCIES="logging config_cache shell_security"
+VANTAGE_MODULE_DESCRIPTION="External tool integration and plugin management system"
+VANTAGE_MODULE_VERSION="1.0.0"
+VANTAGE_MODULE_DEPENDENCIES="logging config_cache shell_security"
 
 # Prevent double loading
-[[ -n "${_SENTINEL_EXTERNAL_TOOLS_LOADED}" ]] && return 0
-export _SENTINEL_EXTERNAL_TOOLS_LOADED=1
+[[ -n "${_VANTAGE_EXTERNAL_TOOLS_LOADED}" ]] && return 0
+export _VANTAGE_EXTERNAL_TOOLS_LOADED=1
 
 # External tools configuration
-SENTINEL_TOOLS_DIR="${SENTINEL_TOOLS_DIR:-$HOME/.sentinel/tools}"
-SENTINEL_TOOLS_REGISTRY="${SENTINEL_TOOLS_REGISTRY:-$SENTINEL_TOOLS_DIR/registry.json}"
-SENTINEL_TOOLS_SANDBOX_DIR="${SENTINEL_TOOLS_SANDBOX_DIR:-$SENTINEL_TOOLS_DIR/sandbox}"
-SENTINEL_TOOLS_PLUGINS_DIR="${SENTINEL_TOOLS_PLUGINS_DIR:-$SENTINEL_TOOLS_DIR/plugins}"
+VANTAGE_TOOLS_DIR="${VANTAGE_TOOLS_DIR:-$HOME/.vantage/tools}"
+VANTAGE_TOOLS_REGISTRY="${VANTAGE_TOOLS_REGISTRY:-$VANTAGE_TOOLS_DIR/registry.json}"
+VANTAGE_TOOLS_SANDBOX_DIR="${VANTAGE_TOOLS_SANDBOX_DIR:-$VANTAGE_TOOLS_DIR/sandbox}"
+VANTAGE_TOOLS_PLUGINS_DIR="${VANTAGE_TOOLS_PLUGINS_DIR:-$VANTAGE_TOOLS_DIR/plugins}"
 
 # MCP (Model Context Protocol) configuration
-SENTINEL_MCP_ENABLED="${SENTINEL_MCP_ENABLED:-1}"
-SENTINEL_MCP_SOCKET="${SENTINEL_MCP_SOCKET:-$SENTINEL_TOOLS_DIR/mcp.sock}"
-SENTINEL_MCP_TIMEOUT="${SENTINEL_MCP_TIMEOUT:-30}"
+VANTAGE_MCP_ENABLED="${VANTAGE_MCP_ENABLED:-1}"
+VANTAGE_MCP_SOCKET="${VANTAGE_MCP_SOCKET:-$VANTAGE_TOOLS_DIR/mcp.sock}"
+VANTAGE_MCP_TIMEOUT="${VANTAGE_MCP_TIMEOUT:-30}"
 
 # Security settings
-SENTINEL_TOOLS_SANDBOX_ENABLED="${SENTINEL_TOOLS_SANDBOX_ENABLED:-1}"
-SENTINEL_TOOLS_VERIFICATION="${SENTINEL_TOOLS_VERIFICATION:-1}"
-SENTINEL_TOOLS_ALLOWED_COMMANDS="${SENTINEL_TOOLS_ALLOWED_COMMANDS:-git,docker,kubectl,terraform,ansible}"
+VANTAGE_TOOLS_SANDBOX_ENABLED="${VANTAGE_TOOLS_SANDBOX_ENABLED:-1}"
+VANTAGE_TOOLS_VERIFICATION="${VANTAGE_TOOLS_VERIFICATION:-1}"
+VANTAGE_TOOLS_ALLOWED_COMMANDS="${VANTAGE_TOOLS_ALLOWED_COMMANDS:-git,docker,kubectl,terraform,ansible}"
 
 # Create necessary directories
-mkdir -p "$SENTINEL_TOOLS_DIR" "$SENTINEL_TOOLS_SANDBOX_DIR" "$SENTINEL_TOOLS_PLUGINS_DIR"
+mkdir -p "$VANTAGE_TOOLS_DIR" "$VANTAGE_TOOLS_SANDBOX_DIR" "$VANTAGE_TOOLS_PLUGINS_DIR"
 
 # Initialize registry if it doesn't exist
-if [[ ! -f "$SENTINEL_TOOLS_REGISTRY" ]]; then
-    echo '{"tools": {}, "plugins": {}, "version": "1.0.0"}' > "$SENTINEL_TOOLS_REGISTRY"
+if [[ ! -f "$VANTAGE_TOOLS_REGISTRY" ]]; then
+    echo '{"tools": {}, "plugins": {}, "version": "1.0.0"}' > "$VANTAGE_TOOLS_REGISTRY"
 fi
 
 # Tool discovery function
-# Usage: sentinel_tool_discover <path> [type]
-sentinel_tool_discover() {
+# Usage: vantage_tool_discover <path> [type]
+vantage_tool_discover() {
     local search_path="${1:-$PATH}"
     local tool_type="${2:-all}"
     local discovered_tools=()
     
-    sentinel_log_info "external_tools" "Discovering tools in: $search_path"
+    vantage_log_info "external_tools" "Discovering tools in: $search_path"
     
     # Split PATH and search for executable tools
     IFS=':' read -ra PATHS <<< "$search_path"
@@ -53,9 +53,9 @@ sentinel_tool_discover() {
         [[ ! -d "$path" ]] && continue
         
         # Search for known tool patterns
-        for tool in $SENTINEL_TOOLS_ALLOWED_COMMANDS; do
+        for tool in $VANTAGE_TOOLS_ALLOWED_COMMANDS; do
             if [[ -x "$path/$tool" ]]; then
-                local tool_info=$(sentinel_tool_inspect "$path/$tool")
+                local tool_info=$(vantage_tool_inspect "$path/$tool")
                 if [[ -n "$tool_info" ]]; then
                     discovered_tools+=("$tool_info")
                 fi
@@ -68,8 +68,8 @@ sentinel_tool_discover() {
 }
 
 # Tool inspection function
-# Usage: sentinel_tool_inspect <tool_path>
-sentinel_tool_inspect() {
+# Usage: vantage_tool_inspect <tool_path>
+vantage_tool_inspect() {
     local tool_path="$1"
     local tool_name=$(basename "$tool_path")
     local tool_version=""
@@ -109,27 +109,27 @@ EOF
 }
 
 # Tool registration function
-# Usage: sentinel_tool_register <name> <path> [metadata]
-sentinel_tool_register() {
+# Usage: vantage_tool_register <name> <path> [metadata]
+vantage_tool_register() {
     local tool_name="$1"
     local tool_path="$2"
     local metadata="${3:-'{}'}"
     
     [[ -z "$tool_name" || -z "$tool_path" ]] && {
-        sentinel_log_error "external_tools" "Tool name and path required for registration"
+        vantage_log_error "external_tools" "Tool name and path required for registration"
         return 1
     }
     
     # Verify tool exists and is executable
     if [[ ! -x "$tool_path" ]]; then
-        sentinel_log_error "external_tools" "Tool not found or not executable: $tool_path"
+        vantage_log_error "external_tools" "Tool not found or not executable: $tool_path"
         return 1
     fi
     
     # Security verification if enabled
-    if [[ "$SENTINEL_TOOLS_VERIFICATION" == "1" ]]; then
-        if ! sentinel_tool_verify "$tool_path"; then
-            sentinel_log_error "external_tools" "Tool verification failed: $tool_name"
+    if [[ "$VANTAGE_TOOLS_VERIFICATION" == "1" ]]; then
+        if ! vantage_tool_verify "$tool_path"; then
+            vantage_log_error "external_tools" "Tool verification failed: $tool_name"
             return 1
         fi
     fi
@@ -143,42 +143,42 @@ sentinel_tool_register() {
                                   "metadata": $meta,
                                   "registered": now | strftime("%Y-%m-%dT%H:%M:%SZ"),
                                   "enabled": true
-                              }' "$SENTINEL_TOOLS_REGISTRY")
+                              }' "$VANTAGE_TOOLS_REGISTRY")
     
-    echo "$registry_update" > "$SENTINEL_TOOLS_REGISTRY"
-    sentinel_log_info "external_tools" "Registered tool: $tool_name"
+    echo "$registry_update" > "$VANTAGE_TOOLS_REGISTRY"
+    vantage_log_info "external_tools" "Registered tool: $tool_name"
     
     # Generate wrapper if sandboxing is enabled
-    if [[ "$SENTINEL_TOOLS_SANDBOX_ENABLED" == "1" ]]; then
-        sentinel_tool_create_sandbox_wrapper "$tool_name" "$tool_path"
+    if [[ "$VANTAGE_TOOLS_SANDBOX_ENABLED" == "1" ]]; then
+        vantage_tool_create_sandbox_wrapper "$tool_name" "$tool_path"
     fi
     
     return 0
 }
 
 # Tool verification function
-# Usage: sentinel_tool_verify <tool_path>
-sentinel_tool_verify() {
+# Usage: vantage_tool_verify <tool_path>
+vantage_tool_verify() {
     local tool_path="$1"
     local tool_name=$(basename "$tool_path")
     
     # Check if tool is in allowed list
     local allowed=0
-    for cmd in $(echo "$SENTINEL_TOOLS_ALLOWED_COMMANDS" | tr "," " "); do
+    for cmd in $(echo "$VANTAGE_TOOLS_ALLOWED_COMMANDS" | tr "," " "); do
         if [ "$cmd" = "$tool_name" ]; then
             allowed=1
             break
         fi
     done
     if [ $allowed -eq 0 ]; then
-        sentinel_log_warning "external_tools" "Tool not in allowed list: $tool_name"
+        vantage_log_warning "external_tools" "Tool not in allowed list: $tool_name"
         return 1
     fi
     
     # Check file permissions
     local file_perms=$(stat -c %a "$tool_path" 2>/dev/null || stat -f %p "$tool_path" 2>/dev/null)
     if [[ "$file_perms" =~ [2367]$ ]]; then
-        sentinel_log_warning "external_tools" "Suspicious permissions on tool: $tool_path"
+        vantage_log_warning "external_tools" "Suspicious permissions on tool: $tool_path"
         return 1
     fi
     
@@ -188,25 +188,25 @@ sentinel_tool_verify() {
 }
 
 # Sandbox wrapper creation
-# Usage: sentinel_tool_create_sandbox_wrapper <name> <path>
-sentinel_tool_create_sandbox_wrapper() {
+# Usage: vantage_tool_create_sandbox_wrapper <name> <path>
+vantage_tool_create_sandbox_wrapper() {
     local tool_name="$1"
     local tool_path="$2"
-    local wrapper_path="$SENTINEL_TOOLS_SANDBOX_DIR/$tool_name"
+    local wrapper_path="$VANTAGE_TOOLS_SANDBOX_DIR/$tool_name"
     
     cat > "$wrapper_path" <<'EOF'
 #!/usr/bin/env bash
-# SENTINEL sandbox wrapper for: TOOL_NAME
+# VANTAGE sandbox wrapper for: TOOL_NAME
 
 # Sandbox configuration
 TOOL_PATH="TOOL_PATH_PLACEHOLDER"
 TOOL_NAME="TOOL_NAME_PLACEHOLDER"
 
-# Load SENTINEL security functions
-_sentinel_root="${SENTINEL_ROOT:-$HOME/.sentinel}"
+# Load VANTAGE security functions
+_vantage_root="${VANTAGE_ROOT:-$HOME/.vantage}"
 _security_module_path=""
-if [[ -f "$_sentinel_root/bash_modules.d/shell_security.module" ]]; then
-    _security_module_path="$_sentinel_root/bash_modules.d/shell_security.module"
+if [[ -f "$_vantage_root/bash_modules.d/shell_security.module" ]]; then
+    _security_module_path="$_vantage_root/bash_modules.d/shell_security.module"
 elif [[ -f "$HOME/bash_modules.d/shell_security.module" ]]; then
     _security_module_path="$HOME/bash_modules.d/shell_security.module"
 fi
@@ -215,14 +215,14 @@ if [[ -n "$_security_module_path" ]]; then
 fi
 
 # Pre-execution checks
-sentinel_sandbox_pre_exec() {
+vantage_sandbox_pre_exec() {
     # Log execution attempt
-    sentinel_log_info "sandbox" "Executing sandboxed tool: $TOOL_NAME"
+    vantage_log_info "sandbox" "Executing sandboxed tool: $TOOL_NAME"
     
     # Check for suspicious arguments
     for arg in "$@"; do
         if [[ "$arg" =~ (rm|delete|destroy|drop|truncate) ]]; then
-            sentinel_log_warning "sandbox" "Potentially dangerous argument detected: $arg"
+            vantage_log_warning "sandbox" "Potentially dangerous argument detected: $arg"
             read -p "Continue execution? [y/N] " -n 1 -r
             echo
             [[ ! $REPLY =~ ^[Yy]$ ]] && return 1
@@ -233,7 +233,7 @@ sentinel_sandbox_pre_exec() {
 }
 
 # Execute with sandboxing
-if sentinel_sandbox_pre_exec "$@"; then
+if vantage_sandbox_pre_exec "$@"; then
     # Set resource limits if available
     if command -v ulimit >/dev/null 2>&1; then
         ulimit -t 300  # CPU time limit (5 minutes)
@@ -252,38 +252,38 @@ EOF
     sed -i "s|TOOL_NAME_PLACEHOLDER|$tool_name|g" "$wrapper_path"
     
     chmod +x "$wrapper_path"
-    sentinel_log_info "external_tools" "Created sandbox wrapper: $wrapper_path"
+    vantage_log_info "external_tools" "Created sandbox wrapper: $wrapper_path"
 }
 
 # MCP (Model Context Protocol) integration
-# Usage: sentinel_mcp_init
-sentinel_mcp_init() {
-    [[ "$SENTINEL_MCP_ENABLED" != "1" ]] && return 0
+# Usage: vantage_mcp_init
+vantage_mcp_init() {
+    [[ "$VANTAGE_MCP_ENABLED" != "1" ]] && return 0
     
-    sentinel_log_info "external_tools" "Initializing MCP integration"
+    vantage_log_info "external_tools" "Initializing MCP integration"
     
     # Create MCP socket directory
-    local socket_dir=$(dirname "$SENTINEL_MCP_SOCKET")
+    local socket_dir=$(dirname "$VANTAGE_MCP_SOCKET")
     mkdir -p "$socket_dir"
     
     # Start MCP listener if not already running
-    if [[ ! -S "$SENTINEL_MCP_SOCKET" ]]; then
-        sentinel_mcp_listener &
+    if [[ ! -S "$VANTAGE_MCP_SOCKET" ]]; then
+        vantage_mcp_listener &
         local listener_pid=$!
-        echo "$listener_pid" > "$SENTINEL_TOOLS_DIR/mcp.pid"
+        echo "$listener_pid" > "$VANTAGE_TOOLS_DIR/mcp.pid"
     fi
 }
 
 # MCP listener implementation
-sentinel_mcp_listener() {
-    local socket="$SENTINEL_MCP_SOCKET"
+vantage_mcp_listener() {
+    local socket="$VANTAGE_MCP_SOCKET"
     
     # Clean up old socket if exists
     [[ -S "$socket" ]] && rm -f "$socket"
     
     # Create named pipe for MCP communication
     mkfifo "$socket" 2>/dev/null || {
-        sentinel_log_error "external_tools" "Failed to create MCP socket"
+        vantage_log_error "external_tools" "Failed to create MCP socket"
         return 1
     }
     
@@ -291,7 +291,7 @@ sentinel_mcp_listener() {
     while true; do
         if read -r request < "$socket"; then
             # Parse MCP request
-            local response=$(sentinel_mcp_handle_request "$request")
+            local response=$(vantage_mcp_handle_request "$request")
             echo "$response" > "$socket.response"
         fi
         sleep 0.1
@@ -299,8 +299,8 @@ sentinel_mcp_listener() {
 }
 
 # MCP request handler
-# Usage: sentinel_mcp_handle_request <request_json>
-sentinel_mcp_handle_request() {
+# Usage: vantage_mcp_handle_request <request_json>
+vantage_mcp_handle_request() {
     local request="$1"
     local method=$(echo "$request" | jq -r '.method // ""')
     local params=$(echo "$request" | jq -r '.params // {}')
@@ -309,14 +309,14 @@ sentinel_mcp_handle_request() {
         "tool.execute")
             local tool_name=$(echo "$params" | jq -r '.tool')
             local tool_args=$(echo "$params" | jq -r '.args[]')
-            sentinel_tool_execute "$tool_name" $tool_args
+            vantage_tool_execute "$tool_name" $tool_args
             ;;
         "tool.list")
-            sentinel_tool_list_json
+            vantage_tool_list_json
             ;;
         "tool.info")
             local tool_name=$(echo "$params" | jq -r '.tool')
-            sentinel_tool_info "$tool_name"
+            vantage_tool_info "$tool_name"
             ;;
         *)
             echo '{"error": "Unknown method", "code": -32601}'
@@ -325,16 +325,16 @@ sentinel_mcp_handle_request() {
 }
 
 # Tool execution with logging and sandboxing
-# Usage: sentinel_tool_execute <name> [args...]
-sentinel_tool_execute() {
+# Usage: vantage_tool_execute <name> [args...]
+vantage_tool_execute() {
     local tool_name="$1"
     shift
     
     # Get tool info from registry
-    local tool_info=$(jq -r --arg name "$tool_name" '.tools[$name] // empty' "$SENTINEL_TOOLS_REGISTRY")
+    local tool_info=$(jq -r --arg name "$tool_name" '.tools[$name] // empty' "$VANTAGE_TOOLS_REGISTRY")
     
     if [[ -z "$tool_info" ]]; then
-        sentinel_log_error "external_tools" "Tool not registered: $tool_name"
+        vantage_log_error "external_tools" "Tool not registered: $tool_name"
         return 1
     fi
     
@@ -342,43 +342,43 @@ sentinel_tool_execute() {
     local enabled=$(echo "$tool_info" | jq -r '.enabled')
     
     if [[ "$enabled" != "true" ]]; then
-        sentinel_log_error "external_tools" "Tool is disabled: $tool_name"
+        vantage_log_error "external_tools" "Tool is disabled: $tool_name"
         return 1
     fi
     
     # Log execution
-    sentinel_log_info "external_tools" "Executing tool: $tool_name $*"
+    vantage_log_info "external_tools" "Executing tool: $tool_name $*"
     
     # Execute through sandbox wrapper if enabled
-    if [[ "$SENTINEL_TOOLS_SANDBOX_ENABLED" == "1" && -x "$SENTINEL_TOOLS_SANDBOX_DIR/$tool_name" ]]; then
-        "$SENTINEL_TOOLS_SANDBOX_DIR/$tool_name" "$@"
+    if [[ "$VANTAGE_TOOLS_SANDBOX_ENABLED" == "1" && -x "$VANTAGE_TOOLS_SANDBOX_DIR/$tool_name" ]]; then
+        "$VANTAGE_TOOLS_SANDBOX_DIR/$tool_name" "$@"
     else
         "$tool_path" "$@"
     fi
 }
 
 # List registered tools
-# Usage: sentinel_tool_list [format]
-sentinel_tool_list() {
+# Usage: vantage_tool_list [format]
+vantage_tool_list() {
     local format="${1:-table}"
     
     case "$format" in
         json)
-            sentinel_tool_list_json
+            vantage_tool_list_json
             ;;
         table|*)
-            sentinel_tool_list_table
+            vantage_tool_list_table
             ;;
     esac
 }
 
 # List tools in JSON format
-sentinel_tool_list_json() {
-    jq '.tools' "$SENTINEL_TOOLS_REGISTRY"
+vantage_tool_list_json() {
+    jq '.tools' "$VANTAGE_TOOLS_REGISTRY"
 }
 
 # List tools in table format
-sentinel_tool_list_table() {
+vantage_tool_list_table() {
     echo "Registered External Tools:"
     echo "========================="
     printf "%-20s %-10s %-10s %s\n" "NAME" "TYPE" "ENABLED" "PATH"
@@ -386,34 +386,34 @@ sentinel_tool_list_table() {
     
     jq -r '.tools | to_entries[] | 
         "\(.key)|\(.value.metadata.type // "unknown")|\(.value.enabled)|\(.value.path)"' \
-        "$SENTINEL_TOOLS_REGISTRY" | \
+        "$VANTAGE_TOOLS_REGISTRY" | \
     while IFS='|' read -r name type enabled path; do
         printf "%-20s %-10s %-10s %s\n" "$name" "$type" "$enabled" "$path"
     done
 }
 
 # Get tool information
-# Usage: sentinel_tool_info <name>
-sentinel_tool_info() {
+# Usage: vantage_tool_info <name>
+vantage_tool_info() {
     local tool_name="$1"
     
-    jq -r --arg name "$tool_name" '.tools[$name] // {"error": "Tool not found"}' "$SENTINEL_TOOLS_REGISTRY"
+    jq -r --arg name "$tool_name" '.tools[$name] // {"error": "Tool not found"}' "$VANTAGE_TOOLS_REGISTRY"
 }
 
 # Plugin loader
-# Usage: sentinel_plugin_load <plugin_name>
-sentinel_plugin_load() {
+# Usage: vantage_plugin_load <plugin_name>
+vantage_plugin_load() {
     local plugin_name="$1"
-    local plugin_file="$SENTINEL_TOOLS_PLUGINS_DIR/${plugin_name}.plugin"
+    local plugin_file="$VANTAGE_TOOLS_PLUGINS_DIR/${plugin_name}.plugin"
     
     if [[ ! -f "$plugin_file" ]]; then
-        sentinel_log_error "external_tools" "Plugin not found: $plugin_name"
+        vantage_log_error "external_tools" "Plugin not found: $plugin_name"
         return 1
     fi
     
     # Source plugin with error handling
     if source "$plugin_file"; then
-        sentinel_log_info "external_tools" "Loaded plugin: $plugin_name"
+        vantage_log_info "external_tools" "Loaded plugin: $plugin_name"
         
         # Register plugin in registry
         jq --arg name "$plugin_name" \
@@ -422,17 +422,17 @@ sentinel_plugin_load() {
                "file": $file,
                "loaded": now | strftime("%Y-%m-%dT%H:%M:%SZ"),
                "enabled": true
-           }' "$SENTINEL_TOOLS_REGISTRY" > "$SENTINEL_TOOLS_REGISTRY.tmp" && \
-        mv "$SENTINEL_TOOLS_REGISTRY.tmp" "$SENTINEL_TOOLS_REGISTRY"
+           }' "$VANTAGE_TOOLS_REGISTRY" > "$VANTAGE_TOOLS_REGISTRY.tmp" && \
+        mv "$VANTAGE_TOOLS_REGISTRY.tmp" "$VANTAGE_TOOLS_REGISTRY"
     else
-        sentinel_log_error "external_tools" "Failed to load plugin: $plugin_name"
+        vantage_log_error "external_tools" "Failed to load plugin: $plugin_name"
         return 1
     fi
 }
 
 # Tool alias creation
-# Usage: sentinel_tool_alias <alias_name> <tool_name> [default_args]
-sentinel_tool_alias() {
+# Usage: vantage_tool_alias <alias_name> <tool_name> [default_args]
+vantage_tool_alias() {
     local alias_name="$1"
     local tool_name="$2"
     shift 2
@@ -441,52 +441,52 @@ sentinel_tool_alias() {
     # Create alias function
     eval "
     $alias_name() {
-        sentinel_tool_execute '$tool_name' $default_args \"\$@\"
+        vantage_tool_execute '$tool_name' $default_args \"\$@\"
     }
     export -f $alias_name
     "
     
-    sentinel_log_info "external_tools" "Created alias: $alias_name -> $tool_name $default_args"
+    vantage_log_info "external_tools" "Created alias: $alias_name -> $tool_name $default_args"
 }
 
 # Initialize external tools on module load
-sentinel_external_tools_init() {
+vantage_external_tools_init() {
     # Initialize MCP if enabled
-    [[ "$SENTINEL_MCP_ENABLED" == "1" ]] && sentinel_mcp_init
+    [[ "$VANTAGE_MCP_ENABLED" == "1" ]] && vantage_mcp_init
     
     # Load registered plugins
-    if [[ -f "$SENTINEL_TOOLS_REGISTRY" ]]; then
-        local plugins=$(jq -r '.plugins | to_entries[] | select(.value.enabled == true) | .key' "$SENTINEL_TOOLS_REGISTRY" 2>/dev/null)
+    if [[ -f "$VANTAGE_TOOLS_REGISTRY" ]]; then
+        local plugins=$(jq -r '.plugins | to_entries[] | select(.value.enabled == true) | .key' "$VANTAGE_TOOLS_REGISTRY" 2>/dev/null)
         for plugin in $plugins; do
-            sentinel_plugin_load "$plugin"
+            vantage_plugin_load "$plugin"
         done
     fi
     
     # Auto-discover common tools
-    if [[ "${SENTINEL_TOOLS_AUTO_DISCOVER:-1}" == "1" ]]; then
-        sentinel_tool_discover "$PATH" >/dev/null 2>&1
+    if [[ "${VANTAGE_TOOLS_AUTO_DISCOVER:-1}" == "1" ]]; then
+        vantage_tool_discover "$PATH" >/dev/null 2>&1
     fi
     
-    sentinel_log_info "external_tools" "External tools module initialized"
+    vantage_log_info "external_tools" "External tools module initialized"
 }
 
 # Export functions
-export -f sentinel_tool_discover
-export -f sentinel_tool_inspect
-export -f sentinel_tool_register
-export -f sentinel_tool_verify
-export -f sentinel_tool_create_sandbox_wrapper
-export -f sentinel_mcp_init
-export -f sentinel_mcp_listener
-export -f sentinel_mcp_handle_request
-export -f sentinel_tool_execute
-export -f sentinel_tool_list
-export -f sentinel_tool_list_json
-export -f sentinel_tool_list_table
-export -f sentinel_tool_info
-export -f sentinel_plugin_load
-export -f sentinel_tool_alias
-export -f sentinel_external_tools_init
+export -f vantage_tool_discover
+export -f vantage_tool_inspect
+export -f vantage_tool_register
+export -f vantage_tool_verify
+export -f vantage_tool_create_sandbox_wrapper
+export -f vantage_mcp_init
+export -f vantage_mcp_listener
+export -f vantage_mcp_handle_request
+export -f vantage_tool_execute
+export -f vantage_tool_list
+export -f vantage_tool_list_json
+export -f vantage_tool_list_table
+export -f vantage_tool_info
+export -f vantage_plugin_load
+export -f vantage_tool_alias
+export -f vantage_external_tools_init
 
 # Initialize module
-sentinel_external_tools_init
+vantage_external_tools_init

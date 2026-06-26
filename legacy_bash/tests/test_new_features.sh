@@ -10,12 +10,12 @@
 # For this test, we'll assume the functions/modules are available
 # as they would be in a normal shell session after the changes.
 
-export SENTINEL_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")"/.. && pwd)"
+export VANTAGE_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")"/.. && pwd)"
 
-source "${SENTINEL_ROOT}/bash_modules.d/logging.module" 2>/dev/null || true
-source "${SENTINEL_ROOT}/bash_functions.d/venv_helpers"
-export SENTINEL_AUTO_INSTALL_ENABLED=0
-source "${SENTINEL_ROOT}/bash_modules.d/auto_install.module"
+source "${VANTAGE_ROOT}/bash_modules.d/logging.module" 2>/dev/null || true
+source "${VANTAGE_ROOT}/bash_functions.d/venv_helpers"
+export VANTAGE_AUTO_INSTALL_ENABLED=0
+source "${VANTAGE_ROOT}/bash_modules.d/auto_install.module"
 
 echo "--- Test Suite for New Features ---"
 
@@ -62,7 +62,7 @@ echo "It will install packages, which might take some time."
 # We will redirect mkvenv output to /dev/null to keep test output clean,
 # but this means we won't see its progress.
 _test_mkvenv_creation() {
-    export SENTINEL_MKVENV_SKIP_PACKAGES=1
+    export VANTAGE_MKVENV_SKIP_PACKAGES=1
     # Temporarily disable interactive prompts for the test
     # This is a simple way; a more robust way would be to expect/provide input.
     alias read='echo "N" | read'
@@ -86,25 +86,25 @@ _test_mkvenv_creation() {
                 #    return 1
                 # fi
                 deactivate # Deactivate after check
-                unset SENTINEL_MKVENV_SKIP_PACKAGES
+                unset VANTAGE_MKVENV_SKIP_PACKAGES
                 unalias read # Restore read
                 return 0 # Success
             else
                 echo "pip command NOT found in venv."
                 deactivate
-                unset SENTINEL_MKVENV_SKIP_PACKAGES
+                unset VANTAGE_MKVENV_SKIP_PACKAGES
                 unalias read
                 return 1 # Failure
             fi
         else
             echo "Venv directory '$TEMP_VENV_DIR' or activate script '$TEMP_VENV_DIR/bin/activate' not found."
-            unset SENTINEL_MKVENV_SKIP_PACKAGES
+            unset VANTAGE_MKVENV_SKIP_PACKAGES
             unalias read
             return 1 # Failure
         fi
     else
         echo "mkvenv command itself failed to execute or returned an error."
-        unset SENTINEL_MKVENV_SKIP_PACKAGES
+        unset VANTAGE_MKVENV_SKIP_PACKAGES
         unalias read
         return 1 # Failure
     fi
@@ -120,7 +120,7 @@ _run_test "mkvenv basic creation (directory and activate script)" "_test_mkvenv_
 _run_test "auto_install_module loading (check for _auto_install_log)" "type _auto_install_log &>/dev/null"
 
 # 2. Verify the test harness can disable side effects when sourcing the module.
-_run_test "auto_install_module explicit disable respected" '[[ "${SENTINEL_AUTO_INSTALL_ENABLED}" == "0" ]]'
+_run_test "auto_install_module explicit disable respected" '[[ "${VANTAGE_AUTO_INSTALL_ENABLED}" == "0" ]]'
 
 
 # --- Summary ---

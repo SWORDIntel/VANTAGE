@@ -5,7 +5,7 @@
 # Dependencies: logging config_cache
 # Optional-Dependencies: fzf python3
 # Author: Your Name
-# License: Same as SENTINEL
+# License: Same as VANTAGE
 
 # Prevent direct execution
 [[ "${BASH_SOURCE[0]}" == "${0}" ]] && {
@@ -21,7 +21,7 @@
 MODULE_NAME="module_name"
 MODULE_VERSION="1.0.0"
 MODULE_AUTHOR="Your Name"
-MODULE_LICENSE="Same as SENTINEL"
+MODULE_LICENSE="Same as VANTAGE"
 MODULE_DESCRIPTION="Brief description of module functionality"
 
 # Dependencies
@@ -373,7 +373,7 @@ DEPENDENCIES:
     Optional: ${MODULE_OPTIONAL_DEPS[*]}
 
 For more information, see the module documentation in:
-    "${SENTINEL_ROOT:-$(dirname "$(dirname "${BASH_SOURCE[0]}")")}/.claude/guides/module_development.md"
+    "${VANTAGE_ROOT:-$(dirname "$(dirname "${BASH_SOURCE[0]}")")}/.claude/guides/module_development.md"
 EOF
 }
 

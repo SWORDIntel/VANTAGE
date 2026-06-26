@@ -1,10 +1,10 @@
-# SENTINEL Project Overview
+# VANTAGE Project Overview
 
 This file is a condensed project overview for the `docs/` tree. The canonical user-facing README is the repository root [`README.md`](../README.md).
 
-## What SENTINEL Provides
+## What VANTAGE Provides
 
-SENTINEL is a modular Bash environment focused on security, automation, and shell ergonomics. The current codebase centers on:
+VANTAGE is a modular Bash environment focused on security, automation, and shell ergonomics. The current codebase centers on:
 
 - dependency-aware shell modules
 - installer-managed shell integration
@@ -15,8 +15,8 @@ SENTINEL is a modular Bash environment focused on security, automation, and shel
 ## Canonical Getting Started
 
 ```bash
-git clone https://github.com/SWORDIntel/SENTINEL.git
-cd SENTINEL
+git clone https://github.com/SWORDIntel/VANTAGE.git
+cd VANTAGE
 bash install.sh
 source ~/.bashrc
 ```
@@ -30,7 +30,7 @@ bash install.sh --non-interactive --headless
 For kitty-first installs:
 
 ```bash
-bash install_kitty.sh
+bash install.sh kitty
 ```
 
 ## Validation
@@ -44,7 +44,7 @@ make test RUN_OPTIONAL=1
 Optional Markov dependencies:
 
 ```bash
-python3 -m pip install -r requirements-markov.txt
+python3 -m pip install -r requirements.txt
 ```
 
 ## Important Layout Conventions

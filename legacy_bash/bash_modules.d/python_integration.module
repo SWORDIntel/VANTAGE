@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
 ### BEGIN MODULE INFO
 # Name:                  python_integration
-# Short-Description:     Unified Python/Bash integration for SENTINEL
+# Short-Description:     Unified Python/Bash integration for VANTAGE
 # Description:           Provides seamless integration between bash modules and Python
 #                        components with shared state, configuration, and IPC.
 # Author:                Team 5 Agent 1
-# URL:                   https://github.com/SWORDIntel/SENTINEL/
+# URL:                   https://github.com/SWORDIntel/VANTAGE/
 # Version:               1.0.0
 # Stability:             stable
 # Tags:                  integration, python, ipc, state-management
@@ -15,30 +15,30 @@
 ### END MODULE INFO
 
 # Module initialization
-SENTINEL_PYTHON_INTEGRATION_VERSION="1.0.0"
-SENTINEL_PYTHON_INTEGRATION_STATE_DIR="${SENTINEL_ROOT:-${HOME}/.sentinel}/.state"
-SENTINEL_PYTHON_INTEGRATION_CONFIG_DIR="${SENTINEL_ROOT:-${HOME}/.sentinel}/.config"
-SENTINEL_PYTHON_INTEGRATION_IPC_DIR="${SENTINEL_ROOT:-${HOME}/.sentinel}/.ipc"
-SENTINEL_PYTHON_INTEGRATION_LOG_DIR="${SENTINEL_ROOT:-${HOME}/.sentinel}/logs"
+VANTAGE_PYTHON_INTEGRATION_VERSION="1.0.0"
+VANTAGE_PYTHON_INTEGRATION_STATE_DIR="${VANTAGE_ROOT:-${HOME}/.vantage}/.state"
+VANTAGE_PYTHON_INTEGRATION_CONFIG_DIR="${VANTAGE_ROOT:-${HOME}/.vantage}/.config"
+VANTAGE_PYTHON_INTEGRATION_IPC_DIR="${VANTAGE_ROOT:-${HOME}/.vantage}/.ipc"
+VANTAGE_PYTHON_INTEGRATION_LOG_DIR="${VANTAGE_ROOT:-${HOME}/.vantage}/logs"
 
 # Create necessary directories
-mkdir -p "${SENTINEL_PYTHON_INTEGRATION_STATE_DIR}"
-mkdir -p "${SENTINEL_PYTHON_INTEGRATION_CONFIG_DIR}"
-mkdir -p "${SENTINEL_PYTHON_INTEGRATION_IPC_DIR}"
-mkdir -p "${SENTINEL_PYTHON_INTEGRATION_LOG_DIR}"
+mkdir -p "${VANTAGE_PYTHON_INTEGRATION_STATE_DIR}"
+mkdir -p "${VANTAGE_PYTHON_INTEGRATION_CONFIG_DIR}"
+mkdir -p "${VANTAGE_PYTHON_INTEGRATION_IPC_DIR}"
+mkdir -p "${VANTAGE_PYTHON_INTEGRATION_LOG_DIR}"
 
 # Export paths for Python components
-export SENTINEL_STATE_DIR="${SENTINEL_PYTHON_INTEGRATION_STATE_DIR}"
-export SENTINEL_CONFIG_DIR="${SENTINEL_PYTHON_INTEGRATION_CONFIG_DIR}"
-export SENTINEL_IPC_DIR="${SENTINEL_PYTHON_INTEGRATION_IPC_DIR}"
-export SENTINEL_LOG_DIR="${SENTINEL_PYTHON_INTEGRATION_LOG_DIR}"
+export VANTAGE_STATE_DIR="${VANTAGE_PYTHON_INTEGRATION_STATE_DIR}"
+export VANTAGE_CONFIG_DIR="${VANTAGE_PYTHON_INTEGRATION_CONFIG_DIR}"
+export VANTAGE_IPC_DIR="${VANTAGE_PYTHON_INTEGRATION_IPC_DIR}"
+export VANTAGE_LOG_DIR="${VANTAGE_PYTHON_INTEGRATION_LOG_DIR}"
 
 # Shared configuration system
-declare -gA SENTINEL_CONFIG
+declare -gA VANTAGE_CONFIG
 
 # Load configuration from JSON file if exists
-_sentinel_load_config() {
-    local config_file="${SENTINEL_CONFIG_DIR}/sentinel.json"
+_vantage_load_config() {
+    local config_file="${VANTAGE_CONFIG_DIR}/vantage.json"
     if [[ -f "$config_file" ]]; then
         while IFS=$'\t' read -r key b64; do
             [[ -z "$key" ]] && continue
@@ -48,10 +48,10 @@ _sentinel_load_config() {
             else
                 value="$(python3 -c 'import base64,sys; print(base64.b64decode(sys.argv[1].encode()).decode(errors="replace"))' "$b64" 2>/dev/null || true)"
             fi
-            SENTINEL_CONFIG["$key"]="$value"
+            VANTAGE_CONFIG["$key"]="$value"
         done < <(python3 - <<'PY' 2>/dev/null
 import base64, json, os, sys
-config_file = os.environ.get("SENTINEL_CONFIG_DIR", "") + "/sentinel.json"
+config_file = os.environ.get("VANTAGE_CONFIG_DIR", "") + "/vantage.json"
 try:
     with open(config_file, "r", encoding="utf-8") as f:
         config = json.load(f) or {}
@@ -67,14 +67,14 @@ PY
 }
 
 # Save configuration to JSON file
-_sentinel_save_config() {
-    local config_file="${SENTINEL_CONFIG_DIR}/sentinel.json"
+_vantage_save_config() {
+    local config_file="${VANTAGE_CONFIG_DIR}/vantage.json"
     local _tmp_kv
-    _tmp_kv="$(mktemp "${SENTINEL_CONFIG_DIR}/.sentinel_kv.XXXXXX" 2>/dev/null || mktemp)"
+    _tmp_kv="$(mktemp "${VANTAGE_CONFIG_DIR}/.vantage_kv.XXXXXX" 2>/dev/null || mktemp)"
     {
         local key
-        for key in "${!SENTINEL_CONFIG[@]}"; do
-            local value="${SENTINEL_CONFIG[$key]}"
+        for key in "${!VANTAGE_CONFIG[@]}"; do
+            local value="${VANTAGE_CONFIG[$key]}"
             local b64=""
             if command -v base64 >/dev/null 2>&1; then
                 # GNU coreutils: base64 -w0; Busybox: no -w
@@ -112,43 +112,43 @@ PY
 }
 
 # Get configuration value
-sentinel_config_get() {
+vantage_config_get() {
     local key="$1"
-    echo "${SENTINEL_CONFIG[$key]:-}"
+    echo "${VANTAGE_CONFIG[$key]:-}"
 }
 
 # Set configuration value
-sentinel_config_set() {
+vantage_config_set() {
     local key="$1"
     local value="$2"
-    SENTINEL_CONFIG["$key"]="$value"
-    _sentinel_save_config
+    VANTAGE_CONFIG["$key"]="$value"
+    _vantage_save_config
 }
 
 # State management functions
-sentinel_state_set() {
+vantage_state_set() {
     local key="$1"
     local value="$2"
-    local state_file="${SENTINEL_STATE_DIR}/${key}.state"
+    local state_file="${VANTAGE_STATE_DIR}/${key}.state"
     echo "$value" > "$state_file"
 }
 
-sentinel_state_get() {
+vantage_state_get() {
     local key="$1"
-    local state_file="${SENTINEL_STATE_DIR}/${key}.state"
+    local state_file="${VANTAGE_STATE_DIR}/${key}.state"
     [[ -f "$state_file" ]] && cat "$state_file"
 }
 
-sentinel_state_delete() {
+vantage_state_delete() {
     local key="$1"
-    local state_file="${SENTINEL_STATE_DIR}/${key}.state"
+    local state_file="${VANTAGE_STATE_DIR}/${key}.state"
     [[ -f "$state_file" ]] && rm -f "$state_file"
 }
 
 # IPC mechanism using named pipes and files
-sentinel_ipc_create_channel() {
+vantage_ipc_create_channel() {
     local channel_name="$1"
-    local channel_path="${SENTINEL_IPC_DIR}/${channel_name}"
+    local channel_path="${VANTAGE_IPC_DIR}/${channel_name}"
     
     # Create bidirectional named pipes
     [[ ! -p "${channel_path}.in" ]] && mkfifo "${channel_path}.in"
@@ -157,10 +157,10 @@ sentinel_ipc_create_channel() {
     echo "$channel_path"
 }
 
-sentinel_ipc_send() {
+vantage_ipc_send() {
     local channel_name="$1"
     local message="$2"
-    local channel_path="${SENTINEL_IPC_DIR}/${channel_name}.in"
+    local channel_path="${VANTAGE_IPC_DIR}/${channel_name}.in"
     
     if [[ -p "$channel_path" ]]; then
         echo "$message" > "$channel_path" &
@@ -170,10 +170,10 @@ sentinel_ipc_send() {
     fi
 }
 
-sentinel_ipc_receive() {
+vantage_ipc_receive() {
     local channel_name="$1"
     local timeout="${2:-5}"
-    local channel_path="${SENTINEL_IPC_DIR}/${channel_name}.out"
+    local channel_path="${VANTAGE_IPC_DIR}/${channel_name}.out"
     
     if [[ -p "$channel_path" ]]; then
         timeout "$timeout" cat "$channel_path"
@@ -184,23 +184,23 @@ sentinel_ipc_receive() {
 }
 
 # Python execution wrapper with error handling
-sentinel_python_exec() {
+vantage_python_exec() {
     local script="$1"
     shift
     local -a args=("$@")
     
     # Set Python environment variables
-    export PYTHONPATH="${PYTHONPATH}:${SENTINEL_ROOT:-${HOME}/.sentinel}/lib"
-    export SENTINEL_INTEGRATION_VERSION="${SENTINEL_PYTHON_INTEGRATION_VERSION}"
+    export PYTHONPATH="${PYTHONPATH}:${VANTAGE_ROOT:-${HOME}/.vantage}/lib"
+    export VANTAGE_INTEGRATION_VERSION="${VANTAGE_PYTHON_INTEGRATION_VERSION}"
     
     # Execute Python script with consistent error handling
     python3 -u "$script" "${args[@]}" 2>&1 | while IFS= read -r line; do
         if [[ "$line" =~ ^ERROR: ]]; then
             echo "[PYTHON ERROR] $line" >&2
-            sentinel_log "error" "Python execution error: $line"
+            vantage_log "error" "Python execution error: $line"
         elif [[ "$line" =~ ^WARNING: ]]; then
             echo "[PYTHON WARNING] $line" >&2
-            sentinel_log "warning" "Python execution warning: $line"
+            vantage_log "warning" "Python execution warning: $line"
         else
             echo "$line"
         fi
@@ -210,40 +210,40 @@ sentinel_python_exec() {
 }
 
 # Logging function for consistent error handling
-sentinel_log() {
+vantage_log() {
     local level="$1"
     local message="$2"
     local timestamp
     timestamp=$(date '+%Y-%m-%d %H:%M:%S')
-    local log_file="${SENTINEL_LOG_DIR}/sentinel.log"
+    local log_file="${VANTAGE_LOG_DIR}/vantage.log"
     
     echo "[$timestamp] [$level] $message" >> "$log_file"
 }
 
 # Python module manager integration
-sentinel_python_module_install() {
+vantage_python_module_install() {
     local module="$1"
-    local venv_path="${SENTINEL_ROOT:-${HOME}/.sentinel}/venv"
+    local venv_path="${VANTAGE_ROOT:-${HOME}/.vantage}/venv"
     
     # Create virtual environment if not exists
     if [[ ! -d "$venv_path" ]]; then
         python3 -m venv "$venv_path"
-        sentinel_log "info" "Created Python virtual environment at $venv_path"
+        vantage_log "info" "Created Python virtual environment at $venv_path"
     fi
     
     # Activate virtual environment and install module
     # shellcheck disable=SC1091
     source "$venv_path/bin/activate"
     pip install "$module" 2>&1 | while IFS= read -r line; do
-        sentinel_log "info" "pip: $line"
+        vantage_log "info" "pip: $line"
     done
     local pip_rc=${PIPESTATUS[0]}
     deactivate
     return "$pip_rc"
 }
 
-sentinel_python_module_list() {
-    local venv_path="${SENTINEL_ROOT:-${HOME}/.sentinel}/venv"
+vantage_python_module_list() {
+    local venv_path="${VANTAGE_ROOT:-${HOME}/.vantage}/venv"
     
     if [[ -d "$venv_path" ]]; then
         # shellcheck disable=SC1091
@@ -256,11 +256,11 @@ sentinel_python_module_list() {
 }
 
 # ML component state synchronization
-sentinel_ml_sync_state() {
+vantage_ml_sync_state() {
     local component="$1"
-    local state_file="${SENTINEL_STATE_DIR}/ml_${component}.json"
+    local state_file="${VANTAGE_STATE_DIR}/ml_${component}.json"
     
-    local sync_script="${SENTINEL_CONFIG_DIR}/ml_sync.py"
+    local sync_script="${VANTAGE_CONFIG_DIR}/ml_sync.py"
     cat > "$sync_script" << 'EOFPY'
 #!/usr/bin/env python3
 import json
@@ -314,23 +314,23 @@ EOFPY
     chmod +x "$sync_script"
     
     # Execute sync
-    sentinel_python_exec "$sync_script" "$component" "$state_file"
+    vantage_python_exec "$sync_script" "$component" "$state_file"
 }
 
 # Initialize bash-python bridge
-_sentinel_init_python_bridge() {
+_vantage_init_python_bridge() {
     # Create Python integration library in both the repo-local runtime path and
     # the compatibility path used by contrib tooling.
-    local primary_lib_dir="${SENTINEL_ROOT:-${HOME}/.sentinel}/lib"
-    local compat_lib_dir="${HOME}/.config/sentinel/lib"
-    local integration_file="${primary_lib_dir}/sentinel_integration.py"
+    local primary_lib_dir="${VANTAGE_ROOT:-${HOME}/.vantage}/lib"
+    local compat_lib_dir="${HOME}/.config/vantage/lib"
+    local integration_file="${primary_lib_dir}/vantage_integration.py"
     mkdir -p "$primary_lib_dir" "$compat_lib_dir"
     
-    # Create sentinel_integration.py module
+    # Create vantage_integration.py module
     cat > "$integration_file" << 'EOFPY'
 #!/usr/bin/env python3
 """
-SENTINEL Python Integration Module
+VANTAGE Python Integration Module
 Provides unified interface for bash-python communication
 """
 
@@ -341,14 +341,14 @@ import subprocess
 from pathlib import Path
 from typing import Any, Dict, Optional
 
-class SentinelIntegration:
-    """Main integration class for SENTINEL Python components"""
+class VantageIntegration:
+    """Main integration class for VANTAGE Python components"""
     
     def __init__(self):
-        self.state_dir = Path(os.environ.get('SENTINEL_STATE_DIR', '~/.config/sentinel/state')).expanduser()
-        self.config_dir = Path(os.environ.get('SENTINEL_CONFIG_DIR', '~/.config/sentinel/config')).expanduser()
-        self.ipc_dir = Path(os.environ.get('SENTINEL_IPC_DIR', '~/.config/sentinel/ipc')).expanduser()
-        self.log_dir = Path(os.environ.get('SENTINEL_LOG_DIR', '~/.local/share/sentinel/logs')).expanduser()
+        self.state_dir = Path(os.environ.get('VANTAGE_STATE_DIR', '~/.config/vantage/state')).expanduser()
+        self.config_dir = Path(os.environ.get('VANTAGE_CONFIG_DIR', '~/.config/vantage/config')).expanduser()
+        self.ipc_dir = Path(os.environ.get('VANTAGE_IPC_DIR', '~/.config/vantage/ipc')).expanduser()
+        self.log_dir = Path(os.environ.get('VANTAGE_LOG_DIR', '~/.local/share/vantage/logs')).expanduser()
         
         # Ensure directories exist
         for dir_path in [self.state_dir, self.config_dir, self.ipc_dir, self.log_dir]:
@@ -368,11 +368,11 @@ class SentinelIntegration:
                 logging.StreamHandler()
             ]
         )
-        self.logger = logging.getLogger('sentinel_integration')
+        self.logger = logging.getLogger('vantage_integration')
     
     def get_config(self, key: str, default: Any = None) -> Any:
         """Get configuration value"""
-        config_file = self.config_dir / 'sentinel.json'
+        config_file = self.config_dir / 'vantage.json'
         if config_file.exists():
             with open(config_file, 'r') as f:
                 config = json.load(f)
@@ -381,7 +381,7 @@ class SentinelIntegration:
     
     def set_config(self, key: str, value: Any):
         """Set configuration value"""
-        config_file = self.config_dir / 'sentinel.json'
+        config_file = self.config_dir / 'vantage.json'
         config = {}
         if config_file.exists():
             with open(config_file, 'r') as f:
@@ -457,44 +457,44 @@ class SentinelIntegration:
         return None
 
 # Global instance
-sentinel = SentinelIntegration()
+vantage = VantageIntegration()
 EOFPY
     chmod +x "$integration_file"
-    cp "$integration_file" "${compat_lib_dir}/sentinel_integration.py"
+    cp "$integration_file" "${compat_lib_dir}/vantage_integration.py"
     
     # Add to PYTHONPATH
     export PYTHONPATH="${primary_lib_dir}:${compat_lib_dir}:${PYTHONPATH:-}"
 }
 
 # Command aliases for easier usage
-alias sentinel-config-get='sentinel_config_get'
-alias sentinel-config-set='sentinel_config_set'
-alias sentinel-state-get='sentinel_state_get'
-alias sentinel-state-set='sentinel_state_set'
-alias sentinel-py='sentinel_python_exec'
+alias vantage-config-get='vantage_config_get'
+alias vantage-config-set='vantage_config_set'
+alias vantage-state-get='vantage_state_get'
+alias vantage-state-set='vantage_state_set'
+alias vantage-py='vantage_python_exec'
 
 # Initialize on module load
-_sentinel_load_config
-_sentinel_init_python_bridge
+_vantage_load_config
+_vantage_init_python_bridge
 
 # Export functions for use in other modules
-export -f sentinel_config_get
-export -f sentinel_config_set
-export -f sentinel_state_get
-export -f sentinel_state_set
-export -f sentinel_state_delete
-export -f sentinel_ipc_create_channel
-export -f sentinel_ipc_send
-export -f sentinel_ipc_receive
-export -f sentinel_python_exec
-export -f sentinel_log
-export -f sentinel_python_module_install
-export -f sentinel_python_module_list
-export -f sentinel_ml_sync_state
+export -f vantage_config_get
+export -f vantage_config_set
+export -f vantage_state_get
+export -f vantage_state_set
+export -f vantage_state_delete
+export -f vantage_ipc_create_channel
+export -f vantage_ipc_send
+export -f vantage_ipc_receive
+export -f vantage_python_exec
+export -f vantage_log
+export -f vantage_python_module_install
+export -f vantage_python_module_list
+export -f vantage_ml_sync_state
 
-if [[ "${SENTINEL_VERBOSE:-0}" == "1" ]] || [[ "${SENTINEL_DEBUG:-0}" == "1" ]]; then
-    echo "[SENTINEL] Python Integration Module v${SENTINEL_PYTHON_INTEGRATION_VERSION} loaded"
-    echo "[SENTINEL] State directory: ${SENTINEL_STATE_DIR}"
-    echo "[SENTINEL] Config directory: ${SENTINEL_CONFIG_DIR}"
-    echo "[SENTINEL] IPC directory: ${SENTINEL_IPC_DIR}"
+if [[ "${VANTAGE_VERBOSE:-0}" == "1" ]] || [[ "${VANTAGE_DEBUG:-0}" == "1" ]]; then
+    echo "[VANTAGE] Python Integration Module v${VANTAGE_PYTHON_INTEGRATION_VERSION} loaded"
+    echo "[VANTAGE] State directory: ${VANTAGE_STATE_DIR}"
+    echo "[VANTAGE] Config directory: ${VANTAGE_CONFIG_DIR}"
+    echo "[VANTAGE] IPC directory: ${VANTAGE_IPC_DIR}"
 fi

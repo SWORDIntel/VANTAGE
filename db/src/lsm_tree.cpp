@@ -14,8 +14,8 @@ namespace {
     }
 
     std::shared_ptr<hybrid_db::MemTable> create_shm_memtable() {
-        unlink("/dev/shm/sentinel_active_session");
-        int fd = open("/dev/shm/sentinel_active_session", O_CREAT | O_RDWR, 0666);
+        unlink("/dev/shm/vantage_active_session");
+        int fd = open("/dev/shm/vantage_active_session", O_CREAT | O_RDWR, 0666);
         if (fd == -1) throw std::runtime_error("Failed to open shm file");
         if (ftruncate(fd, sizeof(hybrid_db::MemTable)) == -1) {
             close(fd);

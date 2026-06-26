@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# SENTINEL Installer - Python Functions
+# VANTAGE Installer - Python Functions
 
 setup_python_venv() {
     if is_done "PYTHON_VENV_READY"; then
@@ -117,7 +117,7 @@ setup_python_venv() {
         echo "You can try installing them manually later with: pip install ${failed_packages[*]}"
     fi
 
-    if [[ "${SENTINEL_ENABLE_TENSORFLOW:-0}" == "1" ]]; then
+    if [[ "${VANTAGE_ENABLE_TENSORFLOW:-0}" == "1" ]]; then
         step "Attempting to install tensorflow..."
         if "$VENV_DIR/bin/pip" install tensorflow; then
             ok "Tensorflow installed (advanced ML features enabled)"

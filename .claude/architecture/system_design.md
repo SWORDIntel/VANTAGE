@@ -1,8 +1,8 @@
-# SENTINEL System Architecture
+# VANTAGE System Architecture
 
 ## Overview
 
-SENTINEL follows a modular, layered architecture designed for flexibility, security, and performance.
+VANTAGE follows a modular, layered architecture designed for flexibility, security, and performance.
 
 ```
 ┌─────────────────────────────────────────────────────────┐
@@ -80,7 +80,7 @@ Configuration Hierarchy:
    └── Hardcoded in modules
 2. User Configuration
    └── ~/.bashrc, ~/.bash_profile
-3. SENTINEL Configuration
+3. VANTAGE Configuration
    └── bashrc.precustom, bashrc.postcustom
 4. Module Configuration
    └── Per-module settings
@@ -156,7 +156,7 @@ Read Defaults → Apply User Config → Load Module Configs →
 ## File System Layout
 
 ```
-/opt/github/SENTINEL/
+/opt/github/VANTAGE/
 ├── Core System Files
 │   ├── bash_modules         # Module loader
 │   ├── bashrc*              # Shell configuration
@@ -172,7 +172,7 @@ Read Defaults → Apply User Config → Load Module Configs →
 │   └── bash_completion.d/   # Tool completions
 │
 ├── Python Tools (contrib/)
-│   ├── sentinel_*.py        # Python tools
+│   ├── vantage_*.py        # Python tools
 │   └── requirements.txt     # Python dependencies
 │
 └── Data & Resources

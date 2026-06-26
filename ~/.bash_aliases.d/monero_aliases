@@ -1,5 +1,0 @@
-# Monero unified wallet
-export MONERO_WALLET="$HOME/Monero/wallets/MyWallet/MyWallet"
-alias monero-gui="~/Programs/monero-gui/monero-wallet-gui"
-alias monero-cli="~/Programs/monero-cli/monero-wallet-cli --wallet-file $MONERO_WALLET"
-alias monerod="~/Programs/monero-cli/monerod --prune-blockchain"

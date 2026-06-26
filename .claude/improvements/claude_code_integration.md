@@ -1,24 +1,24 @@
-# SENTINEL + Claude Code Integration Plan
+# VANTAGE + Claude Code Integration Plan
 
 ## Executive Summary
 
-This document outlines the deep integration between SENTINEL and Claude Code, creating a powerful AI-enhanced terminal experience that combines SENTINEL's security and automation capabilities with Claude's natural language understanding and code generation abilities.
+This document outlines the deep integration between VANTAGE and Claude Code, creating a powerful AI-enhanced terminal experience that combines VANTAGE's security and automation capabilities with Claude's natural language understanding and code generation abilities.
 
 ## Core Integration Features
 
 ### 1. Bidirectional Communication
 
 ```yaml
-Feature: "SENTINEL ↔ Claude Code Bridge"
+Feature: "VANTAGE ↔ Claude Code Bridge"
 Components:
-  - MCP (Model Context Protocol) server in SENTINEL
+  - MCP (Model Context Protocol) server in VANTAGE
   - Claude Code client integration
   - Shared context and state management
   - Real-time event streaming
 
 Benefits:
   - Claude understands current terminal state
-  - SENTINEL executes Claude-generated commands
+  - VANTAGE executes Claude-generated commands
   - Seamless workflow automation
   - Context-aware assistance
 ```
@@ -26,19 +26,19 @@ Benefits:
 ### 2. Natural Language Command Interface
 
 ```bash
-# Examples of natural language to SENTINEL commands
+# Examples of natural language to VANTAGE commands
 
 User: "Find all Python files larger than 1MB modified in the last week"
-SENTINEL: find . -name "*.py" -size +1M -mtime -7
+VANTAGE: find . -name "*.py" -size +1M -mtime -7
 
 User: "Set up a secure web server with nginx"
-SENTINEL: [Executes series of commands for nginx setup with security hardening]
+VANTAGE: [Executes series of commands for nginx setup with security hardening]
 
 User: "Monitor system for unusual network activity"
-SENTINEL: [Activates threat detection module with specific parameters]
+VANTAGE: [Activates threat detection module with specific parameters]
 
 User: "Clean up disk space but keep important logs"
-SENTINEL: [Intelligent cleanup preserving critical files]
+VANTAGE: [Intelligent cleanup preserving critical files]
 ```
 
 ### 3. Intelligent Security Analysis
@@ -53,8 +53,8 @@ Capabilities:
   - Security recommendations
 
 Integration Points:
-  - Claude analyzes SENTINEL security logs
-  - SENTINEL executes Claude's remediation steps
+  - Claude analyzes VANTAGE security logs
+  - VANTAGE executes Claude's remediation steps
   - Continuous learning from security events
   - Threat intelligence integration
 ```
@@ -82,8 +82,8 @@ Examples:
 ### MCP Server Implementation
 
 ```python
-# sentinel_mcp_server.py
-class SentinelMCPServer:
+# vantage_mcp_server.py
+class VantageMCPServer:
     """MCP server for Claude Code integration"""
     
     def __init__(self):
@@ -112,14 +112,14 @@ class SentinelMCPServer:
 ```yaml
 Shared Context:
   - Current directory and project type
-  - Active SENTINEL modules
+  - Active VANTAGE modules
   - Recent command history
   - System state and resources
   - Security posture
   - User preferences
 
 Context Flow:
-  1. SENTINEL maintains real-time context
+  1. VANTAGE maintains real-time context
   2. Context streamed to Claude via MCP
   3. Claude uses context for better suggestions
   4. Commands executed with full context awareness
@@ -157,7 +157,7 @@ Security Layers:
 ```bash
 User: "Claude, investigate the suspicious activity on port 8080"
 
-Claude + SENTINEL:
+Claude + VANTAGE:
 1. Analyzes network connections on port 8080
 2. Identifies suspicious patterns
 3. Traces process ownership
@@ -172,7 +172,7 @@ Claude + SENTINEL:
 ```bash
 User: "Set up a secure development environment for our new API"
 
-Claude + SENTINEL:
+Claude + VANTAGE:
 1. Detects project requirements
 2. Sets up virtual environment
 3. Installs dependencies with security scanning
@@ -187,7 +187,7 @@ Claude + SENTINEL:
 ```bash
 User: "Optimize system performance, it's running slow"
 
-Claude + SENTINEL:
+Claude + VANTAGE:
 1. Analyzes system resources
 2. Identifies bottlenecks
 3. Suggests optimizations
@@ -201,7 +201,7 @@ Claude + SENTINEL:
 ```bash
 User: "Gather information about domain example.com"
 
-Claude + SENTINEL:
+Claude + VANTAGE:
 1. DNS enumeration
 2. Certificate transparency logs
 3. Web technology detection
@@ -239,7 +239,7 @@ Claude + SENTINEL:
 ## Configuration
 
 ```bash
-# .sentinel/claude_config.yaml
+# .vantage/claude_config.yaml
 claude_integration:
   enabled: true
   mcp_server:
@@ -276,10 +276,10 @@ claude_integration:
 
 ## Future Possibilities
 
-1. **Voice Control**: "Hey SENTINEL, check system security"
+1. **Voice Control**: "Hey VANTAGE, check system security"
 2. **Predictive Automation**: Anticipate user needs
 3. **Team Collaboration**: Shared AI-powered workspaces
 4. **Custom AI Models**: Train on organization-specific patterns
 5. **Integration Hub**: Connect with all development tools
 
-This integration transforms SENTINEL from a powerful terminal enhancement into an AI-powered command center for development and security operations.
+This integration transforms VANTAGE from a powerful terminal enhancement into an AI-powered command center for development and security operations.

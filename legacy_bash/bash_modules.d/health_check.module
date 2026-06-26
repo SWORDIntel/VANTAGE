@@ -1,21 +1,21 @@
 #!/usr/bin/env bash
-# SENTINEL Module: Health Check System
-# Provides comprehensive health monitoring for SENTINEL modules
+# VANTAGE Module: Health Check System
+# Provides comprehensive health monitoring for VANTAGE modules
 
-SENTINEL_MODULE_DESCRIPTION="Module health check system with automatic recovery"
-SENTINEL_MODULE_VERSION="1.0.0"
-SENTINEL_MODULE_DEPENDENCIES="logging"
+VANTAGE_MODULE_DESCRIPTION="Module health check system with automatic recovery"
+VANTAGE_MODULE_VERSION="1.0.0"
+VANTAGE_MODULE_DEPENDENCIES="logging"
 
 # Prevent double loading
-[[ -n "${_SENTINEL_HEALTH_CHECK_LOADED:-}" ]] && return 0
-export _SENTINEL_HEALTH_CHECK_LOADED=1
+[[ -n "${_VANTAGE_HEALTH_CHECK_LOADED:-}" ]] && return 0
+export _VANTAGE_HEALTH_CHECK_LOADED=1
 
 # Health check configuration
-SENTINEL_HEALTH_CHECK_DIR="${SENTINEL_HEALTH_CHECK_DIR:-$HOME/.cache/sentinel/health}"
-SENTINEL_HEALTH_CHECK_INTERVAL="${SENTINEL_HEALTH_CHECK_INTERVAL:-300}"  # 5 minutes default
-SENTINEL_HEALTH_CHECK_ENABLED="${SENTINEL_HEALTH_CHECK_ENABLED:-1}"
-SENTINEL_HEALTH_CHECK_AUTO_RECOVERY="${SENTINEL_HEALTH_CHECK_AUTO_RECOVERY:-1}"
-SENTINEL_HEALTH_CHECK_MAX_RETRIES="${SENTINEL_HEALTH_CHECK_MAX_RETRIES:-3}"
+VANTAGE_HEALTH_CHECK_DIR="${VANTAGE_HEALTH_CHECK_DIR:-$HOME/.cache/vantage/health}"
+VANTAGE_HEALTH_CHECK_INTERVAL="${VANTAGE_HEALTH_CHECK_INTERVAL:-300}"  # 5 minutes default
+VANTAGE_HEALTH_CHECK_ENABLED="${VANTAGE_HEALTH_CHECK_ENABLED:-1}"
+VANTAGE_HEALTH_CHECK_AUTO_RECOVERY="${VANTAGE_HEALTH_CHECK_AUTO_RECOVERY:-1}"
+VANTAGE_HEALTH_CHECK_MAX_RETRIES="${VANTAGE_HEALTH_CHECK_MAX_RETRIES:-3}"
 
 # Health status codes
 readonly HEALTH_OK=0
@@ -25,31 +25,31 @@ readonly HEALTH_CRITICAL=3
 readonly HEALTH_UNKNOWN=4
 
 # Module health registry
-declare -gA SENTINEL_MODULE_HEALTH_STATUS
-declare -gA SENTINEL_MODULE_HEALTH_CHECKS
-declare -gA SENTINEL_MODULE_FAILURE_COUNT
-declare -gA SENTINEL_MODULE_LAST_CHECK
-declare -gA SENTINEL_MODULE_RECOVERY_ATTEMPTS
+declare -gA VANTAGE_MODULE_HEALTH_STATUS
+declare -gA VANTAGE_MODULE_HEALTH_CHECKS
+declare -gA VANTAGE_MODULE_FAILURE_COUNT
+declare -gA VANTAGE_MODULE_LAST_CHECK
+declare -gA VANTAGE_MODULE_RECOVERY_ATTEMPTS
 
 # Performance thresholds
-SENTINEL_HEALTH_MEMORY_THRESHOLD="${SENTINEL_HEALTH_MEMORY_THRESHOLD:-100000}"  # 100MB in KB
-SENTINEL_HEALTH_LOAD_TIME_THRESHOLD="${SENTINEL_HEALTH_LOAD_TIME_THRESHOLD:-5000}"  # 5 seconds in ms
+VANTAGE_HEALTH_MEMORY_THRESHOLD="${VANTAGE_HEALTH_MEMORY_THRESHOLD:-100000}"  # 100MB in KB
+VANTAGE_HEALTH_LOAD_TIME_THRESHOLD="${VANTAGE_HEALTH_LOAD_TIME_THRESHOLD:-5000}"  # 5 seconds in ms
 
 # Initialize health check system
 _init_health_check() {
     # Create health check directory
-    mkdir -p "$SENTINEL_HEALTH_CHECK_DIR"
+    mkdir -p "$VANTAGE_HEALTH_CHECK_DIR"
     
     # Initialize health check log
-    local health_log="$SENTINEL_HEALTH_CHECK_DIR/health_$(date +%Y%m%d).log"
+    local health_log="$VANTAGE_HEALTH_CHECK_DIR/health_$(date +%Y%m%d).log"
     touch "$health_log"
     
     # Load previous health status if available
-    local status_file="$SENTINEL_HEALTH_CHECK_DIR/module_status.dat"
+    local status_file="$VANTAGE_HEALTH_CHECK_DIR/module_status.dat"
     if [[ -f "$status_file" ]]; then
         while IFS='|' read -r module status timestamp; do
-            [[ -n "$module" ]] && SENTINEL_MODULE_HEALTH_STATUS["$module"]=$status
-            [[ -n "$timestamp" ]] && SENTINEL_MODULE_LAST_CHECK["$module"]=$timestamp
+            [[ -n "$module" ]] && VANTAGE_MODULE_HEALTH_STATUS["$module"]=$status
+            [[ -n "$timestamp" ]] && VANTAGE_MODULE_LAST_CHECK["$module"]=$timestamp
         done < "$status_file" 2>/dev/null || true
     fi
     
@@ -57,7 +57,7 @@ _init_health_check() {
     _register_standard_health_checks
     
     # Start periodic health check if enabled
-    if [[ "$SENTINEL_HEALTH_CHECK_ENABLED" == "1" ]]; then
+    if [[ "$VANTAGE_HEALTH_CHECK_ENABLED" == "1" ]]; then
         _start_periodic_health_check
     fi
 }
@@ -70,9 +70,9 @@ _register_standard_health_checks() {
     register_health_check "shell_security" _check_security_health
     
     # ML module checks
-    register_health_check "sentinel_ml" _check_ml_module_health
-    register_health_check "sentinel_chat" _check_chat_module_health
-    register_health_check "sentinel_osint" _check_osint_module_health
+    register_health_check "vantage_ml" _check_ml_module_health
+    register_health_check "vantage_chat" _check_chat_module_health
+    register_health_check "vantage_osint" _check_osint_module_health
     
     # Performance-critical modules
     register_health_check "fuzzy_correction" _check_fuzzy_correction_health
@@ -85,17 +85,17 @@ register_health_check() {
     local check_function="$2"
     
     if [[ -z "$module_name" || -z "$check_function" ]]; then
-        sentinel_log $SENTINEL_LOG_LEVEL_ERROR "health_check" \
+        vantage_log $VANTAGE_LOG_LEVEL_ERROR "health_check" \
             "Invalid health check registration: module=$module_name, function=$check_function"
         return 1
     fi
     
-    SENTINEL_MODULE_HEALTH_CHECKS["$module_name"]="$check_function"
-    SENTINEL_MODULE_HEALTH_STATUS["$module_name"]=$HEALTH_UNKNOWN
-    SENTINEL_MODULE_FAILURE_COUNT["$module_name"]=0
-    SENTINEL_MODULE_RECOVERY_ATTEMPTS["$module_name"]=0
+    VANTAGE_MODULE_HEALTH_CHECKS["$module_name"]="$check_function"
+    VANTAGE_MODULE_HEALTH_STATUS["$module_name"]=$HEALTH_UNKNOWN
+    VANTAGE_MODULE_FAILURE_COUNT["$module_name"]=0
+    VANTAGE_MODULE_RECOVERY_ATTEMPTS["$module_name"]=0
     
-    sentinel_log $SENTINEL_LOG_LEVEL_DEBUG "health_check" \
+    vantage_log $VANTAGE_LOG_LEVEL_DEBUG "health_check" \
         "Registered health check for module: $module_name"
 }
 
@@ -105,24 +105,24 @@ check_module_health() {
     local force="${2:-0}"
     
     # Check if module is loaded
-    if [[ "${SENTINEL_LOADED_MODULES[$module_name]:-}" != "1" ]] && \
-       [[ "${SENTINEL_LAZY_MODULES[$module_name]:-}" != "loaded" ]]; then
-        SENTINEL_MODULE_HEALTH_STATUS["$module_name"]=$HEALTH_UNKNOWN
+    if [[ "${VANTAGE_LOADED_MODULES[$module_name]:-}" != "1" ]] && \
+       [[ "${VANTAGE_LAZY_MODULES[$module_name]:-}" != "loaded" ]]; then
+        VANTAGE_MODULE_HEALTH_STATUS["$module_name"]=$HEALTH_UNKNOWN
         return $HEALTH_UNKNOWN
     fi
     
     # Check if we need to run the check (rate limiting)
     local current_time=$(date +%s)
-    local last_check="${SENTINEL_MODULE_LAST_CHECK[$module_name]:-0}"
+    local last_check="${VANTAGE_MODULE_LAST_CHECK[$module_name]:-0}"
     local time_diff=$((current_time - last_check))
     
     if [[ "$force" != "1" && $time_diff -lt 60 ]]; then
         # Return cached status if checked within last minute
-        return ${SENTINEL_MODULE_HEALTH_STATUS["$module_name"]:-$HEALTH_UNKNOWN}
+        return ${VANTAGE_MODULE_HEALTH_STATUS["$module_name"]:-$HEALTH_UNKNOWN}
     fi
     
     # Update last check time
-    SENTINEL_MODULE_LAST_CHECK["$module_name"]=$current_time
+    VANTAGE_MODULE_LAST_CHECK["$module_name"]=$current_time
     
     # Run generic health checks
     local status=$HEALTH_OK
@@ -136,13 +136,13 @@ check_module_health() {
     
     # Check 2: Memory usage
     local mem_usage=$(_get_module_memory_usage "$module_name")
-    if [[ -n "$mem_usage" && $mem_usage -gt $SENTINEL_HEALTH_MEMORY_THRESHOLD ]]; then
+    if [[ -n "$mem_usage" && $mem_usage -gt $VANTAGE_HEALTH_MEMORY_THRESHOLD ]]; then
         status=$HEALTH_WARNING
         issues+=("High memory usage: ${mem_usage}KB")
     fi
     
     # Check 3: Module-specific health check if registered
-    local check_function="${SENTINEL_MODULE_HEALTH_CHECKS[$module_name]:-}"
+    local check_function="${VANTAGE_MODULE_HEALTH_CHECKS[$module_name]:-}"
     if [[ -n "$check_function" ]] && declare -f "$check_function" >/dev/null; then
         local check_result
         check_result=$("$check_function" 2>&1)
@@ -157,34 +157,34 @@ check_module_health() {
     # Check 4: Dependency health
     local deps=$(_get_module_dependencies "$module_name")
     for dep in $deps; do
-        if [[ "${SENTINEL_MODULE_HEALTH_STATUS[$dep]:-$HEALTH_UNKNOWN}" -ge $HEALTH_ERROR ]]; then
+        if [[ "${VANTAGE_MODULE_HEALTH_STATUS[$dep]:-$HEALTH_UNKNOWN}" -ge $HEALTH_ERROR ]]; then
             status=$HEALTH_WARNING
             issues+=("Dependency unhealthy: $dep")
         fi
     done
     
     # Update health status
-    SENTINEL_MODULE_HEALTH_STATUS["$module_name"]=$status
+    VANTAGE_MODULE_HEALTH_STATUS["$module_name"]=$status
     
     # Log health status
     local status_text=$(_health_status_to_text $status)
     if [[ $status -ne $HEALTH_OK ]]; then
         local issue_list=$(IFS='; ' ; echo "${issues[*]}")
-        sentinel_log $SENTINEL_LOG_LEVEL_WARNING "health_check" \
+        vantage_log $VANTAGE_LOG_LEVEL_WARNING "health_check" \
             "Module $module_name health: $status_text - Issues: $issue_list"
         
         # Update failure count
-        local failures="${SENTINEL_MODULE_FAILURE_COUNT[$module_name]:-0}"
-        SENTINEL_MODULE_FAILURE_COUNT["$module_name"]=$((failures + 1))
+        local failures="${VANTAGE_MODULE_FAILURE_COUNT[$module_name]:-0}"
+        VANTAGE_MODULE_FAILURE_COUNT["$module_name"]=$((failures + 1))
         
         # Attempt recovery if enabled and threshold reached
-        if [[ "$SENTINEL_HEALTH_CHECK_AUTO_RECOVERY" == "1" && $failures -ge 3 ]]; then
+        if [[ "$VANTAGE_HEALTH_CHECK_AUTO_RECOVERY" == "1" && $failures -ge 3 ]]; then
             _attempt_module_recovery "$module_name" "$status" "$issue_list"
         fi
     else
         # Reset failure count on successful check
-        SENTINEL_MODULE_FAILURE_COUNT["$module_name"]=0
-        SENTINEL_MODULE_RECOVERY_ATTEMPTS["$module_name"]=0
+        VANTAGE_MODULE_FAILURE_COUNT["$module_name"]=0
+        VANTAGE_MODULE_RECOVERY_ATTEMPTS["$module_name"]=0
     fi
     
     # Save status to file
@@ -198,11 +198,11 @@ check_all_modules_health() {
     local unhealthy_count=0
     local total_checked=0
     
-    sentinel_log $SENTINEL_LOG_LEVEL_INFO "health_check" "Starting system-wide health check"
+    vantage_log $VANTAGE_LOG_LEVEL_INFO "health_check" "Starting system-wide health check"
     
     # Check all loaded modules
-    for module_name in "${!SENTINEL_LOADED_MODULES[@]}"; do
-        if [[ "${SENTINEL_LOADED_MODULES[$module_name]}" == "1" ]]; then
+    for module_name in "${!VANTAGE_LOADED_MODULES[@]}"; do
+        if [[ "${VANTAGE_LOADED_MODULES[$module_name]}" == "1" ]]; then
             check_module_health "$module_name"
             local status=$?
             ((total_checked++))
@@ -212,8 +212,8 @@ check_all_modules_health() {
     done
     
     # Check lazy-loaded modules that are active
-    for module_name in "${!SENTINEL_LAZY_MODULES[@]}"; do
-        if [[ "${SENTINEL_LAZY_MODULES[$module_name]}" == "loaded" ]]; then
+    for module_name in "${!VANTAGE_LAZY_MODULES[@]}"; do
+        if [[ "${VANTAGE_LAZY_MODULES[$module_name]}" == "loaded" ]]; then
             check_module_health "$module_name"
             local status=$?
             ((total_checked++))
@@ -222,7 +222,7 @@ check_all_modules_health() {
         fi
     done
     
-    sentinel_log $SENTINEL_LOG_LEVEL_INFO "health_check" \
+    vantage_log $VANTAGE_LOG_LEVEL_INFO "health_check" \
         "Health check complete: $total_checked modules checked, $unhealthy_count unhealthy"
     
     return $unhealthy_count
@@ -234,17 +234,17 @@ _attempt_module_recovery() {
     local health_status="$2"
     local issues="$3"
     
-    local attempts="${SENTINEL_MODULE_RECOVERY_ATTEMPTS[$module_name]:-0}"
+    local attempts="${VANTAGE_MODULE_RECOVERY_ATTEMPTS[$module_name]:-0}"
     
-    if [[ $attempts -ge $SENTINEL_HEALTH_CHECK_MAX_RETRIES ]]; then
-        sentinel_log $SENTINEL_LOG_LEVEL_ERROR "health_check" \
+    if [[ $attempts -ge $VANTAGE_HEALTH_CHECK_MAX_RETRIES ]]; then
+        vantage_log $VANTAGE_LOG_LEVEL_ERROR "health_check" \
             "Module $module_name exceeded max recovery attempts ($attempts). Manual intervention required."
         return 1
     fi
     
-    SENTINEL_MODULE_RECOVERY_ATTEMPTS["$module_name"]=$((attempts + 1))
+    VANTAGE_MODULE_RECOVERY_ATTEMPTS["$module_name"]=$((attempts + 1))
     
-    sentinel_log $SENTINEL_LOG_LEVEL_WARNING "health_check" \
+    vantage_log $VANTAGE_LOG_LEVEL_WARNING "health_check" \
         "Attempting recovery for module $module_name (attempt $((attempts + 1)))"
     
     # Recovery strategies based on health status
@@ -268,43 +268,43 @@ _attempt_module_recovery() {
 _soft_recovery() {
     local module_name="$1"
     
-    sentinel_log $SENTINEL_LOG_LEVEL_INFO "health_check" \
+    vantage_log $VANTAGE_LOG_LEVEL_INFO "health_check" \
         "Performing soft recovery for module $module_name"
     
     # Clear module-specific caches
     case "$module_name" in
         "config_cache")
             # Clear config cache
-            [[ -d "$HOME/.cache/sentinel/config" ]] && \
-                find "$HOME/.cache/sentinel/config" -type f -mtime +1 -delete 2>/dev/null || true
+            [[ -d "$HOME/.cache/vantage/config" ]] && \
+                find "$HOME/.cache/vantage/config" -type f -mtime +1 -delete 2>/dev/null || true
             ;;
         "fuzzy_correction")
             # Reset fuzzy correction history
-            unset SENTINEL_FUZZY_HISTORY 2>/dev/null || true
+            unset VANTAGE_FUZZY_HISTORY 2>/dev/null || true
             ;;
-        "sentinel_ml"*)
+        "vantage_ml"*)
             # Clear ML model cache
-            [[ -d "$HOME/.cache/sentinel/ml" ]] && \
-                find "$HOME/.cache/sentinel/ml" -type f -name "*.cache" -delete 2>/dev/null || true
+            [[ -d "$HOME/.cache/vantage/ml" ]] && \
+                find "$HOME/.cache/vantage/ml" -type f -name "*.cache" -delete 2>/dev/null || true
             ;;
     esac
     
     # Reset failure count to give module another chance
-    SENTINEL_MODULE_FAILURE_COUNT["$module_name"]=0
+    VANTAGE_MODULE_FAILURE_COUNT["$module_name"]=0
 }
 
 # Reload a module
 _reload_module() {
     local module_name="$1"
     
-    sentinel_log $SENTINEL_LOG_LEVEL_WARNING "health_check" \
+    vantage_log $VANTAGE_LOG_LEVEL_WARNING "health_check" \
         "Reloading module $module_name due to health issues"
     
     # First, try to unload module cleanly
     _unload_module_functions "$module_name"
     
     # Mark as unloaded
-    unset SENTINEL_LOADED_MODULES["$module_name"]
+    unset VANTAGE_LOADED_MODULES["$module_name"]
     
     # Wait a moment
     sleep 1
@@ -318,11 +318,11 @@ _reload_module() {
     local new_status=$?
     
     if [[ $new_status -eq $HEALTH_OK ]]; then
-        sentinel_log $SENTINEL_LOG_LEVEL_INFO "health_check" \
+        vantage_log $VANTAGE_LOG_LEVEL_INFO "health_check" \
             "Module $module_name successfully recovered after reload"
-        SENTINEL_MODULE_RECOVERY_ATTEMPTS["$module_name"]=0
+        VANTAGE_MODULE_RECOVERY_ATTEMPTS["$module_name"]=0
     else
-        sentinel_log $SENTINEL_LOG_LEVEL_ERROR "health_check" \
+        vantage_log $VANTAGE_LOG_LEVEL_ERROR "health_check" \
             "Module $module_name failed to recover after reload"
     fi
 }
@@ -331,38 +331,38 @@ _reload_module() {
 _disable_failed_module() {
     local module_name="$1"
     
-    sentinel_log $SENTINEL_LOG_LEVEL_CRITICAL "health_check" \
+    vantage_log $VANTAGE_LOG_LEVEL_CRITICAL "health_check" \
         "Disabling critically failed module $module_name"
     
     # Remove from loaded modules
-    unset SENTINEL_LOADED_MODULES["$module_name"]
+    unset VANTAGE_LOADED_MODULES["$module_name"]
     
     # Try to unload functions
     _unload_module_functions "$module_name"
     
     # Create a quarantine marker
-    local quarantine_file="$SENTINEL_HEALTH_CHECK_DIR/quarantine_$module_name"
+    local quarantine_file="$VANTAGE_HEALTH_CHECK_DIR/quarantine_$module_name"
     echo "$(date): Module quarantined due to critical failures" > "$quarantine_file"
     
     # Notify user
     echo -e "${RED}CRITICAL: Module '$module_name' has been disabled due to repeated failures${NC}" >&2
-    echo -e "${YELLOW}Please check logs in $SENTINEL_HEALTH_CHECK_DIR for details${NC}" >&2
+    echo -e "${YELLOW}Please check logs in $VANTAGE_HEALTH_CHECK_DIR for details${NC}" >&2
 }
 
 # Module-specific health check functions
 _check_logging_health() {
     # Check if log directory is accessible
-    [[ -d "$SENTINEL_LOG_DIR" && -w "$SENTINEL_LOG_DIR" ]] || return 1
+    [[ -d "$VANTAGE_LOG_DIR" && -w "$VANTAGE_LOG_DIR" ]] || return 1
     
     # Check if logging function exists
-    declare -f sentinel_log >/dev/null || return 1
+    declare -f vantage_log >/dev/null || return 1
     
     return 0
 }
 
 _check_config_cache_health() {
     # Check cache directory
-    local cache_dir="${SENTINEL_CONFIG_CACHE_DIR:-$HOME/.cache/sentinel/config}"
+    local cache_dir="${VANTAGE_CONFIG_CACHE_DIR:-$HOME/.cache/vantage/config}"
     [[ -d "$cache_dir" && -w "$cache_dir" ]] || return 1
     
     # Check cache size
@@ -377,7 +377,7 @@ _check_security_health() {
     declare -f _check_command_safety >/dev/null || return 1
     
     # Check security log
-    local security_log="$HOME/.sentinel/security.log"
+    local security_log="$HOME/.vantage/security.log"
     if [[ -f "$security_log" ]]; then
         # Check for recent security violations
         local recent_violations=$(tail -100 "$security_log" 2>/dev/null | grep -c "VIOLATION" || echo 0)
@@ -392,11 +392,11 @@ _check_ml_module_health() {
     command -v python3 >/dev/null || return 1
     
     # Check ML cache directory
-    local ml_cache="$HOME/.cache/sentinel/ml"
+    local ml_cache="$HOME/.cache/vantage/ml"
     [[ -d "$ml_cache" ]] || mkdir -p "$ml_cache" 2>/dev/null || return 1
     
     # Check if ML model files exist
-    local model_dir="${SENTINEL_ML_MODEL_DIR:-$HOME/.local/share/sentinel/models}"
+    local model_dir="${VANTAGE_ML_MODEL_DIR:-$HOME/.local/share/vantage/models}"
     [[ -d "$model_dir" ]] || return 1
     
     return 0
@@ -424,7 +424,7 @@ _check_osint_module_health() {
 
 _check_fuzzy_correction_health() {
     # Check if fuzzy correction is not consuming too much memory
-    local fuzzy_cache_size=$(set | grep -c "SENTINEL_FUZZY_" 2>/dev/null || echo 0)
+    local fuzzy_cache_size=$(set | grep -c "VANTAGE_FUZZY_" 2>/dev/null || echo 0)
     [[ $fuzzy_cache_size -lt 1000 ]] || return 1
     
     return 0
@@ -432,7 +432,7 @@ _check_fuzzy_correction_health() {
 
 _check_autocomplete_health() {
     # Check if completion directory exists
-    local comp_dir="${SENTINEL_COMPLETION_DIR:-$HOME/.local/share/sentinel/completions}"
+    local comp_dir="${VANTAGE_COMPLETION_DIR:-$HOME/.local/share/vantage/completions}"
     [[ -d "$comp_dir" ]] || return 1
     
     # Check if not overloading bash completion
@@ -445,7 +445,7 @@ _check_autocomplete_health() {
 # Helper functions
 _check_module_file_exists() {
     local module_name="$1"
-    local module_path="${SENTINEL_MODULES_PATH:-$HOME/.bash_modules.d}"
+    local module_path="${VANTAGE_MODULES_PATH:-$HOME/.bash_modules.d}"
     
     [[ -f "$module_path/$module_name.module" || -f "$module_path/$module_name.sh" ]] || \
     find "$module_path" -name "$module_name.module" -o -name "$module_name.sh" 2>/dev/null | grep -q .
@@ -457,7 +457,7 @@ _get_module_memory_usage() {
     local var_count=0
     local func_size=0
 
-    var_count="$(set | grep -c "^SENTINEL_${module_name^^}_" 2>/dev/null || true)"
+    var_count="$(set | grep -c "^VANTAGE_${module_name^^}_" 2>/dev/null || true)"
     func_size="$(declare -f | grep -A 1000 "^[[:alnum:]_]*${module_name}[[:alnum:]_]*\\s*()" 2>/dev/null | wc -c)"
 
     var_count="${var_count//[^0-9]/}"
@@ -474,8 +474,8 @@ _get_module_dependencies() {
     
     # Find module file
     for ext in "module" "sh"; do
-        for path in "$SENTINEL_MODULES_PATH/$module_name.$ext" \
-                   $(find "$SENTINEL_MODULES_PATH" -name "$module_name.$ext" 2>/dev/null); do
+        for path in "$VANTAGE_MODULES_PATH/$module_name.$ext" \
+                   $(find "$VANTAGE_MODULES_PATH" -name "$module_name.$ext" 2>/dev/null); do
             if [[ -f "$path" ]]; then
                 module_file="$path"
                 break 2
@@ -484,7 +484,7 @@ _get_module_dependencies() {
     done
     
     if [[ -n "$module_file" ]]; then
-        grep "SENTINEL_MODULE_DEPENDENCIES=" "$module_file" 2>/dev/null | \
+        grep "VANTAGE_MODULE_DEPENDENCIES=" "$module_file" 2>/dev/null | \
             cut -d'"' -f2 2>/dev/null || echo ""
     fi
 }
@@ -495,7 +495,7 @@ _unload_module_functions() {
     # Unset module-specific variables
     while IFS= read -r var; do
         unset "$var" 2>/dev/null || true
-    done < <(set | grep "^SENTINEL_${module_name^^}_" | cut -d= -f1)
+    done < <(set | grep "^VANTAGE_${module_name^^}_" | cut -d= -f1)
     
     # Note: We cannot truly unset functions in bash, but we can override them
     # This is a limitation of bash - functions cannot be fully unloaded
@@ -517,13 +517,13 @@ _is_valid_health_module_name() {
 }
 
 _save_health_status() {
-    local status_file="$SENTINEL_HEALTH_CHECK_DIR/module_status.dat"
+    local status_file="$VANTAGE_HEALTH_CHECK_DIR/module_status.dat"
     
     # Save current status
     {
-        for module in "${!SENTINEL_MODULE_HEALTH_STATUS[@]}"; do
+        for module in "${!VANTAGE_MODULE_HEALTH_STATUS[@]}"; do
             _is_valid_health_module_name "$module" || continue
-            echo "${module}|${SENTINEL_MODULE_HEALTH_STATUS[$module]}|${SENTINEL_MODULE_LAST_CHECK[$module]:-0}"
+            echo "${module}|${VANTAGE_MODULE_HEALTH_STATUS[$module]}|${VANTAGE_MODULE_LAST_CHECK[$module]:-0}"
         done
     } > "$status_file.tmp"
     
@@ -535,9 +535,9 @@ _start_periodic_health_check() {
     # Note: This is a simple implementation. For production, consider using systemd timers or cron
     
     # Check if we should run in background
-    if [[ "${SENTINEL_HEALTH_CHECK_BACKGROUND:-1}" == "1" ]]; then
+    if [[ "${VANTAGE_HEALTH_CHECK_BACKGROUND:-1}" == "1" ]]; then
         # Create a marker file to track background process
-        local marker_file="$SENTINEL_HEALTH_CHECK_DIR/periodic_check.pid"
+        local marker_file="$VANTAGE_HEALTH_CHECK_DIR/periodic_check.pid"
         
         # Check if already running
         if [[ -f "$marker_file" ]]; then
@@ -553,7 +553,7 @@ _start_periodic_health_check() {
             echo $$ > "$marker_file"
             
             while true; do
-                sleep "$SENTINEL_HEALTH_CHECK_INTERVAL"
+                sleep "$VANTAGE_HEALTH_CHECK_INTERVAL"
                 
                 # Run health check
                 check_all_modules_health >/dev/null 2>&1
@@ -565,25 +565,25 @@ _start_periodic_health_check() {
             rm -f "$marker_file"
         ) &
         
-        sentinel_log $SENTINEL_LOG_LEVEL_INFO "health_check" \
-            "Started background health monitoring (PID: $!, interval: ${SENTINEL_HEALTH_CHECK_INTERVAL}s)"
+        vantage_log $VANTAGE_LOG_LEVEL_INFO "health_check" \
+            "Started background health monitoring (PID: $!, interval: ${VANTAGE_HEALTH_CHECK_INTERVAL}s)"
     fi
 }
 
 # Command-line interface
 health_check_status() {
-    echo "SENTINEL Module Health Status"
+    echo "VANTAGE Module Health Status"
     echo "============================"
     echo
     printf "%-30s %-10s %-20s %-10s\n" "Module" "Status" "Last Check" "Failures"
     printf "%-30s %-10s %-20s %-10s\n" "------" "------" "----------" "--------"
     
-    for module in $(echo "${!SENTINEL_MODULE_HEALTH_STATUS[@]}" | tr ' ' '\n' | sort); do
+    for module in $(echo "${!VANTAGE_MODULE_HEALTH_STATUS[@]}" | tr ' ' '\n' | sort); do
         _is_valid_health_module_name "$module" || continue
-        local status=${SENTINEL_MODULE_HEALTH_STATUS[$module]}
+        local status=${VANTAGE_MODULE_HEALTH_STATUS[$module]}
         local status_text=$(_health_status_to_text $status)
-        local last_check=${SENTINEL_MODULE_LAST_CHECK[$module]:-0}
-        local failures=${SENTINEL_MODULE_FAILURE_COUNT[$module]:-0}
+        local last_check=${VANTAGE_MODULE_LAST_CHECK[$module]:-0}
+        local failures=${VANTAGE_MODULE_FAILURE_COUNT[$module]:-0}
         
         # Format last check time
         local last_check_text="Never"
@@ -617,8 +617,8 @@ health_check_status() {
     
     # Show recovery attempts if any
     local has_recovery=0
-    for module in "${!SENTINEL_MODULE_RECOVERY_ATTEMPTS[@]}"; do
-        local attempts=${SENTINEL_MODULE_RECOVERY_ATTEMPTS[$module]}
+    for module in "${!VANTAGE_MODULE_RECOVERY_ATTEMPTS[@]}"; do
+        local attempts=${VANTAGE_MODULE_RECOVERY_ATTEMPTS[$module]}
         if [[ $attempts -gt 0 ]]; then
             [[ $has_recovery -eq 0 ]] && echo "Recovery Attempts:" && has_recovery=1
             echo "  $module: $attempts attempts"
@@ -626,8 +626,8 @@ health_check_status() {
     done
     
     # Show quarantined modules
-    if [[ -d "$SENTINEL_HEALTH_CHECK_DIR" ]]; then
-        local quarantined=$(find "$SENTINEL_HEALTH_CHECK_DIR" -name "quarantine_*" 2>/dev/null)
+    if [[ -d "$VANTAGE_HEALTH_CHECK_DIR" ]]; then
+        local quarantined=$(find "$VANTAGE_HEALTH_CHECK_DIR" -name "quarantine_*" 2>/dev/null)
         if [[ -n "$quarantined" ]]; then
             echo
             echo "Quarantined Modules:"
@@ -657,14 +657,14 @@ health_check() {
             fi
             ;;
         enable)
-            SENTINEL_HEALTH_CHECK_ENABLED=1
+            VANTAGE_HEALTH_CHECK_ENABLED=1
             _start_periodic_health_check
             echo "Health monitoring enabled"
             ;;
         disable)
-            SENTINEL_HEALTH_CHECK_ENABLED=0
+            VANTAGE_HEALTH_CHECK_ENABLED=0
             # Stop background process if running
-            local marker_file="$SENTINEL_HEALTH_CHECK_DIR/periodic_check.pid"
+            local marker_file="$VANTAGE_HEALTH_CHECK_DIR/periodic_check.pid"
             if [[ -f "$marker_file" ]]; then
                 local pid=$(cat "$marker_file" 2>/dev/null)
                 [[ -n "$pid" ]] && kill "$pid" 2>/dev/null || true
@@ -683,11 +683,11 @@ health_check() {
         clear)
             # Clear quarantine for a module
             if [[ -n "$2" ]]; then
-                local quarantine_file="$SENTINEL_HEALTH_CHECK_DIR/quarantine_$2"
+                local quarantine_file="$VANTAGE_HEALTH_CHECK_DIR/quarantine_$2"
                 if [[ -f "$quarantine_file" ]]; then
                     rm -f "$quarantine_file"
-                    SENTINEL_MODULE_FAILURE_COUNT["$2"]=0
-                    SENTINEL_MODULE_RECOVERY_ATTEMPTS["$2"]=0
+                    VANTAGE_MODULE_FAILURE_COUNT["$2"]=0
+                    VANTAGE_MODULE_RECOVERY_ATTEMPTS["$2"]=0
                     echo "Cleared quarantine for module: $2"
                 else
                     echo "Module $2 is not quarantined"
@@ -712,4 +712,4 @@ export -f check_all_modules_health
 export -f register_health_check
 
 # Log initialization
-sentinel_log $SENTINEL_LOG_LEVEL_INFO "health_check" "Health check module initialized"
+vantage_log $VANTAGE_LOG_LEVEL_INFO "health_check" "Health check module initialized"

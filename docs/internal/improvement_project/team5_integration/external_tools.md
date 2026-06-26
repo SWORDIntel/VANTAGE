@@ -1,8 +1,8 @@
-# SENTINEL External Tools Integration
+# VANTAGE External Tools Integration
 
 ## Overview
 
-The External Tools Integration module provides a secure, extensible plugin system for integrating third-party tools into the SENTINEL environment. It supports tool discovery, registration, sandboxing, and Model Context Protocol (MCP) integration for AI-assisted operations.
+The External Tools Integration module provides a secure, extensible plugin system for integrating third-party tools into the VANTAGE environment. It supports tool discovery, registration, sandboxing, and Model Context Protocol (MCP) integration for AI-assisted operations.
 
 ## Architecture
 
@@ -16,7 +16,7 @@ The External Tools Integration module provides a secure, extensible plugin syste
 ### Directory Structure
 
 ```
-~/.sentinel/tools/
+~/.vantage/tools/
 ├── registry.json          # Tool and plugin registry
 ├── sandbox/              # Sandboxed tool wrappers
 ├── plugins/              # Plugin extensions
@@ -32,13 +32,13 @@ Automatically discover and register tools from system PATH:
 
 ```bash
 # Discover all tools in PATH
-sentinel_tool_discover
+vantage_tool_discover
 
 # Discover specific tool type
-sentinel_tool_discover /usr/local/bin vcs
+vantage_tool_discover /usr/local/bin vcs
 
 # Register a specific tool
-sentinel_tool_register git /usr/bin/git '{"type": "vcs", "category": "development"}'
+vantage_tool_register git /usr/bin/git '{"type": "vcs", "category": "development"}'
 ```
 
 ### 2. Security Sandboxing
@@ -51,10 +51,10 @@ All registered tools can be executed through a security sandbox that:
 
 ```bash
 # Enable sandboxing (default)
-export SENTINEL_TOOLS_SANDBOX_ENABLED=1
+export VANTAGE_TOOLS_SANDBOX_ENABLED=1
 
 # Execute tool through sandbox
-sentinel_tool_execute git status
+vantage_tool_execute git status
 ```
 
 ### 3. Plugin System
@@ -63,10 +63,10 @@ Extend functionality with plugins:
 
 ```bash
 # Load a plugin
-sentinel_plugin_load git_integration
+vantage_plugin_load git_integration
 
 # List loaded plugins
-jq '.plugins' ~/.sentinel/tools/registry.json
+jq '.plugins' ~/.vantage/tools/registry.json
 ```
 
 ### 4. MCP (Model Context Protocol) Integration
@@ -75,9 +75,9 @@ Enable AI models to interact with tools:
 
 ```bash
 # Enable MCP support
-export SENTINEL_MCP_ENABLED=1
+export VANTAGE_MCP_ENABLED=1
 
-# MCP will create a socket at ~/.sentinel/tools/mcp.sock
+# MCP will create a socket at ~/.vantage/tools/mcp.sock
 # AI models can send JSON requests to execute tools
 ```
 
@@ -100,13 +100,13 @@ Enhanced Git workflows with security features:
 
 ```bash
 # Smart git operations
-sentinel_git_status        # Enhanced status display
-sentinel_git_commit        # Commit with templates
-sentinel_git_workflow feature my-feature  # Feature branch workflow
-sentinel_git_analyze       # Repository analysis
+vantage_git_status        # Enhanced status display
+vantage_git_commit        # Commit with templates
+vantage_git_workflow feature my-feature  # Feature branch workflow
+vantage_git_analyze       # Repository analysis
 
 # Git hooks integration
-sentinel_git_hooks_init    # Install security hooks
+vantage_git_hooks_init    # Install security hooks
 ```
 
 ### Docker Integration Plugin
@@ -115,16 +115,16 @@ Secure Docker container management:
 
 ```bash
 # Security scanning
-sentinel_docker_scan nginx:latest
+vantage_docker_scan nginx:latest
 
 # Safe container execution
-sentinel_docker_run nginx  # Runs with security options
+vantage_docker_run nginx  # Runs with security options
 
 # Container monitoring
-sentinel_docker_monitor    # Real-time container stats
+vantage_docker_monitor    # Real-time container stats
 
 # Cleanup utilities
-sentinel_docker_cleanup safe  # Remove stopped containers
+vantage_docker_cleanup safe  # Remove stopped containers
 ```
 
 ### Kubernetes Integration Plugin
@@ -133,20 +133,20 @@ Kubernetes cluster management with security focus:
 
 ```bash
 # Context management
-sentinel_k8s_context list
-sentinel_k8s_context switch production
+vantage_k8s_context list
+vantage_k8s_context switch production
 
 # Security scanning
-sentinel_k8s_scan all      # Comprehensive security scan
+vantage_k8s_scan all      # Comprehensive security scan
 
 # Safe kubectl operations
-sentinel_kubectl delete pod my-pod  # Prompts for confirmation
+vantage_kubectl delete pod my-pod  # Prompts for confirmation
 
 # Resource monitoring
-sentinel_k8s_monitor pods  # Real-time pod monitoring
+vantage_k8s_monitor pods  # Real-time pod monitoring
 
 # Troubleshooting
-sentinel_k8s_debug my-pod  # Comprehensive pod debugging
+vantage_k8s_debug my-pod  # Comprehensive pod debugging
 ```
 
 ## Configuration
@@ -155,14 +155,14 @@ sentinel_k8s_debug my-pod  # Comprehensive pod debugging
 
 ```bash
 # External tools configuration
-SENTINEL_TOOLS_DIR="$HOME/.sentinel/tools"
-SENTINEL_TOOLS_SANDBOX_ENABLED=1
-SENTINEL_TOOLS_VERIFICATION=1
-SENTINEL_TOOLS_ALLOWED_COMMANDS="git,docker,kubectl,terraform,ansible"
+VANTAGE_TOOLS_DIR="$HOME/.vantage/tools"
+VANTAGE_TOOLS_SANDBOX_ENABLED=1
+VANTAGE_TOOLS_VERIFICATION=1
+VANTAGE_TOOLS_ALLOWED_COMMANDS="git,docker,kubectl,terraform,ansible"
 
 # MCP configuration
-SENTINEL_MCP_ENABLED=1
-SENTINEL_MCP_TIMEOUT=30
+VANTAGE_MCP_ENABLED=1
+VANTAGE_MCP_TIMEOUT=30
 
 # Plugin-specific settings
 DOCKER_SCAN_ENABLED=1
@@ -174,7 +174,7 @@ K8S_SECURITY_SCAN=1
 
 Register tools manually:
 ```bash
-sentinel_tool_register terraform /usr/local/bin/terraform '{
+vantage_tool_register terraform /usr/local/bin/terraform '{
   "type": "infrastructure",
   "category": "iac",
   "version": "1.5.0"
@@ -186,9 +186,9 @@ sentinel_tool_register terraform /usr/local/bin/terraform '{
 Create convenient aliases for tools:
 ```bash
 # Create alias with default arguments
-sentinel_tool_alias tf terraform
-sentinel_tool_alias k kubectl
-sentinel_tool_alias d docker
+vantage_tool_alias tf terraform
+vantage_tool_alias k kubectl
+vantage_tool_alias d docker
 ```
 
 ## Security Features
@@ -219,15 +219,15 @@ sentinel_tool_alias d docker
 
 ```bash
 #!/usr/bin/env bash
-# SENTINEL - My Custom Plugin
+# VANTAGE - My Custom Plugin
 # Version: 1.0.0
 # Description: Plugin description
 # Dependencies: external_tools
 
 # Plugin metadata
-SENTINEL_PLUGIN_NAME="my_plugin"
-SENTINEL_PLUGIN_VERSION="1.0.0"
-SENTINEL_PLUGIN_DESCRIPTION="My custom plugin"
+VANTAGE_PLUGIN_NAME="my_plugin"
+VANTAGE_PLUGIN_VERSION="1.0.0"
+VANTAGE_PLUGIN_DESCRIPTION="My custom plugin"
 
 # Plugin functions
 my_plugin_function() {
@@ -249,10 +249,10 @@ my_plugin_mcp_handler() {
 # Initialize plugin
 my_plugin_init() {
     # Register tools
-    sentinel_tool_register "mytool" "/usr/bin/mytool"
+    vantage_tool_register "mytool" "/usr/bin/mytool"
     
     # Register MCP handler
-    echo "myplugin:my_plugin_mcp_handler" >> "$SENTINEL_TOOLS_DIR/mcp_handlers.txt"
+    echo "myplugin:my_plugin_mcp_handler" >> "$VANTAGE_TOOLS_DIR/mcp_handlers.txt"
 }
 
 # Export functions
@@ -264,8 +264,8 @@ my_plugin_init
 
 ### Loading Custom Plugins
 
-1. Place plugin file in `~/.sentinel/tools/plugins/`
-2. Load with: `sentinel_plugin_load my_plugin`
+1. Place plugin file in `~/.vantage/tools/plugins/`
+2. Load with: `vantage_plugin_load my_plugin`
 
 ## Best Practices
 
@@ -288,28 +288,28 @@ my_plugin_init
 
 Enable debug logging:
 ```bash
-export SENTINEL_MODULE_DEBUG=1
-export SENTINEL_LOG_LEVEL=debug
+export VANTAGE_MODULE_DEBUG=1
+export VANTAGE_LOG_LEVEL=debug
 ```
 
 ### Registry Corruption
 
 Reset registry:
 ```bash
-mv ~/.sentinel/tools/registry.json ~/.sentinel/tools/registry.json.backup
-echo '{"tools": {}, "plugins": {}, "version": "1.0.0"}' > ~/.sentinel/tools/registry.json
+mv ~/.vantage/tools/registry.json ~/.vantage/tools/registry.json.backup
+echo '{"tools": {}, "plugins": {}, "version": "1.0.0"}' > ~/.vantage/tools/registry.json
 ```
 
 ## API Reference
 
 ### Core Functions
 
-- `sentinel_tool_discover`: Discover tools in PATH
-- `sentinel_tool_register`: Register a tool
-- `sentinel_tool_execute`: Execute registered tool
-- `sentinel_tool_list`: List registered tools
-- `sentinel_plugin_load`: Load a plugin
-- `sentinel_tool_alias`: Create tool alias
+- `vantage_tool_discover`: Discover tools in PATH
+- `vantage_tool_register`: Register a tool
+- `vantage_tool_execute`: Execute registered tool
+- `vantage_tool_list`: List registered tools
+- `vantage_plugin_load`: Load a plugin
+- `vantage_tool_alias`: Create tool alias
 
 ### MCP Protocol
 

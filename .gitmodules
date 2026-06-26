@@ -1,0 +1,3 @@
+[submodule "vendor/QIHSE"]
+	path = vendor/QIHSE
+	url = https://github.com/SWORDIntel/QIHSE.git

@@ -1,4 +1,4 @@
-# SENTINEL Development History
+# VANTAGE Development History
 
 ## Project Timeline
 
@@ -279,4 +279,4 @@ Planned: Full plugin ecosystem
 
 See `.claude/improvements/future_enhancements.md` for detailed plans.
 
-Remember: SENTINEL's history shows evolution from a simple bash customization to a comprehensive security-focused shell enhancement framework. Each decision was driven by real-world usage and user feedback.
+Remember: VANTAGE's history shows evolution from a simple bash customization to a comprehensive security-focused shell enhancement framework. Each decision was driven by real-world usage and user feedback.

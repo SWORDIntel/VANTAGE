@@ -1,0 +1,143 @@
+#!/usr/bin/env bash
+### BEGIN MODULE INFO
+# Name:                  vantage_ml
+# Short-Description:     ML-powered command suggestions and autolearning
+# Description:           Provides machine learning powered command suggestions and
+#                        autolearning based on command history and usage patterns.
+# Author:                John
+# URL:                   https://github.com/SWORDIntel/VANTAGE/
+# Version:               1.0.0
+# Stability:             stable
+# Tags:                  ml, suggestions, autolearn, productivity
+# Provides:              ml_command_suggestions
+# Requires:              python3, markovify
+# Conflicts:             none
+### END MODULE INFO
+
+# Check if module is enabled in bashrc.postcustom
+if [[ "${VANTAGE_ML_ENABLED:-0}" != "1" ]]; then
+    # Silently check if module is disabled
+    # No need to show this message as it's documented elsewhere
+    # End of silent check
+    return 0
+fi
+
+# Check dependencies
+if command -v python3 &>/dev/null; then
+    if python3 -c "import markovify" &>/dev/null; then
+        # Module is already enabled via bashrc.postcustom
+        true
+    else
+        if [[ "${VANTAGE_VERBOSE:-0}" == "1" ]] || [[ "${VANTAGE_DEBUG:-0}" == "1" ]]; then
+            echo "Warning: markovify not installed. Install with: pip install markovify"
+            echo "To enable VANTAGE ML capabilities, install required packages."
+        fi
+        return 0
+    fi
+else
+    if [[ "${VANTAGE_VERBOSE:-0}" == "1" ]] || [[ "${VANTAGE_DEBUG:-0}" == "1" ]]; then
+        echo "Warning: python3 not found. VANTAGE ML capabilities disabled."
+    fi
+    return 0
+fi
+
+# Check for OpenVINO
+VANTAGE_OPENVINO_AVAILABLE=0
+if python3 -c "import openvino" &>/dev/null; then
+    VANTAGE_OPENVINO_AVAILABLE=1
+    echo "OpenVINO detected! Hardware acceleration enabled for VANTAGE ML."
+fi
+
+# Ensure the models directory exists
+if [ ! -d "${HOME}/models" ]; then
+    mkdir -p "${HOME}/models"
+    echo "Created ${HOME}/models directory"
+fi
+
+# Path to ML scripts - use installed script if available
+CONTRIB_ML_DIR="$(dirname "$(dirname "${BASH_SOURCE[0]}")")/contrib"
+INSTALLED_ML_DIR="${HOME}"
+
+# Check for installed version first
+if [ -f "${INSTALLED_ML_DIR}/vantage_autolearn.py" ]; then
+    VANTAGE_ML_DIR="${INSTALLED_ML_DIR}"
+else
+    VANTAGE_ML_DIR="${CONTRIB_ML_DIR}"
+fi
+
+# Initial setup and training
+function vantage_ml_setup() {
+    if [ $VANTAGE_ML_ENABLED -eq 1 ]; then
+        # Check if script exists
+        if [ ! -f "$VANTAGE_ML_DIR/vantage_autolearn.py" ]; then
+            echo "Error: vantage_autolearn.py not found at $VANTAGE_ML_DIR"
+            echo "Please run the VANTAGE installer to set up the ML module."
+            return 1
+        fi
+
+        # Initial training from bash history
+        python3 "$VANTAGE_ML_DIR/vantage_autolearn.py" --learn-history --train
+
+        # Source the bash hook
+        eval "$(python3 "$VANTAGE_ML_DIR/vantage_autolearn.py" --setup)"
+
+        echo "VANTAGE ML suggestions activated with auto-learning capability."
+        if [ $VANTAGE_OPENVINO_AVAILABLE -eq 1 ]; then
+            echo "Using hardware acceleration for faster suggestions."
+        fi
+    else
+        echo "VANTAGE ML disabled due to missing dependencies."
+        echo "Install markovify with: pip install markovify"
+    fi
+}
+
+# Manually trigger training
+function vantage_ml_train() {
+    if [ $VANTAGE_ML_ENABLED -eq 1 ]; then
+        # Check if script exists
+        if [ ! -f "$VANTAGE_ML_DIR/vantage_autolearn.py" ]; then
+            echo "Error: vantage_autolearn.py not found at $VANTAGE_ML_DIR"
+            echo "Please run the VANTAGE installer to set up the ML module."
+            return 1
+        fi
+
+        python3 "$VANTAGE_ML_DIR/vantage_autolearn.py" --train
+        echo "VANTAGE ML model retrained with latest command history."
+    else
+        echo "VANTAGE ML disabled. Install dependencies first."
+    fi
+}
+
+# Show ML stats
+function vantage_ml_stats() {
+    if [ $VANTAGE_ML_ENABLED -eq 1 ]; then
+        if [ -f ~/.vantage_stats.json ]; then
+            echo "VANTAGE ML command frequency statistics:"
+            python3 -c "
+import json
+with open('$HOME/.vantage_stats.json') as f:
+    stats = json.load(f)
+sorted_stats = sorted(stats.items(), key=lambda x: x[1], reverse=True)
+for cmd, count in sorted_stats[:20]:
+    print(f'{cmd:20} {count:5}')
+"
+        else
+            echo "No statistics available yet. Use more commands to generate data."
+        fi
+    else
+        echo "VANTAGE ML disabled. Install dependencies first."
+    fi
+}
+
+# Register completion for relevant functions
+for cmd in findlarge find_big_dirs find_recent find_by_ext; do
+    if [ $VANTAGE_ML_ENABLED -eq 1 ]; then
+        # Check if autolearn script exists before setting up completion
+        if [ -f "$VANTAGE_ML_DIR/vantage_autolearn.py" ]; then
+            complete -C "python3 $VANTAGE_ML_DIR/vantage_autolearn.py --suggest" $cmd
+        fi
+    fi
+done
+
+# Auto-setup when module loads
+vantage_ml_setup

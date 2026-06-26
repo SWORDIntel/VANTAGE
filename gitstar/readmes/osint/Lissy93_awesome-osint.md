@@ -877,7 +877,7 @@ algorithms, knowledgebase and AI technology.
 * [ViaMichelin](http://www.viamichelin.com)
 * [Yahoo Maps](https://maps.yahoo.com)
 * [Zeemaps](https://www.zeemaps.com)
-* [Sentinel Hub](https://www.sentinel-hub.com/explore/sentinelplayground/)
+* [Vantage Hub](https://www.vantage-hub.com/explore/vantageplayground/)
 * [Maxar](https://discover.digitalglobe.com/)
 * [USGS (EarthExplorer)](https://earthexplorer.usgs.gov/)
 * [Zoom Earth](https://zoom.earth/)
@@ -1207,7 +1207,7 @@ algorithms, knowledgebase and AI technology.
 
 * [Gephi](https://gephi.org) - is an open-source graph and network visualization software.
 * [ORA](http://www.casos.cs.cmu.edu/projects/ora/software.php)
-* [Sentinel Visualizer](http://www.fmsasg.com)
+* [Vantage Visualizer](http://www.fmsasg.com)
 * [Wynyard Group](https://wynyardgroup.com)
 * [Visual Investigative Scenarios](https://vis.occrp.org)
 

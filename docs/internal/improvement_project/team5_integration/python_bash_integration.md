@@ -1,15 +1,15 @@
-# Python/Bash Integration for SENTINEL
+# Python/Bash Integration for VANTAGE
 
 ## Overview
 
-This document describes the unified Python/Bash integration system implemented for SENTINEL, providing seamless interoperability between bash modules and Python components.
+This document describes the unified Python/Bash integration system implemented for VANTAGE, providing seamless interoperability between bash modules and Python components.
 
 ## Architecture
 
 ### Core Components
 
 1. **python_integration.module** - Main bash module providing integration infrastructure
-2. **sentinel_integration.py** - Python library for accessing bash functionality
+2. **vantage_integration.py** - Python library for accessing bash functionality
 3. **Shared State Management** - Unified state storage accessible from both languages
 4. **IPC Mechanism** - Inter-process communication using named pipes
 5. **Configuration System** - JSON-based shared configuration
@@ -18,14 +18,14 @@ This document describes the unified Python/Bash integration system implemented f
 ### Directory Structure
 
 ```
-~/.config/sentinel/
+~/.config/vantage/
 ├── state/          # Shared state files
 ├── config/         # Configuration files
 ├── ipc/            # IPC named pipes
 ├── lib/            # Python integration library
 └── venv/           # Python virtual environment
 
-~/.local/share/sentinel/
+~/.local/share/vantage/
 └── logs/           # Unified logging
 ```
 
@@ -38,24 +38,24 @@ Both bash and Python can read/write shared state:
 **Bash:**
 ```bash
 # Set state
-sentinel_state_set "key" "value"
+vantage_state_set "key" "value"
 
 # Get state
-value=$(sentinel_state_get "key")
+value=$(vantage_state_get "key")
 
 # Delete state
-sentinel_state_delete "key"
+vantage_state_delete "key"
 ```
 
 **Python:**
 ```python
-from sentinel_integration import sentinel
+from vantage_integration import vantage
 
 # Set state
-sentinel.set_state('key', 'value')
+vantage.set_state('key', 'value')
 
 # Get state
-value = sentinel.get_state('key')
+value = vantage.get_state('key')
 ```
 
 ### 2. Shared Configuration
@@ -65,19 +65,19 @@ Configuration is stored in JSON format and accessible from both languages:
 **Bash:**
 ```bash
 # Set configuration
-sentinel_config_set "ml.enabled" "true"
+vantage_config_set "ml.enabled" "true"
 
 # Get configuration
-enabled=$(sentinel_config_get "ml.enabled")
+enabled=$(vantage_config_get "ml.enabled")
 ```
 
 **Python:**
 ```python
 # Set configuration
-sentinel.set_config('ml.enabled', True)
+vantage.set_config('ml.enabled', True)
 
 # Get configuration
-enabled = sentinel.get_config('ml.enabled', False)
+enabled = vantage.get_config('ml.enabled', False)
 ```
 
 ### 3. Inter-Process Communication (IPC)
@@ -87,22 +87,22 @@ Bidirectional communication between bash and Python processes:
 **Bash:**
 ```bash
 # Create channel
-sentinel_ipc_create_channel "mychannel"
+vantage_ipc_create_channel "mychannel"
 
 # Send message
-sentinel_ipc_send "mychannel" "Hello from bash"
+vantage_ipc_send "mychannel" "Hello from bash"
 
 # Receive message (with 5-second timeout)
-response=$(sentinel_ipc_receive "mychannel" 5)
+response=$(vantage_ipc_receive "mychannel" 5)
 ```
 
 **Python:**
 ```python
 # Send message
-sentinel.ipc_send('mychannel', 'Hello from Python')
+vantage.ipc_send('mychannel', 'Hello from Python')
 
 # Receive message
-message = sentinel.ipc_receive('mychannel', timeout=5)
+message = vantage.ipc_receive('mychannel', timeout=5)
 ```
 
 ### 4. Cross-Language Execution
@@ -112,7 +112,7 @@ Execute bash commands from Python and Python scripts from bash:
 **From Python:**
 ```python
 # Execute bash command
-result = sentinel.bash_exec('ls -la')
+result = vantage.bash_exec('ls -la')
 if result['success']:
     print(result['stdout'])
 else:
@@ -122,7 +122,7 @@ else:
 **From Bash:**
 ```bash
 # Execute Python script with error handling
-sentinel_python_exec "/path/to/script.py" arg1 arg2
+vantage_python_exec "/path/to/script.py" arg1 arg2
 ```
 
 ### 5. Python Module Management
@@ -131,10 +131,10 @@ Integrated Python module management with virtual environment:
 
 ```bash
 # Install Python module
-sentinel_python_module_install "numpy"
+vantage_python_module_install "numpy"
 
 # List installed modules
-sentinel_python_module_list
+vantage_python_module_list
 ```
 
 ### 6. ML Component Integration
@@ -143,7 +143,7 @@ Automatic state synchronization for ML components:
 
 ```bash
 # Sync ML component state
-sentinel_ml_sync_state "autolearn"
+vantage_ml_sync_state "autolearn"
 
 # Full ML sync
 ml-sync
@@ -161,7 +161,7 @@ ml-status
 # my_module.module
 
 # Check if python_integration is loaded
-if ! declare -f sentinel_state_get &>/dev/null; then
+if ! declare -f vantage_state_get &>/dev/null; then
     echo "Error: python_integration module required"
     return 1
 fi
@@ -171,13 +171,13 @@ process_data() {
     local input="$1"
     
     # Store input in shared state
-    sentinel_state_set "process_input" "$input"
+    vantage_state_set "process_input" "$input"
     
     # Execute Python processor
-    result=$(sentinel_python_exec "${SENTINEL_CONFIG_DIR}/processor.py")
+    result=$(vantage_python_exec "${VANTAGE_CONFIG_DIR}/processor.py")
     
     # Get result from shared state
-    sentinel_state_get "process_result"
+    vantage_state_get "process_result"
 }
 ```
 
@@ -187,19 +187,19 @@ process_data() {
 #!/usr/bin/env python3
 # processor.py
 
-from sentinel_integration import sentinel
+from vantage_integration import vantage
 
 # Get input from bash
-input_data = sentinel.get_state('process_input')
+input_data = vantage.get_state('process_input')
 
 # Process data
 result = process_complex_data(input_data)
 
 # Execute bash command
-file_list = sentinel.bash_exec('find . -name "*.txt"')
+file_list = vantage.bash_exec('find . -name "*.txt"')
 
 # Store result for bash
-sentinel.set_state('process_result', result)
+vantage.set_state('process_result', result)
 ```
 
 ### Example 3: ML Component with State Sync
@@ -208,24 +208,24 @@ sentinel.set_state('process_result', result)
 #!/usr/bin/env python3
 # ml_component.py
 
-from sentinel_integration import sentinel
+from vantage_integration import vantage
 import json
 
 class MLComponent:
     def __init__(self):
         # Load configuration
-        self.enabled = sentinel.get_config('ml.enabled', False)
-        self.model_path = sentinel.get_config('ml.model_path', '~/models')
+        self.enabled = vantage.get_config('ml.enabled', False)
+        self.model_path = vantage.get_config('ml.model_path', '~/models')
         
     def train(self):
         # Get training data from bash history
-        history = sentinel.bash_exec('history | tail -1000')
+        history = vantage.bash_exec('history | tail -1000')
         
         # Train model...
         
         # Update state
-        sentinel.set_state('ml_last_training', str(time.time()))
-        sentinel.set_config('ml.model_version', '1.2.3')
+        vantage.set_state('ml_last_training', str(time.time()))
+        vantage.set_config('ml.model_version', '1.2.3')
 ```
 
 ## Error Handling
@@ -236,9 +236,9 @@ The integration provides consistent error handling across languages:
 
 ```bash
 # Errors are logged and displayed
-sentinel_python_exec "script.py" || {
+vantage_python_exec "script.py" || {
     echo "Python execution failed"
-    sentinel_log "error" "Failed to execute script.py"
+    vantage_log "error" "Failed to execute script.py"
 }
 ```
 
@@ -246,11 +246,11 @@ sentinel_python_exec "script.py" || {
 
 ```python
 try:
-    result = sentinel.bash_exec('complex_command')
+    result = vantage.bash_exec('complex_command')
     if not result['success']:
-        sentinel.logger.error(f"Command failed: {result['stderr']}")
+        vantage.logger.error(f"Command failed: {result['stderr']}")
 except Exception as e:
-    sentinel.logger.error(f"Execution error: {e}")
+    vantage.logger.error(f"Execution error: {e}")
 ```
 
 ## Performance Considerations
@@ -273,7 +273,7 @@ except Exception as e:
 
 1. Always check for python_integration module:
 ```bash
-if ! declare -f sentinel_state_get &>/dev/null; then
+if ! declare -f vantage_state_get &>/dev/null; then
     echo "Error: python_integration module required"
     return 1
 fi
@@ -282,16 +282,16 @@ fi
 2. Use state management for data exchange:
 ```bash
 # Instead of temp files
-sentinel_state_set "module_data" "$data"
+vantage_state_set "module_data" "$data"
 
 # Instead of environment variables
-value=$(sentinel_state_get "module_data")
+value=$(vantage_state_get "module_data")
 ```
 
 3. Leverage Python for complex operations:
 ```bash
 # Use Python for JSON processing
-result=$(sentinel_python_exec -c "
+result=$(vantage_python_exec -c "
 import json
 data = json.loads('$json_string')
 print(data['key'])
@@ -300,22 +300,22 @@ print(data['key'])
 
 ### Python Component Guidelines
 
-1. Always import sentinel_integration:
+1. Always import vantage_integration:
 ```python
-from sentinel_integration import sentinel
+from vantage_integration import vantage
 ```
 
 2. Use logging for debugging:
 ```python
-sentinel.logger.info("Processing started")
-sentinel.logger.error("An error occurred")
+vantage.logger.info("Processing started")
+vantage.logger.error("An error occurred")
 ```
 
 3. Handle missing bash commands gracefully:
 ```python
-result = sentinel.bash_exec('special_command')
+result = vantage.bash_exec('special_command')
 if result['returncode'] == 127:  # Command not found
-    sentinel.logger.warning("Command not available")
+    vantage.logger.warning("Command not available")
 ```
 
 ## Troubleshooting
@@ -335,7 +335,7 @@ if result['returncode'] == 127:  # Command not found
 
 3. **State not persisting**
    - Check directory permissions
-   - Verify SENTINEL_STATE_DIR is set correctly
+   - Verify VANTAGE_STATE_DIR is set correctly
 
 4. **Python module import errors**
    - Ensure virtual environment is activated
@@ -345,13 +345,13 @@ if result['returncode'] == 127:  # Command not found
 
 Enable debug logging:
 ```bash
-export SENTINEL_DEBUG=1
+export VANTAGE_DEBUG=1
 ```
 
 Check logs:
 ```bash
-tail -f ~/.local/share/sentinel/logs/sentinel.log
-tail -f ~/.local/share/sentinel/logs/python_integration.log
+tail -f ~/.local/share/vantage/logs/vantage.log
+tail -f ~/.local/share/vantage/logs/python_integration.log
 ```
 
 ## Future Enhancements
@@ -364,4 +364,4 @@ tail -f ~/.local/share/sentinel/logs/python_integration.log
 
 ## Conclusion
 
-The Python/Bash integration system provides a robust foundation for building sophisticated SENTINEL modules that leverage the strengths of both languages. By providing unified state management, configuration, IPC, and error handling, developers can focus on functionality rather than integration complexity.
+The Python/Bash integration system provides a robust foundation for building sophisticated VANTAGE modules that leverage the strengths of both languages. By providing unified state management, configuration, IPC, and error handling, developers can focus on functionality rather than integration complexity.

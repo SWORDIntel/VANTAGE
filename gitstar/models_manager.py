@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
 """
-SENTINEL Small Models Manager
+VANTAGE Small Models Manager
 ----------------------------
-Utility for managing and using small LLMs within SENTINEL.
+Utility for managing and using small LLMs within VANTAGE.
 
 This script provides functions to:
 1. List available downloaded models
 2. Run inference on downloaded models using llama.cpp Python bindings
-3. Integrate with other SENTINEL components
+3. Integrate with other VANTAGE components
 
 Usage:
   python3 models_manager.py --list
@@ -28,10 +28,10 @@ logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s [%(levelname)s] %(message)s'
 )
-logger = logging.getLogger("sentinel_models_manager")
+logger = logging.getLogger("vantage_models_manager")
 
 # Directory setup
-MODEL_DIR = os.path.expanduser("~/Documents/GitHub/SENTINEL/gitstar/models")
+MODEL_DIR = os.path.expanduser("~/Documents/GitHub/VANTAGE/gitstar/models")
 Path(MODEL_DIR).mkdir(parents=True, exist_ok=True)
 
 # Model configurations (prompt templates and parameters)
@@ -187,7 +187,7 @@ def main():
     # Make sure requirements are installed
     install_requirements()
     
-    parser = argparse.ArgumentParser(description="SENTINEL Small Models Manager")
+    parser = argparse.ArgumentParser(description="VANTAGE Small Models Manager")
     
     # Command group
     group = parser.add_mutually_exclusive_group(required=True)

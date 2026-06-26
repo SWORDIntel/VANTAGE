@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 ### BEGIN MODULE INFO
-# Name:                  SENTINEL Module: distcc
+# Name:                  VANTAGE Module: distcc
 # Short-Description:     Setup for distributed compilation with Distcc and Ccache
-# Description:           This SENTINEL module configures environment variables,
+# Description:           This VANTAGE module configures environment variables,
 #                        directories, and runtime paths for distributed builds
 #                        using Distcc and Ccache. Intended for environments
 #                        requiring performance and reproducibility in CI/CD
@@ -10,23 +10,23 @@
 # Author:                John
 
 # Prevent multiple loading
-[[ -n "${_SENTINEL_DISTCC_LOADED}" ]] && return 0
-export _SENTINEL_DISTCC_LOADED=1
+[[ -n "${_VANTAGE_DISTCC_LOADED}" ]] && return 0
+export _VANTAGE_DISTCC_LOADED=1
 # Email:                 intel@swordintelligence.airforce
-# URL:                   https://github.com/SWORDIntel/SENTINEL/
+# URL:                   https://github.com/SWORDIntel/VANTAGE/
 # Version:               1.0.0
 # Stability:             stable
 # Tags:                  compilation, distcc, ccache, distributed, optimization
-# Provides:              sentinel_distcc_environment
+# Provides:              vantage_distcc_environment
 # Requires:              distcc, ccache
 # Conflicts:             restricted_build_envs
 ### END MODULE INFO
 
 # Module metadata
-SENTINEL_MODULE_VERSION="1.0.0"
-SENTINEL_MODULE_DESCRIPTION="Configure environment for distributed compilation with Distcc and Ccache"
-SENTINEL_MODULE_AUTHOR="John"
-SENTINEL_MODULE_DEPENDENCIES=""
+VANTAGE_MODULE_VERSION="1.0.0"
+VANTAGE_MODULE_DESCRIPTION="Configure environment for distributed compilation with Distcc and Ccache"
+VANTAGE_MODULE_AUTHOR="John"
+VANTAGE_MODULE_DEPENDENCIES=""
 
 # Check if we're being sourced
 if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
@@ -145,7 +145,7 @@ distcc_setup() {
     done
     
     # Report results - only in verbose/debug mode to prevent startup hang
-    if [[ "${SENTINEL_VERBOSE:-0}" == "1" || "${SENTINEL_DEBUG:-0}" == "1" || "${SENTINEL_DEBUG_MODULES:-0}" == "1" ]]; then
+    if [[ "${VANTAGE_VERBOSE:-0}" == "1" || "${VANTAGE_DEBUG:-0}" == "1" || "${VANTAGE_DEBUG_MODULES:-0}" == "1" ]]; then
         if [[ -n "$distcc_found" || -n "$ccache_found" ]]; then
             echo -e "${GREEN}Compiler wrapper directories added to PATH:${NC}"
             [[ -n "$distcc_found" ]] && echo -e "  Distcc wrappers: $distcc_found"
@@ -276,7 +276,7 @@ distcc_monitor() {
 # Function to display help information
 distcc_help() {
     cat << EOF
-${GREEN}SENTINEL Distcc Module Help${NC}
+${GREEN}VANTAGE Distcc Module Help${NC}
 ==============================
 
 ${BLUE}Available Commands:${NC}
@@ -358,7 +358,7 @@ alias automake-distcc='automake_env gnu'
 alias cmake-distcc='automake_env cmake'
 
 # Display module loaded message
-if [[ "${SENTINEL_QUIET_MODE:-0}" != "1" && "${SENTINEL_SUPPRESS_MODULE_MESSAGES:-0}" != "1" ]]; then
+if [[ "${VANTAGE_QUIET_MODE:-0}" != "1" && "${VANTAGE_SUPPRESS_MODULE_MESSAGES:-0}" != "1" ]]; then
     echo -e "${GREEN}[+]${NC} Distcc/Ccache module loaded. PATH configured for distributed compilation."
     echo -e "    Type ${CYAN}distcc-help${NC} to see available commands."
 fi

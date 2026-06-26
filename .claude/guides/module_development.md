@@ -1,4 +1,4 @@
-# SENTINEL Module Development Guide
+# VANTAGE Module Development Guide
 
 ## Quick Start
 
@@ -47,10 +47,10 @@ chmod 644 bash_modules.d/awesome_feature.module
 #!/bin/bash
 # Module: awesome_feature
 # Version: 1.0.0
-# Description: Adds awesome functionality to SENTINEL
+# Description: Adds awesome functionality to VANTAGE
 # Dependencies: logging config_cache
 # Author: Your Name
-# License: Same as SENTINEL
+# License: Same as VANTAGE
 
 # Prevent direct execution
 [[ "${BASH_SOURCE[0]}" == "${0}" ]] && {
@@ -421,7 +421,7 @@ _awesome_on_command() {
 ```bash
 # Save state between sessions
 _awesome_save_state() {
-    local state_file="$HOME/.cache/sentinel/awesome_feature.state"
+    local state_file="$HOME/.cache/vantage/awesome_feature.state"
     mkdir -p "$(dirname "$state_file")"
     
     cat > "$state_file" << EOF
@@ -432,7 +432,7 @@ EOF
 
 # Load state on init
 _awesome_load_state() {
-    local state_file="$HOME/.cache/sentinel/awesome_feature.state"
+    local state_file="$HOME/.cache/vantage/awesome_feature.state"
     [[ -f "$state_file" ]] && source "$state_file"
 }
 ```

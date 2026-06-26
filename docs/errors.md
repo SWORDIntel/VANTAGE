@@ -1,6 +1,6 @@
-# SENTINEL Shell Script Validation – Error & Warning Report
+# VANTAGE Shell Script Validation – Error & Warning Report
 
-This document summarizes all issues, warnings, and recommendations found during static analysis and validation of the SENTINEL shell environment scripts.
+This document summarizes all issues, warnings, and recommendations found during static analysis and validation of the VANTAGE shell environment scripts.
 
 ---
 

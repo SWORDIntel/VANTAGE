@@ -130,7 +130,7 @@
 
 **Playbooks** can help automate and orchestrate your response, and can be set to run automatically when specific alerts or incidents are generated, by being attached to an analytics rule or an automation rule.
 
-* [Automate threat response with playbooks in Microsoft Azure with Sentinel](https://github.com/MicrosoftDocs/azure-docs/blob/main/articles/sentinel/tutorial-respond-threats-playbook.md) is a collection of procedures that can be run from Microsoft Sentinel in response to an alert or incident. 
+* [Automate threat response with playbooks in Microsoft Azure with Vantage](https://github.com/MicrosoftDocs/azure-docs/blob/main/articles/vantage/tutorial-respond-threats-playbook.md) is a collection of procedures that can be run from Microsoft Vantage in response to an alert or incident. 
 * [AWS Incident Response Runbook Samples](https://github.com/aws-samples/aws-incident-response-runbooks/tree/0d9a1c0f7ad68fb2c1b2d86be8914f2069492e21) - AWS IR Runbook Samples meant to be customized per each entity using them. The three samples are: "DoS or DDoS attack", "credential leakage", and "unintended access to an Amazon S3 bucket".
 * [Counteractive Playbooks](https://github.com/counteractive/incident-response-plan-template/tree/master/playbooks) - Counteractive PLaybooks collection.
 * [GuardSIght Playbook Battle Cards](https://github.com/guardsight/gsvsoc_cirt-playbook-battle-cards) - A collection of Cyber Incident Response Playbook Battle Cards
@@ -491,7 +491,7 @@
 
 [nDPI®](http://www.ntop.org/) is an open source LGPLv3 library for deep-packet inspection. Based on OpenDPI it includes ntop extensions. 
 
-[Azure Sentinel](https://github.com/Azure/Azure-Sentinel) is a Cloud-native SIEM for intelligent security analytics for your entire enterprise. 
+[Azure Vantage](https://github.com/Azure/Azure-Vantage) is a Cloud-native SIEM for intelligent security analytics for your entire enterprise. 
 
 [NETworkManager](https://github.com/BornToBeRoot/NETworkManager) is a powerful tool for managing networks and troubleshoot network problems. It contains features like a WiFi analyzer, IP scanner, port scanner, ping monitor, traceroute, DNS lookup or a LLDP/CDP capture. 
 

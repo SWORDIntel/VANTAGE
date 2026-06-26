@@ -1,9 +1,9 @@
 #!/bin/bash
 # ------------------------------------------------
-# SENTINEL TEST SCRIPT: Markov Text Generator
+# VANTAGE TEST SCRIPT: Markov Text Generator
 # ------------------------------------------------
 # Tests the functionality of the Markov text generator
-# components and integration with SENTINEL.
+# components and integration with VANTAGE.
 #
 # Usage: ./test_markov_generator.sh
 # ------------------------------------------------
@@ -26,8 +26,8 @@ NC='\033[0m' # No Color
 # Test directories
 ROOT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
 TEST_DIR="${ROOT_DIR}/tests/markov_test"
-SCRIPT_PATH="${ROOT_DIR}/markov_generator.py"
-MODULE_PATH="${ROOT_DIR}/bash_modules.d/sentinel_markov.module"
+SCRIPT_PATH="${ROOT_DIR}/contrib/markov_generator.py"
+MODULE_PATH="${ROOT_DIR}/bash_modules.d/vantage_markov.module"
 
 # Create test directory if it doesn't exist
 mkdir -p "${TEST_DIR}"
@@ -57,14 +57,14 @@ test_case() {
 # Create test input file
 create_test_input() {
     cat > "${TEST_DIR}/input.txt" << EOF
-SENTINEL is a comprehensive, modular, security-focused bash environment enhancement system for cybersecurity professionals.
+VANTAGE is a comprehensive, modular, security-focused bash environment enhancement system for cybersecurity professionals.
 It provides AI-powered conversational assistant, modular autocomplete, and command prediction.
 The framework supports secure snippet management and context-aware suggestions.
 All modules are designed for robust error handling, security, and privacy.
-SENTINEL focuses on terminal-based workflows and Linux-first compatibility.
+VANTAGE focuses on terminal-based workflows and Linux-first compatibility.
 The modular architecture includes components for logging, security, and machine learning.
 Users can enable or disable features based on their specific needs and performance requirements.
-SENTINEL implements performance optimizations like configuration caching and dependency-based module loading.
+VANTAGE implements performance optimizations like configuration caching and dependency-based module loading.
 The installation process is designed to be secure and customizable for different environments.
 Advanced features include distributed compilation and secure file operations for power users.
 EOF

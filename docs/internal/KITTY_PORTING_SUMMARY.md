@@ -2,12 +2,12 @@
 
 ## Overview
 
-All SENTINEL modules and addons have been successfully ported to work with the kitty primary CLI pathway. This document summarizes all changes made.
+All VANTAGE modules and addons have been successfully ported to work with the kitty primary CLI pathway. This document summarizes all changes made.
 
 ## New Files Created
 
 ### Installer Components
-- `install_kitty.sh` - Standalone kitty pathway installer
+- `install.sh kitty` - Kitty pathway subcommand in unified installer
 - `installer/kitty.sh` - Kitty installer library functions
 - `installer/lib/install_kitty_core.sh` - Core installation logic for kitty
 - `kitty_startup.sh` - Startup script for kitty sessions
@@ -42,36 +42,36 @@ All SENTINEL modules and addons have been successfully ported to work with the k
 - Maintains HMAC verification for security
 - Creates aliases for easy snippet access
 
-### Sentinel Modules
-✅ **sentinel_git_tui.module**
+### Vantage Modules
+✅ **vantage_git_tui.module**
 - Color functions optimized for kitty
 - Enhanced display capabilities
 
-✅ **sentinel_chat.module**
+✅ **vantage_chat.module**
 - Compatible with kitty (no changes needed)
 
-✅ **sentinel_ml.module**
+✅ **vantage_ml.module**
 - Compatible with kitty (no changes needed)
 
-✅ **sentinel_ml_enhanced.module**
+✅ **vantage_ml_enhanced.module**
 - Compatible with kitty (no changes needed)
 
-✅ **sentinel_osint.module**
+✅ **vantage_osint.module**
 - Compatible with kitty (no changes needed)
 
-✅ **sentinel_cybersec_ml.module**
+✅ **vantage_cybersec_ml.module**
 - Compatible with kitty (no changes needed)
 
-✅ **sentinel_gitstar.module**
+✅ **vantage_gitstar.module**
 - Compatible with kitty (no changes needed)
 
-✅ **sentinel_smallllm.module**
+✅ **vantage_smallllm.module**
 - Compatible with kitty (no changes needed)
 
-✅ **sentinel_markov.module**
+✅ **vantage_markov.module**
 - Compatible with kitty (no changes needed)
 
-✅ **sentinel_context.module**
+✅ **vantage_context.module**
 - Compatible with kitty (no changes needed)
 
 ### Integration Modules
@@ -122,14 +122,14 @@ All SENTINEL modules and addons have been successfully ported to work with the k
 ### 1. Terminal Detection
 All modules can now detect kitty using:
 ```bash
-sentinel_is_kitty()  # Returns true if running in kitty
+vantage_is_kitty()  # Returns true if running in kitty
 ```
 
 ### 2. GPU Acceleration
 Automatically enabled when kitty is detected:
 ```bash
-export SENTINEL_KITTY_GPU_ACCEL=1
-export SENTINEL_TERMINAL_COLORS=256
+export VANTAGE_KITTY_GPU_ACCEL=1
+export VANTAGE_TERMINAL_COLORS=256
 ```
 
 ### 3. Image Display
@@ -141,8 +141,8 @@ kitty +kitten icat --clear --transfer-mode=memory <image>
 ### 4. Window Management
 Modules can control kitty windows:
 ```bash
-sentinel_kitty_set_title "Window Title"
-sentinel_kitty_set_tab_title "Tab Title"
+vantage_kitty_set_title "Window Title"
+vantage_kitty_set_tab_title "Tab Title"
 ```
 
 ### 5. Snippet System
@@ -163,11 +163,11 @@ Enhanced for kitty:
 ### Main Installer
 - Updated `installer/install.sh` to support pathway selection
 - Interactive menu for choosing bash or kitty pathway
-- Environment variable support (`SENTINEL_INSTALL_PATHWAY=kitty`)
+- Environment variable support (`VANTAGE_INSTALL_PATHWAY=kitty`)
 - Command-line flag support (`--kitty-primary`)
 
 ### Kitty Installer
-- Standalone installer (`install_kitty.sh`)
+- Unified installer subcommand (`install.sh kitty`)
 - Automatic kitty detection and validation
 - Creates all necessary configuration files
 - Ensures kitty_integration module is enabled
@@ -181,9 +181,9 @@ Enhanced for kitty:
 - Sets kitty-specific environment variables
 
 ### kitty.conf
-- SENTINEL-managed configuration block
+- VANTAGE-managed configuration block
 - Optimized performance settings
-- SENTINEL-themed colors
+- VANTAGE-themed colors
 - Shell integration enabled
 
 ## Backward Compatibility
@@ -210,7 +210,7 @@ All changes maintain backward compatibility:
 
 ### Install Kitty Pathway
 ```bash
-bash install_kitty.sh
+bash install.sh kitty
 ```
 
 ### Or use main installer
@@ -221,8 +221,8 @@ bash installer/install.sh
 
 ### Verify Installation
 ```bash
-sentinel_is_kitty && echo "Kitty detected"
-echo $SENTINEL_KITTY_GPU_ACCEL  # Should show "1"
+vantage_is_kitty && echo "Kitty detected"
+echo $VANTAGE_KITTY_GPU_ACCEL  # Should show "1"
 ```
 
 ## Documentation

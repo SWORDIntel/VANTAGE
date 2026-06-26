@@ -8,8 +8,8 @@ This module provides integration with Hashcat, the world's fastest and most adva
 - Optional: none
 
 ## Functions Exported
-- `sentinel_hashcat_run`: A wrapper function for running Hashcat with pre-configured options.
-- `sentinel_hashcat_benchmark`: Runs the Hashcat benchmark.
+- `vantage_hashcat_run`: A wrapper function for running Hashcat with pre-configured options.
+- `vantage_hashcat_benchmark`: Runs the Hashcat benchmark.
 
 ## Configuration
 - `HASHCAT_BIN`: The path to the Hashcat binary.
@@ -23,8 +23,8 @@ This module provides integration with Hashcat, the world's fastest and most adva
 ## Examples
 ```bash
 # Run Hashcat against a hash file
-sentinel_hashcat_run -m 0 -a 0 /path/to/hashes.txt /path/to/wordlist.txt
+vantage_hashcat_run -m 0 -a 0 /path/to/hashes.txt /path/to/wordlist.txt
 
 # Run the Hashcat benchmark
-sentinel_hashcat_benchmark
+vantage_hashcat_benchmark
 ```

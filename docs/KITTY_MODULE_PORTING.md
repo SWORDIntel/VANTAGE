@@ -1,6 +1,6 @@
 # Kitty Pathway Module Porting Guide
 
-This document describes how all SENTINEL modules and addons have been ported to work with the kitty primary CLI pathway.
+This document describes how all VANTAGE modules and addons have been ported to work with the kitty primary CLI pathway.
 
 ## Overview
 
@@ -15,8 +15,8 @@ All modules have been updated to:
 ### Core Modules
 
 #### `kitty_integration.module` (NEW)
-- Provides `sentinel_is_kitty()` function for terminal detection
-- Provides `sentinel_kitty_set_title()` for window management
+- Provides `vantage_is_kitty()` function for terminal detection
+- Provides `vantage_kitty_set_title()` for window management
 - Enables GPU acceleration flags automatically
 - Sets up 256-color support
 
@@ -35,16 +35,16 @@ All modules have been updated to:
 - Works seamlessly in kitty using function-based expansion
 - Maintains HMAC verification for security
 
-### Sentinel Modules
+### Vantage Modules
 
-#### `sentinel_git_tui.module`
+#### `vantage_git_tui.module`
 - Color functions optimized for kitty
 - Enhanced display capabilities
 
-#### `sentinel_chat.module`
+#### `vantage_chat.module`
 - Compatible with kitty (no terminal-specific code)
 
-#### `sentinel_ml.module`
+#### `vantage_ml.module`
 - Compatible with kitty (no terminal-specific code)
 
 ### Plugins
@@ -72,8 +72,8 @@ All modules have been updated to:
 ### GPU Acceleration
 All modules automatically enable GPU acceleration when kitty is detected:
 ```bash
-export SENTINEL_KITTY_GPU_ACCEL=1
-export SENTINEL_TERMINAL_COLORS=256
+export VANTAGE_KITTY_GPU_ACCEL=1
+export VANTAGE_TERMINAL_COLORS=256
 ```
 
 ### Image Display
@@ -85,8 +85,8 @@ kitty +kitten icat --clear --transfer-mode=memory <image>
 ### Window Management
 Modules can set window and tab titles:
 ```bash
-sentinel_kitty_set_title "My Project"
-sentinel_kitty_set_tab_title "Git Operations"
+vantage_kitty_set_title "My Project"
+vantage_kitty_set_tab_title "Git Operations"
 ```
 
 ## Module Loading Order
@@ -103,7 +103,7 @@ The kitty pathway loads modules in this order:
 Modules should use this pattern to detect kitty:
 
 ```bash
-if type sentinel_is_kitty &>/dev/null && sentinel_is_kitty; then
+if type vantage_is_kitty &>/dev/null && vantage_is_kitty; then
     # Kitty-specific optimizations
     export OPTION="kitty_value"
 else
@@ -124,8 +124,8 @@ All modules maintain backward compatibility:
 To test kitty integration:
 
 1. Ensure kitty is installed and running
-2. Check detection: `sentinel_is_kitty && echo "Kitty detected"`
-3. Verify GPU acceleration: `echo $SENTINEL_KITTY_GPU_ACCEL`
+2. Check detection: `vantage_is_kitty && echo "Kitty detected"`
+3. Verify GPU acceleration: `echo $VANTAGE_KITTY_GPU_ACCEL`
 4. Test module loading: Check that all modules load without errors
 
 ## Migration Notes

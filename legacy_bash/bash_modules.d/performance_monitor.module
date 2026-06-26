@@ -1,25 +1,25 @@
 #!/usr/bin/env bash
-# SENTINEL Module: Performance Monitor
+# VANTAGE Module: Performance Monitor
 # Tracks module loading performance and provides analytics
 
-SENTINEL_MODULE_DESCRIPTION="Performance monitoring and analytics for module system"
-SENTINEL_MODULE_VERSION="1.0.0"
-SENTINEL_MODULE_DEPENDENCIES="logging"
+VANTAGE_MODULE_DESCRIPTION="Performance monitoring and analytics for module system"
+VANTAGE_MODULE_VERSION="1.0.0"
+VANTAGE_MODULE_DEPENDENCIES="logging"
 
 # Performance data storage
-SENTINEL_PERF_LOG_DIR="${SENTINEL_PERF_LOG_DIR:-$HOME/.cache/sentinel/performance}"
-mkdir -p "$SENTINEL_PERF_LOG_DIR"
+VANTAGE_PERF_LOG_DIR="${VANTAGE_PERF_LOG_DIR:-$HOME/.cache/vantage/performance}"
+mkdir -p "$VANTAGE_PERF_LOG_DIR"
 
 # Current session performance data
-declare -A SENTINEL_PERF_MODULE_TIMES
-declare -A SENTINEL_PERF_MODULE_MEMORY
-SENTINEL_PERF_SESSION_START=""
-SENTINEL_PERF_SESSION_ID=""
+declare -A VANTAGE_PERF_MODULE_TIMES
+declare -A VANTAGE_PERF_MODULE_MEMORY
+VANTAGE_PERF_SESSION_START=""
+VANTAGE_PERF_SESSION_ID=""
 
 # Initialize performance monitoring
 _init_performance_monitor() {
-    SENTINEL_PERF_SESSION_START=$(date +%s%N 2>/dev/null || date +%s)
-    SENTINEL_PERF_SESSION_ID=$(date +%Y%m%d_%H%M%S)_$$
+    VANTAGE_PERF_SESSION_START=$(date +%s%N 2>/dev/null || date +%s)
+    VANTAGE_PERF_SESSION_ID=$(date +%Y%m%d_%H%M%S)_$$
     
     # Hook into module loading
     if declare -f module_enable >/dev/null; then
@@ -42,8 +42,8 @@ _init_performance_monitor() {
             local duration=$((($end_time - $start_time) / 1000000))
             local mem_delta=$((end_mem - start_mem))
             
-            SENTINEL_PERF_MODULE_TIMES["$module_name"]=$duration
-            SENTINEL_PERF_MODULE_MEMORY["$module_name"]=$mem_delta
+            VANTAGE_PERF_MODULE_TIMES["$module_name"]=$duration
+            VANTAGE_PERF_MODULE_MEMORY["$module_name"]=$mem_delta
             
             return $result
         }
@@ -52,42 +52,42 @@ _init_performance_monitor() {
 
 # Function to save performance data
 save_performance_data() {
-    local perf_file="$SENTINEL_PERF_LOG_DIR/session_${SENTINEL_PERF_SESSION_ID}.log"
+    local perf_file="$VANTAGE_PERF_LOG_DIR/session_${VANTAGE_PERF_SESSION_ID}.log"
     
     {
-        echo "# SENTINEL Performance Log"
-        echo "# Session: $SENTINEL_PERF_SESSION_ID"
+        echo "# VANTAGE Performance Log"
+        echo "# Session: $VANTAGE_PERF_SESSION_ID"
         echo "# Date: $(date)"
         echo "# Shell: $BASH_VERSION"
         echo
         echo "## Module Load Times (ms)"
-        for module in "${!SENTINEL_PERF_MODULE_TIMES[@]}"; do
-            echo "$module,${SENTINEL_PERF_MODULE_TIMES[$module]}"
+        for module in "${!VANTAGE_PERF_MODULE_TIMES[@]}"; do
+            echo "$module,${VANTAGE_PERF_MODULE_TIMES[$module]}"
         done | sort -t',' -k2 -nr
         echo
         echo "## Module Memory Impact (KB)"
-        for module in "${!SENTINEL_PERF_MODULE_MEMORY[@]}"; do
-            echo "$module,${SENTINEL_PERF_MODULE_MEMORY[$module]}"
+        for module in "${!VANTAGE_PERF_MODULE_MEMORY[@]}"; do
+            echo "$module,${VANTAGE_PERF_MODULE_MEMORY[$module]}"
         done | sort -t',' -k2 -nr
         echo
         echo "## Summary"
         local total_time=0
-        for time in "${SENTINEL_PERF_MODULE_TIMES[@]}"; do
+        for time in "${VANTAGE_PERF_MODULE_TIMES[@]}"; do
             ((total_time += time))
         done
-        echo "Total modules: ${#SENTINEL_PERF_MODULE_TIMES[@]}"
+        echo "Total modules: ${#VANTAGE_PERF_MODULE_TIMES[@]}"
         echo "Total time: ${total_time}ms"
-        echo "Average time: $((total_time / ${#SENTINEL_PERF_MODULE_TIMES[@]}))ms"
+        echo "Average time: $((total_time / ${#VANTAGE_PERF_MODULE_TIMES[@]}))ms"
     } > "$perf_file"
 }
 
 # Function to analyze performance trends
 analyze_performance_trends() {
     local days="${1:-7}"
-    echo "=== SENTINEL Performance Analysis (Last $days days) ==="
+    echo "=== VANTAGE Performance Analysis (Last $days days) ==="
     
     # Find recent performance logs
-    local logs=$(find "$SENTINEL_PERF_LOG_DIR" -name "session_*.log" -mtime -"$days" 2>/dev/null | sort)
+    local logs=$(find "$VANTAGE_PERF_LOG_DIR" -name "session_*.log" -mtime -"$days" 2>/dev/null | sort)
     
     if [[ -z "$logs" ]]; then
         echo "No performance data found for the last $days days"
@@ -160,8 +160,8 @@ compare_performance() {
     echo "Module              | Current  | Average  | Diff %"
     echo "------------------- | -------- | -------- | ------"
     
-    for module in "${!SENTINEL_PERF_MODULE_TIMES[@]}"; do
-        local current="${SENTINEL_PERF_MODULE_TIMES[$module]}"
+    for module in "${!VANTAGE_PERF_MODULE_TIMES[@]}"; do
+        local current="${VANTAGE_PERF_MODULE_TIMES[$module]}"
         local avg=$(echo "$avg_data" | grep "^$module " | awk -F'|' '{print $2}' | tr -d ' ')
         
         if [[ -n "$avg" && "$avg" -gt 0 ]]; then
@@ -173,14 +173,14 @@ compare_performance() {
 
 # Function to generate performance report
 generate_performance_report() {
-    local report_file="$SENTINEL_PERF_LOG_DIR/performance_report_$(date +%Y%m%d).html"
+    local report_file="$VANTAGE_PERF_LOG_DIR/performance_report_$(date +%Y%m%d).html"
     
     {
         cat << 'EOF'
 <!DOCTYPE html>
 <html>
 <head>
-    <title>SENTINEL Performance Report</title>
+    <title>VANTAGE Performance Report</title>
     <style>
         body { font-family: Arial, sans-serif; margin: 20px; }
         h1, h2 { color: #333; }
@@ -194,7 +194,7 @@ generate_performance_report() {
     </style>
 </head>
 <body>
-    <h1>SENTINEL Performance Report</h1>
+    <h1>VANTAGE Performance Report</h1>
     <p>Generated: 
 EOF
         date
@@ -211,9 +211,9 @@ EOF
 EOF
         
         # Add module data
-        for module in "${!SENTINEL_PERF_MODULE_TIMES[@]}"; do
-            local time="${SENTINEL_PERF_MODULE_TIMES[$module]}"
-            local memory="${SENTINEL_PERF_MODULE_MEMORY[$module]:-0}"
+        for module in "${!VANTAGE_PERF_MODULE_TIMES[@]}"; do
+            local time="${VANTAGE_PERF_MODULE_TIMES[$module]}"
+            local memory="${VANTAGE_PERF_MODULE_MEMORY[$module]:-0}"
             local status="normal"
             local class=""
             
@@ -248,8 +248,8 @@ EOF
         
         # Add recommendations based on data
         local slow_modules=0
-        for module in "${!SENTINEL_PERF_MODULE_TIMES[@]}"; do
-            local time="${SENTINEL_PERF_MODULE_TIMES[$module]}"
+        for module in "${!VANTAGE_PERF_MODULE_TIMES[@]}"; do
+            local time="${VANTAGE_PERF_MODULE_TIMES[$module]}"
             if ((time > 100)); then
                 ((slow_modules++))
                 echo "        <li>Consider lazy loading for module: $module (${time}ms)</li>"
@@ -272,13 +272,13 @@ EOF
 
 # Function to monitor real-time performance
 monitor_performance_realtime() {
-    echo "=== SENTINEL Real-time Performance Monitor ==="
+    echo "=== VANTAGE Real-time Performance Monitor ==="
     echo "Press Ctrl+C to stop"
     echo
     
     while true; do
         clear
-        echo "=== SENTINEL Real-time Performance Monitor ==="
+        echo "=== VANTAGE Real-time Performance Monitor ==="
         echo "Time: $(date)"
         echo
         
@@ -286,8 +286,8 @@ monitor_performance_realtime() {
         local total_time=0
         local loaded_count=0
         
-        for module in "${!SENTINEL_PERF_MODULE_TIMES[@]}"; do
-            ((total_time += SENTINEL_PERF_MODULE_TIMES[$module]))
+        for module in "${!VANTAGE_PERF_MODULE_TIMES[@]}"; do
+            ((total_time += VANTAGE_PERF_MODULE_TIMES[$module]))
             ((loaded_count++))
         done
         
@@ -300,8 +300,8 @@ monitor_performance_realtime() {
         
         # Show top 5 slowest modules
         echo "Slowest modules:"
-        for module in "${!SENTINEL_PERF_MODULE_TIMES[@]}"; do
-            echo "$module: ${SENTINEL_PERF_MODULE_TIMES[$module]}ms"
+        for module in "${!VANTAGE_PERF_MODULE_TIMES[@]}"; do
+            echo "$module: ${VANTAGE_PERF_MODULE_TIMES[$module]}ms"
         done | sort -t':' -k2 -nr | head -5
         
         sleep 2
@@ -328,4 +328,4 @@ _init_performance_monitor
 # Save performance data on exit
 trap 'save_performance_data 2>/dev/null' EXIT
 
-echo "SENTINEL Performance Monitor initialized" >&2
+echo "VANTAGE Performance Monitor initialized" >&2

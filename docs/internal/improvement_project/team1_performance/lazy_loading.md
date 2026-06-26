@@ -1,8 +1,8 @@
-# SENTINEL Module Lazy Loading Implementation
+# VANTAGE Module Lazy Loading Implementation
 
 ## Overview
 
-This document describes the lazy loading implementation for SENTINEL modules, designed to significantly improve shell startup performance by deferring the loading of heavy modules until they are actually needed.
+This document describes the lazy loading implementation for VANTAGE modules, designed to significantly improve shell startup performance by deferring the loading of heavy modules until they are actually needed.
 
 ## Architecture
 
@@ -13,9 +13,9 @@ This document describes the lazy loading implementation for SENTINEL modules, de
    - Lazy modules: Heavy modules loaded on-demand when first used
 
 2. **Lazy Loading Registry**
-   - `SENTINEL_LOADED_MODULES`: Tracks all loaded modules
-   - `SENTINEL_LAZY_MODULES`: Tracks lazy-loaded modules and their state
-   - `SENTINEL_MODULE_LOADING_STRATEGY`: Configuration for loading behavior
+   - `VANTAGE_LOADED_MODULES`: Tracks all loaded modules
+   - `VANTAGE_LAZY_MODULES`: Tracks lazy-loaded modules and their state
+   - `VANTAGE_MODULE_LOADING_STRATEGY`: Configuration for loading behavior
 
 3. **Proxy Function System**
    - Creates lightweight proxy functions for lazy modules
@@ -24,14 +24,14 @@ This document describes the lazy loading implementation for SENTINEL modules, de
 
 ### Configuration
 
-The lazy loading system is configured through `/opt/github/SENTINEL/bash_modules.d/lazy_loading.conf`:
+The lazy loading system is configured through `/opt/github/VANTAGE/bash_modules.d/lazy_loading.conf`:
 
 ```bash
 # Global toggle
-export SENTINEL_LAZY_LOADING_ENABLED=1
+export VANTAGE_LAZY_LOADING_ENABLED=1
 
 # Core modules (always loaded eagerly)
-SENTINEL_CORE_MODULES=(
+VANTAGE_CORE_MODULES=(
     "blesh_installer"
     "autocomplete"
     "logging"
@@ -45,16 +45,16 @@ SENTINEL_CORE_MODULES=(
 )
 
 # Heavy modules (lazy loaded)
-SENTINEL_LAZY_LOAD_MODULES=(
-    "sentinel_ml"
-    "sentinel_ml_enhanced"
-    "sentinel_osint"
-    "sentinel_cybersec_ml"
-    "sentinel_chat"
-    "sentinel_gitstar"
-    "sentinel_context"
-    "sentinel_markov"
-    "sentinel_smallllm"
+VANTAGE_LAZY_LOAD_MODULES=(
+    "vantage_ml"
+    "vantage_ml_enhanced"
+    "vantage_osint"
+    "vantage_cybersec_ml"
+    "vantage_chat"
+    "vantage_gitstar"
+    "vantage_context"
+    "vantage_markov"
+    "vantage_smallllm"
     "hashcat"
     "obfuscate"
 )
@@ -69,12 +69,12 @@ is_lazy_load_module() {
     local module_name="$1"
     
     # Check global toggle
-    if [[ "${SENTINEL_LAZY_LOADING_ENABLED:-1}" == "0" ]]; then
+    if [[ "${VANTAGE_LAZY_LOADING_ENABLED:-1}" == "0" ]]; then
         return 1
     fi
     
     # Check module-specific override
-    local override_var="SENTINEL_${module_name^^}_LAZY_LOAD"
+    local override_var="VANTAGE_${module_name^^}_LAZY_LOAD"
     if [[ -n "${!override_var}" ]]; then
         [[ "${!override_var}" == "1" ]] && return 0 || return 1
     fi
@@ -95,10 +95,10 @@ Creates lightweight proxy functions that:
 Example proxy for ML module:
 ```bash
 ml_suggest() {
-    if [[ "${SENTINEL_LAZY_MODULES[sentinel_ml]}" != "loaded" ]]; then
+    if [[ "${VANTAGE_LAZY_MODULES[vantage_ml]}" != "loaded" ]]; then
         emsg "[LAZY] Loading ML module for suggestions..."
-        module_enable "sentinel_ml" "0" "lazy"
-        SENTINEL_LAZY_MODULES["sentinel_ml"]="loaded"
+        module_enable "vantage_ml" "0" "lazy"
+        VANTAGE_LAZY_MODULES["vantage_ml"]="loaded"
     fi
     if type ml_suggest &>/dev/null; then
         ml_suggest "$@"
@@ -137,29 +137,29 @@ The `module_enable` function has been enhanced to:
 
 3. **Force load a lazy module:**
    ```bash
-   module_enable sentinel_ml 1
+   module_enable vantage_ml 1
    ```
 
 #### Configuration Options
 
 1. **Disable lazy loading globally:**
    ```bash
-   export SENTINEL_LAZY_LOADING_ENABLED=0
+   export VANTAGE_LAZY_LOADING_ENABLED=0
    ```
 
 2. **Force specific module to load eagerly:**
    ```bash
-   export SENTINEL_SENTINEL_ML_LAZY_LOAD=0
+   export VANTAGE_VANTAGE_ML_LAZY_LOAD=0
    ```
 
 3. **Force specific module to load lazily:**
    ```bash
-   export SENTINEL_FZF_LAZY_LOAD=1
+   export VANTAGE_FZF_LAZY_LOAD=1
    ```
 
 4. **Control loading messages:**
    ```bash
-   export SENTINEL_LAZY_SHOW_LOADING=0  # Hide loading messages
+   export VANTAGE_LAZY_SHOW_LOADING=0  # Hide loading messages
    ```
 
 ### Performance Benefits
@@ -191,19 +191,19 @@ The `module_enable` function has been enhanced to:
 
 #### Default Lazy (Heavy)
 - **ML/AI Modules**: Require Python, models, libraries
-  - `sentinel_ml`, `sentinel_ml_enhanced`
-  - `sentinel_context`, `sentinel_markov`
-  - `sentinel_smallllm`
+  - `vantage_ml`, `vantage_ml_enhanced`
+  - `vantage_context`, `vantage_markov`
+  - `vantage_smallllm`
   
 - **Security/Analysis**: External tools, heavy operations
-  - `sentinel_osint` - OSINT tools
-  - `sentinel_cybersec_ml` - Security ML
+  - `vantage_osint` - OSINT tools
+  - `vantage_cybersec_ml` - Security ML
   - `hashcat` - Password cracking
   - `obfuscate` - Code obfuscation
   
 - **Interactive**: Not needed until explicitly used
-  - `sentinel_chat` - LLM chat
-  - `sentinel_gitstar` - GitHub analysis
+  - `vantage_chat` - LLM chat
+  - `vantage_gitstar` - GitHub analysis
 
 ### Troubleshooting
 
@@ -214,16 +214,16 @@ The `module_enable` function has been enhanced to:
 
 2. **Want to preload all modules:**
    ```bash
-   for module in "${!SENTINEL_LAZY_MODULES[@]}"; do
-       [[ "${SENTINEL_LAZY_MODULES[$module]}" != "loaded" ]] && \
+   for module in "${!VANTAGE_LAZY_MODULES[@]}"; do
+       [[ "${VANTAGE_LAZY_MODULES[$module]}" != "loaded" ]] && \
            module_enable "$module" 0 "preload"
    done
    ```
 
 3. **Debug lazy loading:**
    ```bash
-   export SENTINEL_DEBUG_MODULES=1
-   export SENTINEL_LAZY_SHOW_LOADING=1
+   export VANTAGE_DEBUG_MODULES=1
+   export VANTAGE_LAZY_SHOW_LOADING=1
    ```
 
 ### Future Enhancements
@@ -240,7 +240,7 @@ For existing users:
 1. Lazy loading is enabled by default
 2. No changes needed to module files
 3. Existing configurations work unchanged
-4. To disable: `export SENTINEL_LAZY_LOADING_ENABLED=0`
+4. To disable: `export VANTAGE_LAZY_LOADING_ENABLED=0`
 
 For module developers:
 1. Ensure modules are self-contained

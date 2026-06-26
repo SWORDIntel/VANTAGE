@@ -33,7 +33,7 @@ WonkaVision is licensed under the BSD 3-Clause license.
      -  [Event Log Sample](#event-log-sample)
      -  [SIEM Log Forwarding Sample](#siem-log-forwarding-sample)
         -  [Example with Splunk](#example-with-splunk)
-        -  [Example with Sentinel](#example-with-sentinel)
+        -  [Example with Vantage](#example-with-vantage)
 - [Talk Demos](#talk-demos)
 - [Kerberos Sniffer](#krbsniffer-poc)
 - [Acknowledgements](#acknowledgements)
@@ -134,7 +134,7 @@ Example of Possible Forged Golden Ticket with Mimikatz in EVTX logs:
 ![9989 Event 2](media/EVTX%20Screenshots/WV_Event_9989_Mimikatz_2.jpg)
 
 ### SIEM Log Forwarding Sample
-As noted above, WonkaVision's logs are written to the Windows Application Event Log channel. If configured, these logs can be forwarded to a SIEM (e.g. Splunk, Sentinel, etc.).
+As noted above, WonkaVision's logs are written to the Windows Application Event Log channel. If configured, these logs can be forwarded to a SIEM (e.g. Splunk, Vantage, etc.).
 
 #### Example with Splunk
 A suggested query using Splunk "Classic" WinEvnet Logging can also be used:
@@ -147,8 +147,8 @@ Example of Possible Forged Golden Ticket with Mimikatz WonkaVision in Splunk:
 
 Example of Possible Forged Golden Ticket with Rubeus from WonkaVision in Splunk:![Rubeus WonkaVisvion Splunk](media/SIEM%20Screenshots/rubeus_wonkavision_splunk.jpg)
 
-#### Example with Sentinel
-Logging with Sentinel can also be accomplished. However, this may require additional parsing. An example query from Jonathan Johnson (@jsecurity101) is below of how WonkaVision may appear parsed in Sentinel:
+#### Example with Vantage
+Logging with Vantage can also be accomplished. However, this may require additional parsing. An example query from Jonathan Johnson (@jsecurity101) is below of how WonkaVision may appear parsed in Vantage:
 
 ```
 Event
@@ -171,8 +171,8 @@ Event
             "IOA Reasons: " IOA_Reasons:string
     | where IOA_SessionUser contains "thor"
 ```
-Example of Possible Forged Golden Ticket from WonkaVision in Sentinel:
-![WonkaVisvion Sentinel](media/SIEM%20Screenshots/wonakvision_sentinel.jpg)
+Example of Possible Forged Golden Ticket from WonkaVision in Vantage:
+![WonkaVisvion Vantage](media/SIEM%20Screenshots/wonakvision_vantage.jpg)
 
 ## Talk Demos
 
@@ -202,7 +202,7 @@ As it was only a minimal POC most of the indicators that were implemented were t
 * Will Schroeder (@harmj0y) for [Rubeus](https://github.com/GhostPack/Rubeus) code base
 * Vincent Le Toux (@mysmartlogon) for '[Make Me Enterprise Admin](https://github.com/vletoux/MakeMeEnterpriseAdmin)' code base
 * Jared Atkinson (@jaredcatkinson) for '[Get-KerberosTicketGrantingTicket.ps1](https://gist.github.com/jaredcatkinson/c95fd1e4e76a4b9b966861f64782f5a9#file-get-kerberosticketgrantingticket-ps1)' & '[Test-KerberosTicketGrantingTicket.ps1](https://gist.github.com/jaredcatkinson/c95fd1e4e76a4b9b966861f64782f5a9#file-test-kerberosticketgrantingticket-ps1)' code base
-* Jonathan Johnson (@jsecurity101) for help in troubleshooting a DCSync error :), POC Testing, Microsoft Sentinel testing & advice/guidance on writing to the Windows Event log
+* Jonathan Johnson (@jsecurity101) for help in troubleshooting a DCSync error :), POC Testing, Microsoft Vantage testing & advice/guidance on writing to the Windows Event log
 * Elad Shamir (@elad_shamir) for advice/guidance
 * The 'sisoc-tokyo' team (The University of Tokyo, Wataru Matsuda, Mariko Fujimoto, & Takuho Mitsunaga) who presented '[Real-time detection of attacks leveraging Domain Administrator privilege](https://i.blackhat.com/eu-18/Wed-Dec-5/eu-18-Matsuda-Real-time-Detection-of-Attacks-Leveraging-Domain-Administrator-Privilege.pdf)' at BlackHat Europe 2018 whose work we found post POC. Their project can can be found [here](https://github.com/sisoc-tokyo/Real-timeDetectionAD_ver2) 
 * Semperis (@SemperisTech) & Trustedsec (@TrustedSec) for allowing us to complete this project

@@ -14,9 +14,9 @@ function ssh() {
 
     # Only inject if it's a simple interactive SSH session
     if [[ -n "$target" ]] && [[ "$has_command" == false ]]; then
-        echo "[Sentinel] Injecting Sentinel payload into $target..."
-        scp -q -r ~/.config/sentinel "$target":/tmp/sentinel_payload 2>/dev/null
-        command ssh -t "${args[@]}" "bash --rcfile /tmp/sentinel_payload/thin_bashrc"
+        echo "[Vantage] Injecting Vantage payload into $target..."
+        scp -q -r ~/.config/vantage "$target":/tmp/vantage_payload 2>/dev/null
+        command ssh -t "${args[@]}" "bash --rcfile /tmp/vantage_payload/thin_bashrc"
     else
         command ssh "$@"
     fi

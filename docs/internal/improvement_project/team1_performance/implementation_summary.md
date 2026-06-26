@@ -1,8 +1,8 @@
-# SENTINEL Parallel Module Loading & Caching Implementation Summary
+# VANTAGE Parallel Module Loading & Caching Implementation Summary
 
 ## Overview
 
-This implementation provides a comprehensive parallel loading and caching system for SENTINEL bash modules, significantly improving shell startup performance.
+This implementation provides a comprehensive parallel loading and caching system for VANTAGE bash modules, significantly improving shell startup performance.
 
 ## Key Components
 
@@ -24,7 +24,7 @@ Key features:
 
 Eliminates redundant file parsing:
 - **Hash-based Validation**: Uses SHA256/SHA1/mtime to detect changes
-- **Persistent Cache**: Stores parsed metadata in `~/.cache/sentinel/modules/`
+- **Persistent Cache**: Stores parsed metadata in `~/.cache/vantage/modules/`
 - **Memory Cache**: In-session caching for maximum performance
 - **Automatic Invalidation**: Detects and updates stale cache entries
 
@@ -61,7 +61,7 @@ Metrics tracked:
 
 ### Benchmarks
 
-Testing with 30 typical SENTINEL modules:
+Testing with 30 typical VANTAGE modules:
 
 | Metric | Sequential | Parallel | Improvement |
 |--------|------------|----------|-------------|
@@ -92,7 +92,7 @@ Testing with 30 typical SENTINEL modules:
 
 ```bash
 # Enable parallel loading
-/opt/github/SENTINEL/tools/module_helpers/enable_parallel_loading.sh
+/opt/github/VANTAGE/tools/module_helpers/enable_parallel_loading.sh
 
 # Restart shell or source bashrc
 source ~/.bashrc
@@ -102,13 +102,13 @@ source ~/.bashrc
 
 ```bash
 # Adjust parallel jobs (default: 4)
-export SENTINEL_PARALLEL_MAX_JOBS=8
+export VANTAGE_PARALLEL_MAX_JOBS=8
 
 # Enable debug output
-export SENTINEL_DEBUG_MODULES=1
+export VANTAGE_DEBUG_MODULES=1
 
 # Set cache directory
-export SENTINEL_MODULE_CACHE_DIR="$HOME/.cache/sentinel/modules"
+export VANTAGE_MODULE_CACHE_DIR="$HOME/.cache/vantage/modules"
 ```
 
 ### Commands
@@ -158,7 +158,7 @@ perf-report
 
 1. **Declare Dependencies Explicitly**:
    ```bash
-   SENTINEL_MODULE_DEPENDENCIES="logging config_cache"
+   VANTAGE_MODULE_DEPENDENCIES="logging config_cache"
    ```
 
 2. **Keep Initialization Light**:
@@ -168,7 +168,7 @@ perf-report
 
 3. **Test with Parallel Loading**:
    ```bash
-   export SENTINEL_DEBUG_MODULES=1
+   export VANTAGE_DEBUG_MODULES=1
    parallel_load_modules
    ```
 
@@ -180,7 +180,7 @@ perf-report
    - Identify optimization opportunities
 
 2. **Optimize Configuration**:
-   - Adjust `SENTINEL_PARALLEL_MAX_JOBS` based on CPU
+   - Adjust `VANTAGE_PARALLEL_MAX_JOBS` based on CPU
    - Use SSD for cache directory
    - Enable lazy loading for heavy modules
 
@@ -212,7 +212,7 @@ perf-report
 
 ```bash
 # Enable verbose output
-export SENTINEL_DEBUG_MODULES=1
+export VANTAGE_DEBUG_MODULES=1
 
 # Check specific module dependencies
 show_module_dependencies module_name
@@ -222,7 +222,7 @@ clear_module_cache
 _build_dependency_graph
 
 # Test parallel loading
-/opt/github/SENTINEL/tests/test_parallel_loading.sh
+/opt/github/VANTAGE/tests/test_parallel_loading.sh
 ```
 
 ## Future Enhancements
@@ -238,5 +238,5 @@ _build_dependency_graph
 The parallel loading and caching implementation provides substantial performance improvements while maintaining compatibility and safety. The modular design allows for future enhancements and easy maintenance.
 
 For questions or issues, see the detailed documentation in:
-- `/opt/github/SENTINEL/docs/internal/improvement_project/team1_performance/parallel_loading.md`
-- `/opt/github/SENTINEL/docs/internal/improvement_project/team1_performance/caching.md`
+- `/opt/github/VANTAGE/docs/internal/improvement_project/team1_performance/parallel_loading.md`
+- `/opt/github/VANTAGE/docs/internal/improvement_project/team1_performance/caching.md`

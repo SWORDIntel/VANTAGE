@@ -1,0 +1,194 @@
+#!/usr/bin/env bash
+### VANTAGE Small LLM Module
+### =================================================
+### Provides commands for using small language models 
+### for text generation and assistance.
+###
+### Author: VANTAGE Intel Team
+### Version: 1.0.0
+### Tags: llm, ai, small-models
+### Requirements: python3, pip
+
+# Prevent multiple loading
+[[ -n "${_VANTAGE_SMALLLLM_LOADED}" ]] && return 0
+export _VANTAGE_SMALLLLM_LOADED=1
+### ================================================= 
+
+# Check if module is enabled via environment variable with robust error handling
+# and silent status check that doesn't print messages
+if [[ "${VANTAGE_SMALLLLM_ENABLED:-0}" != "1" ]]; then
+    # Module is disabled but won't echo about it
+    # This line would return, preventing the module from loading
+    # when the environment variable is not set
+    return 0 2>/dev/null || true
+fi
+
+# Continue with the rest of the file, starting after the original check
+
+# Set environment variables and defaults
+export VANTAGE_SMALLLLM_DIR="${VANTAGE_BASE_DIR:-$HOME/Documents/GitHub/VANTAGE}/gitstar/models"
+export VANTAGE_SMALLLLM_ENABLED="${VANTAGE_SMALLLLM_ENABLED:-1}"
+export VANTAGE_SMALLLLM_DEFAULT_MODEL="${VANTAGE_SMALLLLM_DEFAULT_MODEL:-qwen25-05b}"
+
+# Core functionality
+_vantage_smallllm_ensure_dependencies() {
+    # Check and install Python dependencies if needed
+    local py_cmd
+    if command -v python3 >/dev/null 2>&1; then
+        py_cmd="python3"
+    elif command -v python >/dev/null 2>&1; then
+        py_cmd="python"
+    else
+        echo "Python is not installed. Please install Python 3.6 or higher."
+        return 0
+    fi
+    
+    # Create models directory if it doesn't exist
+    mkdir -p "${VANTAGE_SMALLLLM_DIR}"
+    
+    return 0
+}
+
+# Download models command
+vantage_smallllm_download() {
+    if [[ "${VANTAGE_SMALLLLM_ENABLED}" != "1" ]]; then
+        echo "VANTAGE Small LLM module is disabled. Enable it by setting VANTAGE_SMALLLLM_ENABLED=1."
+        return 0
+    fi
+    
+    _vantage_smallllm_ensure_dependencies || return 0
+    
+    # Pass arguments to the download script
+    python3 "${VANTAGE_BASE_DIR:-$HOME/Documents/GitHub/VANTAGE}/gitstar/download_models.py" "$@"
+}
+
+# List available models
+vantage_smallllm_list() {
+    if [[ "${VANTAGE_SMALLLLM_ENABLED}" != "1" ]]; then
+        echo "VANTAGE Small LLM module is disabled. Enable it by setting VANTAGE_SMALLLLM_ENABLED=1."
+        return 0
+    fi
+    
+    python3 "${VANTAGE_BASE_DIR:-$HOME/Documents/GitHub/VANTAGE}/gitstar/models_manager.py" --list
+}
+
+# Generate text with a model
+vantage_smallllm_generate() {
+    if [[ "${VANTAGE_SMALLLLM_ENABLED}" != "1" ]]; then
+        echo "VANTAGE Small LLM module is disabled. Enable it by setting VANTAGE_SMALLLLM_ENABLED=1."
+        return 0
+    fi
+    
+    local model prompt
+    
+    # Check if first argument exists and doesn't start with a quote (likely a model name)
+    if [[ $# -ge 2 && ! "$1" =~ ^[\"\'] ]]; then
+        model="$1"
+        prompt="$2"
+    else
+        model="${VANTAGE_SMALLLLM_DEFAULT_MODEL}"
+        prompt="$1"
+    fi
+    
+    if [[ -z "${prompt}" ]]; then
+        echo "Usage: vantage_smallllm_generate [model] \"prompt\""
+        echo "Example: vantage_smallllm_generate phi3-mini \"What is cybersecurity?\""
+        echo "Default model: ${VANTAGE_SMALLLLM_DEFAULT_MODEL}"
+        return 0
+    fi
+    
+    python3 "${VANTAGE_BASE_DIR:-$HOME/Documents/GitHub/VANTAGE}/gitstar/models_manager.py" --run-model "${model}" --prompt "${prompt}"
+}
+
+# Check model availability
+vantage_smallllm_status() {
+    if [[ "${VANTAGE_SMALLLLM_ENABLED}" != "1" ]]; then
+        echo "VANTAGE Small LLM module is disabled. Enable it by setting VANTAGE_SMALLLLM_ENABLED=1."
+        return 0
+    fi
+    
+    local model_dir="${VANTAGE_SMALLLLM_DIR}"
+    
+    echo "VANTAGE Small LLM Status:"
+    echo "=============================="
+    echo "Module enabled: ${VANTAGE_SMALLLLM_ENABLED}"
+    echo "Default model: ${VANTAGE_SMALLLLM_DEFAULT_MODEL}"
+    echo "Models directory: ${model_dir}"
+    echo ""
+    echo "Available models:"
+    
+    if [[ -d "${model_dir}" ]]; then
+        for model in "${model_dir}"/*.gguf; do
+            if [[ -f "${model}" ]]; then
+                local size=$(du -h "${model}" | cut -f1)
+                local filename=$(basename "${model}")
+                echo "  - ${filename} (${size})"
+            fi
+        done
+    else
+        echo "  No models found."
+    fi
+    
+    echo ""
+    echo "Use 'smallllm-download --list' to see available models for download."
+}
+
+# Usage function
+vantage_smallllm_help() {
+    cat << EOF
+VANTAGE Small LLM Module Help
+==============================
+
+Commands:
+  vantage_smallllm_download [options]   Download small language models
+    Options:
+      --model NAME                       Download a specific model
+      --all                              Download all available models
+      --list                             List available models for download
+
+  vantage_smallllm_list                 List locally available models
+  
+  vantage_smallllm_generate [model] "prompt"  Generate text using a model
+    If model is omitted, uses default model (${VANTAGE_SMALLLLM_DEFAULT_MODEL})
+    
+  vantage_smallllm_status               Show status of Small LLM module
+    
+  vantage_smallllm_help                 Show this help message
+
+Environment Variables:
+  VANTAGE_SMALLLLM_ENABLED              Set to 1 to enable (default: 1)
+  VANTAGE_SMALLLLM_DEFAULT_MODEL        Default model for generation
+  VANTAGE_SMALLLLM_DIR                  Directory for models
+
+Examples:
+  vantage_smallllm_download --list
+  vantage_smallllm_download --model qwen25-05b
+  vantage_smallllm_generate "Write a short poem about cybersecurity"
+  vantage_smallllm_generate phi2-q2k "Explain how firewalls work"
+EOF
+}
+
+# Aliases
+alias smallllm-download='vantage_smallllm_download'
+alias smallllm-list='vantage_smallllm_list'
+alias smallllm-generate='vantage_smallllm_generate'
+alias smallllm-status='vantage_smallllm_status'
+alias smallllm-help='vantage_smallllm_help'
+alias smallllm='smallllm-help'
+
+# Add to VANTAGE_FEATURE_MODULES for tracking
+if [[ -z "${VANTAGE_FEATURE_MODULES}" ]]; then
+    export VANTAGE_FEATURE_MODULES="smallllm"
+else
+    export VANTAGE_FEATURE_MODULES="${VANTAGE_FEATURE_MODULES}:smallllm"
+fi
+
+# Check if we need to download the default model
+if [[ "${VANTAGE_SMALLLLM_ENABLED}" == "1" ]]; then
+    if [[ ! -f "${VANTAGE_SMALLLLM_DIR}/qwen2.5-0.5b-instruct-q4_0.gguf" && "${VANTAGE_SMALLLLM_DEFAULT_MODEL}" == "qwen25-05b" ]]; then
+        echo "Default model (qwen25-05b) not found. You can download it with:"
+        echo "  smallllm-download --model qwen25-05b"
+    fi
+fi
+
+# Module loaded silently Type 'smallllm-help' for usage information." 

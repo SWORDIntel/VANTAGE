@@ -22,6 +22,9 @@ __pycache__/
 **/target/
 *.o
 indexer/indexer_daemon
-sentinel_indexer/indexer_daemon
+vantage_indexer/indexer_daemon
 net/c/simple_test
 net/c/test_memshadow
+
+# KEYSTONE local clone (not a submodule, optional local dependency)
+/vendor/KEYSTONE/

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-### SENTINEL Secure Logout Module - Combined Version
+### VANTAGE Secure Logout Module - Combined Version
 ### =================================================
 ### This module provides configuration management (with persistent options)
 ### as well as secure cleanup functions for interactive shell sessions.
@@ -10,10 +10,10 @@
 ### Author: John / SWORD Intel Team
 
 # Prevent multiple loading
-[[ -n "${_SENTINEL_BASH_LOGOUT_LOADED}" ]] && return 0
-export _SENTINEL_BASH_LOGOUT_LOADED=1
+[[ -n "${_VANTAGE_BASH_LOGOUT_LOADED}" ]] && return 0
+export _VANTAGE_BASH_LOGOUT_LOADED=1
 ### Email: intel@swordintelligence.airforce
-### URL: https://github.com/SWORDIntel/SENTINEL/
+### URL: https://github.com/SWORDIntel/VANTAGE/
 ### Version: 1.0.0
 ### Tags: security, privacy, logout, cleanup
 ### Requirements: coreutils, bash, find, [optional: xclip, xsel, shred]
@@ -35,18 +35,18 @@ esac
 # Configuration Defaults
 # -------------------------------
 # These can be overridden by setting variables in ~/.bashrc.postcustom.
-export SENTINEL_SECURE_BASH_HISTORY="${SENTINEL_SECURE_BASH_HISTORY:-1}"
-export SENTINEL_SECURE_SSH_KNOWN_HOSTS="${SENTINEL_SECURE_SSH_KNOWN_HOSTS:-0}"
-export SENTINEL_SECURE_CLEAN_CACHE="${SENTINEL_SECURE_CLEAN_CACHE:-1}"
-export SENTINEL_SECURE_BROWSER_CACHE="${SENTINEL_SECURE_BROWSER_CACHE:-0}"
-export SENTINEL_SECURE_RECENT="${SENTINEL_SECURE_RECENT:-1}"
-export SENTINEL_SECURE_VIM_UNDO="${SENTINEL_SECURE_VIM_UNDO:-1}"
-export SENTINEL_SECURE_CLIPBOARD="${SENTINEL_SECURE_CLIPBOARD:-1}"
-export SENTINEL_SECURE_CLEAR_SCREEN="${SENTINEL_SECURE_CLEAR_SCREEN:-1}"
-export SENTINEL_SECURE_DIRS="${SENTINEL_SECURE_DIRS:-}"
-export SENTINEL_WORKSPACE_TEMP="${SENTINEL_WORKSPACE_TEMP:-}"
+export VANTAGE_SECURE_BASH_HISTORY="${VANTAGE_SECURE_BASH_HISTORY:-1}"
+export VANTAGE_SECURE_SSH_KNOWN_HOSTS="${VANTAGE_SECURE_SSH_KNOWN_HOSTS:-0}"
+export VANTAGE_SECURE_CLEAN_CACHE="${VANTAGE_SECURE_CLEAN_CACHE:-1}"
+export VANTAGE_SECURE_BROWSER_CACHE="${VANTAGE_SECURE_BROWSER_CACHE:-0}"
+export VANTAGE_SECURE_RECENT="${VANTAGE_SECURE_RECENT:-1}"
+export VANTAGE_SECURE_VIM_UNDO="${VANTAGE_SECURE_VIM_UNDO:-1}"
+export VANTAGE_SECURE_CLIPBOARD="${VANTAGE_SECURE_CLIPBOARD:-1}"
+export VANTAGE_SECURE_CLEAR_SCREEN="${VANTAGE_SECURE_CLEAR_SCREEN:-1}"
+export VANTAGE_SECURE_DIRS="${VANTAGE_SECURE_DIRS:-}"
+export VANTAGE_WORKSPACE_TEMP="${VANTAGE_WORKSPACE_TEMP:-}"
 # New option to completely disable logout cleanup
-export SENTINEL_SECURE_LOGOUT_ENABLED="${SENTINEL_SECURE_LOGOUT_ENABLED:-1}"
+export VANTAGE_SECURE_LOGOUT_ENABLED="${VANTAGE_SECURE_LOGOUT_ENABLED:-1}"
 
 # -------------------------------
 # Configuration Helper Functions
@@ -55,31 +55,31 @@ export SENTINEL_SECURE_LOGOUT_ENABLED="${SENTINEL_SECURE_LOGOUT_ENABLED:-1}"
 # Show the current configuration for secure logout options.
 secure_logout_config() {
     cat << EOF
-SENTINEL Secure Logout Configuration
+VANTAGE Secure Logout Configuration
 =====================================
-Master toggle: $(if [[ "${SENTINEL_SECURE_LOGOUT_ENABLED}" == "1" ]]; then echo "ENABLED"; else echo "DISABLED"; fi) (SENTINEL_SECURE_LOGOUT_ENABLED)
+Master toggle: $(if [[ "${VANTAGE_SECURE_LOGOUT_ENABLED}" == "1" ]]; then echo "ENABLED"; else echo "DISABLED"; fi) (VANTAGE_SECURE_LOGOUT_ENABLED)
 
 The following items will be securely deleted on logout:
 
-$(if [[ "${SENTINEL_SECURE_BASH_HISTORY}" == "1" ]]; then echo "[X]"; else echo "[ ]"; fi) Bash history         : (SENTINEL_SECURE_BASH_HISTORY)
-$(if [[ "${SENTINEL_SECURE_SSH_KNOWN_HOSTS}" == "1" ]]; then echo "[X]"; else echo "[ ]"; fi) SSH known hosts      : (SENTINEL_SECURE_SSH_KNOWN_HOSTS)
-$(if [[ "${SENTINEL_SECURE_CLEAN_CACHE}" == "1" ]]; then echo "[X]"; else echo "[ ]"; fi) Cache directory      : (SENTINEL_SECURE_CLEAN_CACHE)
-$(if [[ "${SENTINEL_SECURE_BROWSER_CACHE}" == "1" ]]; then echo "[X]"; else echo "[ ]"; fi) Browser cache/cookies: (SENTINEL_SECURE_BROWSER_CACHE)
-$(if [[ "${SENTINEL_SECURE_RECENT}" == "1" ]]; then echo "[X]"; else echo "[ ]"; fi) Recently used files  : (SENTINEL_SECURE_RECENT)
-$(if [[ "${SENTINEL_SECURE_VIM_UNDO}" == "1" ]]; then echo "[X]"; else echo "[ ]"; fi) Vim undo history     : (SENTINEL_SECURE_VIM_UNDO)
-$(if [[ "${SENTINEL_SECURE_CLIPBOARD}" == "1" ]]; then echo "[X]"; else echo "[ ]"; fi) Clipboard contents   : (SENTINEL_SECURE_CLIPBOARD)
-$(if [[ "${SENTINEL_SECURE_CLEAR_SCREEN}" == "1" ]]; then echo "[X]"; else echo "[ ]"; fi) Clear screen on exit : (SENTINEL_SECURE_CLEAR_SCREEN)
+$(if [[ "${VANTAGE_SECURE_BASH_HISTORY}" == "1" ]]; then echo "[X]"; else echo "[ ]"; fi) Bash history         : (VANTAGE_SECURE_BASH_HISTORY)
+$(if [[ "${VANTAGE_SECURE_SSH_KNOWN_HOSTS}" == "1" ]]; then echo "[X]"; else echo "[ ]"; fi) SSH known hosts      : (VANTAGE_SECURE_SSH_KNOWN_HOSTS)
+$(if [[ "${VANTAGE_SECURE_CLEAN_CACHE}" == "1" ]]; then echo "[X]"; else echo "[ ]"; fi) Cache directory      : (VANTAGE_SECURE_CLEAN_CACHE)
+$(if [[ "${VANTAGE_SECURE_BROWSER_CACHE}" == "1" ]]; then echo "[X]"; else echo "[ ]"; fi) Browser cache/cookies: (VANTAGE_SECURE_BROWSER_CACHE)
+$(if [[ "${VANTAGE_SECURE_RECENT}" == "1" ]]; then echo "[X]"; else echo "[ ]"; fi) Recently used files  : (VANTAGE_SECURE_RECENT)
+$(if [[ "${VANTAGE_SECURE_VIM_UNDO}" == "1" ]]; then echo "[X]"; else echo "[ ]"; fi) Vim undo history     : (VANTAGE_SECURE_VIM_UNDO)
+$(if [[ "${VANTAGE_SECURE_CLIPBOARD}" == "1" ]]; then echo "[X]"; else echo "[ ]"; fi) Clipboard contents   : (VANTAGE_SECURE_CLIPBOARD)
+$(if [[ "${VANTAGE_SECURE_CLEAR_SCREEN}" == "1" ]]; then echo "[X]"; else echo "[ ]"; fi) Clear screen on exit : (VANTAGE_SECURE_CLEAR_SCREEN)
 
 Additional directories to clean:
-  SENTINEL_SECURE_DIRS=${SENTINEL_SECURE_DIRS:-"(none)"}
+  VANTAGE_SECURE_DIRS=${VANTAGE_SECURE_DIRS:-"(none)"}
 
 Workspace temporary directory:
-  SENTINEL_WORKSPACE_TEMP=${SENTINEL_WORKSPACE_TEMP:-"(none)"}
+  VANTAGE_WORKSPACE_TEMP=${VANTAGE_WORKSPACE_TEMP:-"(none)"}
 
 To change these settings, edit your ~/.bashrc.postcustom file or use the secure_logout_set function.
 Examples:
-  secure_logout_set SENTINEL_SECURE_LOGOUT_ENABLED 0  # Disable secure logout completely
-  secure_logout_set SENTINEL_SECURE_BROWSER_CACHE 1   # Enable browser cache cleaning
+  secure_logout_set VANTAGE_SECURE_LOGOUT_ENABLED 0  # Disable secure logout completely
+  secure_logout_set VANTAGE_SECURE_BROWSER_CACHE 1   # Enable browser cache cleaning
 EOF
 }
 
@@ -90,13 +90,13 @@ secure_logout_set() {
 
     if [[ -z "$option" || -z "$value" ]]; then
         echo "Usage: secure_logout_set OPTION VALUE"
-        echo "Example: secure_logout_set SENTINEL_SECURE_BROWSER_CACHE 1"
+        echo "Example: secure_logout_set VANTAGE_SECURE_BROWSER_CACHE 1"
         return 0
     fi
 
     # Validate option naming.
-    if [[ ! "$option" =~ ^SENTINEL_SECURE_ ]]; then
-        echo "Invalid option: $option. Options must start with SENTINEL_SECURE_"
+    if [[ ! "$option" =~ ^VANTAGE_SECURE_ ]]; then
+        echo "Invalid option: $option. Options must start with VANTAGE_SECURE_"
         return 0
     fi
 
@@ -109,7 +109,7 @@ secure_logout_set() {
         fi
     else
         echo "#!/usr/bin/env bash" > "$HOME/.bashrc.postcustom"
-        echo "# SENTINEL custom configuration" >> "$HOME/.bashrc.postcustom"
+        echo "# VANTAGE custom configuration" >> "$HOME/.bashrc.postcustom"
         echo "export $option=\"$value\"" >> "$HOME/.bashrc.postcustom"
     fi
 
@@ -134,15 +134,15 @@ secure_logout_add_dir() {
         return 0
     fi
 
-    # Add to SENTINEL_SECURE_DIRS if not already included.
-    if [[ -z "$SENTINEL_SECURE_DIRS" ]]; then
-        secure_logout_set "SENTINEL_SECURE_DIRS" "$dir"
+    # Add to VANTAGE_SECURE_DIRS if not already included.
+    if [[ -z "$VANTAGE_SECURE_DIRS" ]]; then
+        secure_logout_set "VANTAGE_SECURE_DIRS" "$dir"
     else
-        if [[ ":$SENTINEL_SECURE_DIRS:" == *":$dir:"* ]]; then
+        if [[ ":$VANTAGE_SECURE_DIRS:" == *":$dir:"* ]]; then
             echo "Directory already in secure cleanup list: $dir"
             return 0
         fi
-        secure_logout_set "SENTINEL_SECURE_DIRS" "${SENTINEL_SECURE_DIRS}:$dir"
+        secure_logout_set "VANTAGE_SECURE_DIRS" "${VANTAGE_SECURE_DIRS}:$dir"
     fi
 
     echo "Added $dir to secure cleanup list."
@@ -153,12 +153,12 @@ secure_logout_add_dir() {
 # -------------------------------
 
 # Only set up this trap in interactive shells and if enabled
-if [[ "$-" == *i* && "${SENTINEL_SECURE_LOGOUT_ENABLED}" == "1" ]]; then
+if [[ "$-" == *i* && "${VANTAGE_SECURE_LOGOUT_ENABLED}" == "1" ]]; then
     # Store original trap
-    _sentinel_original_exit_trap=$(trap -p EXIT)
+    _vantage_original_exit_trap=$(trap -p EXIT)
     
     # Define our trap function
-    _sentinel_secure_logout_trap() {
+    _vantage_secure_logout_trap() {
         # Only run cleanup if shell is actually exiting (not being killed)
         # $? is the exit status of the last command
         # 130 is the exit code for Ctrl+C, 143 for SIGTERM, 146 for SIGTSTP
@@ -175,21 +175,21 @@ if [[ "$-" == *i* && "${SENTINEL_SECURE_LOGOUT_ENABLED}" == "1" ]]; then
         fi
         
         # Execute the original trap if it existed
-        if [[ -n "$_sentinel_original_exit_trap" ]]; then
-            eval "${_sentinel_original_exit_trap#trap -- }"
+        if [[ -n "$_vantage_original_exit_trap" ]]; then
+            eval "${_vantage_original_exit_trap#trap -- }"
         fi
     }
     
     # Set our trap
-    trap _sentinel_secure_logout_trap EXIT
+    trap _vantage_secure_logout_trap EXIT
     
-    if [[ "${SENTINEL_QUIET_MODE:-0}" != "1" && "${SENTINEL_SUPPRESS_MODULE_MESSAGES:-0}" != "1" && "${SENTINEL_DEBUG_MODULES:-0}" == "1" ]]; then
-        echo "SENTINEL: Secure logout trap enabled. Will run cleanup on normal shell exit."
+    if [[ "${VANTAGE_QUIET_MODE:-0}" != "1" && "${VANTAGE_SUPPRESS_MODULE_MESSAGES:-0}" != "1" && "${VANTAGE_DEBUG_MODULES:-0}" == "1" ]]; then
+        echo "VANTAGE: Secure logout trap enabled. Will run cleanup on normal shell exit."
     fi
 else
     # Not setting the trap - either non-interactive shell or disabled by user
-    if [[ "$-" == *i* && "${SENTINEL_QUIET_MODE:-0}" != "1" && "${SENTINEL_SUPPRESS_MODULE_MESSAGES:-0}" != "1" && "${SENTINEL_DEBUG_MODULES:-0}" == "1" ]]; then
-        echo "SENTINEL: Secure logout trap disabled by configuration."
+    if [[ "$-" == *i* && "${VANTAGE_QUIET_MODE:-0}" != "1" && "${VANTAGE_SUPPRESS_MODULE_MESSAGES:-0}" != "1" && "${VANTAGE_DEBUG_MODULES:-0}" == "1" ]]; then
+        echo "VANTAGE: Secure logout trap disabled by configuration."
     fi
 fi
 
@@ -203,7 +203,7 @@ _secure_logout_deletion() {
     local desc="$2"
 
     if [[ -e "$file_path" ]]; then
-        echo "SENTINEL: Securely erasing $desc..."
+        echo "VANTAGE: Securely erasing $desc..."
         if type _secure_shred &>/dev/null; then
             _secure_shred "$file_path" "-f" >/dev/null 2>&1
         elif command -v shred &>/dev/null; then
@@ -226,7 +226,7 @@ _secure_clean_dir() {
     local pattern="${3:-.*}"  # Default: match all files.
 
     if [[ -d "$dir_path" ]]; then
-        echo "SENTINEL: Cleaning $desc in $dir_path..."
+        echo "VANTAGE: Cleaning $desc in $dir_path..."
         # Use find to iterate over matching files securely.
         find "$dir_path" -type f -name "$pattern" -print0 2>/dev/null | while IFS= read -r -d '' file; do
             _secure_logout_deletion "$file" "$(basename "$file") in $desc"
@@ -239,17 +239,17 @@ _secure_clean_dir() {
 # -------------------------------
 
 secure_logout_cleanup() {
-    echo "SENTINEL: Starting secure cleanup..."
+    echo "VANTAGE: Starting secure cleanup..."
 
     # Clear bash history if enabled.
-    if [[ "${SENTINEL_SECURE_BASH_HISTORY}" == "1" ]]; then
-        echo "SENTINEL: Clearing bash history..."
+    if [[ "${VANTAGE_SECURE_BASH_HISTORY}" == "1" ]]; then
+        echo "VANTAGE: Clearing bash history..."
         history -c
         _secure_logout_deletion "$HOME/.bash_history" "bash history"
     fi
 
     # Clear SSH known hosts if enabled.
-    if [[ "${SENTINEL_SECURE_SSH_KNOWN_HOSTS}" == "1" ]]; then
+    if [[ "${VANTAGE_SECURE_SSH_KNOWN_HOSTS}" == "1" ]]; then
         _secure_logout_deletion "$HOME/.ssh/known_hosts" "SSH known hosts"
     fi
 
@@ -257,12 +257,12 @@ secure_logout_cleanup() {
     _secure_clean_dir "/tmp" "temporary files owned by current user" "*"
 
     # Clean the cache directory if enabled.
-    if [[ "${SENTINEL_SECURE_CLEAN_CACHE}" == "1" ]]; then
+    if [[ "${VANTAGE_SECURE_CLEAN_CACHE}" == "1" ]]; then
         _secure_clean_dir "$HOME/.cache" "cache directory"
     fi
 
     # Clean browser cache and cookie files if enabled.
-    if [[ "${SENTINEL_SECURE_BROWSER_CACHE}" == "1" ]]; then
+    if [[ "${VANTAGE_SECURE_BROWSER_CACHE}" == "1" ]]; then
         if [[ -d "$HOME/.mozilla/firefox" ]]; then
             _secure_clean_dir "$HOME/.mozilla/firefox" "Firefox cache" "*.sqlite"
             _secure_clean_dir "$HOME/.mozilla/firefox" "Firefox cookies" "cookies.sqlite*"
@@ -276,26 +276,26 @@ secure_logout_cleanup() {
     fi
 
     # Clean recently used files list if enabled.
-    if [[ "${SENTINEL_SECURE_RECENT}" == "1" ]]; then
+    if [[ "${VANTAGE_SECURE_RECENT}" == "1" ]]; then
         _secure_logout_deletion "$HOME/.local/share/recently-used.xbel" "recently used files list"
         _secure_logout_deletion "$HOME/.recently-used" "recently used files list (old format)"
     fi
 
     # Clean Vim undo history if enabled.
-    if [[ "${SENTINEL_SECURE_VIM_UNDO}" == "1" ]]; then
+    if [[ "${VANTAGE_SECURE_VIM_UNDO}" == "1" ]]; then
         if [[ -d "$HOME/.vim/undo" ]]; then
             _secure_clean_dir "$HOME/.vim/undo" "Vim undo history"
         fi
     fi
 
     # Clean workspace-specific temporary files if defined.
-    if [[ -n "${SENTINEL_WORKSPACE_TEMP}" && -d "${SENTINEL_WORKSPACE_TEMP}" ]]; then
-        _secure_clean_dir "${SENTINEL_WORKSPACE_TEMP}" "workspace temporary files"
+    if [[ -n "${VANTAGE_WORKSPACE_TEMP}" && -d "${VANTAGE_WORKSPACE_TEMP}" ]]; then
+        _secure_clean_dir "${VANTAGE_WORKSPACE_TEMP}" "workspace temporary files"
     fi
 
-    # Clean additional directories specified in SENTINEL_SECURE_DIRS.
-    if [[ -n "${SENTINEL_SECURE_DIRS}" ]]; then
-        IFS=':' read -ra DIRS <<< "${SENTINEL_SECURE_DIRS}"
+    # Clean additional directories specified in VANTAGE_SECURE_DIRS.
+    if [[ -n "${VANTAGE_SECURE_DIRS}" ]]; then
+        IFS=':' read -ra DIRS <<< "${VANTAGE_SECURE_DIRS}"
         for dir in "${DIRS[@]}"; do
             if [[ -d "$dir" ]]; then
                 _secure_clean_dir "$dir" "secure data in $dir"
@@ -304,8 +304,8 @@ secure_logout_cleanup() {
     fi
 
     # Clear the clipboard (if xsel or xclip is installed) if enabled.
-    if [[ "${SENTINEL_SECURE_CLIPBOARD}" == "1" ]]; then
-        echo "SENTINEL: Clearing clipboard..."
+    if [[ "${VANTAGE_SECURE_CLIPBOARD}" == "1" ]]; then
+        echo "VANTAGE: Clearing clipboard..."
         if command -v xsel &>/dev/null; then
             echo -n | xsel --clipboard --input
         elif command -v xclip &>/dev/null; then
@@ -314,12 +314,12 @@ secure_logout_cleanup() {
     fi
 
     # Clear the screen for added privacy if enabled.
-    if [[ "${SENTINEL_SECURE_CLEAR_SCREEN}" == "1" ]]; then
+    if [[ "${VANTAGE_SECURE_CLEAR_SCREEN}" == "1" ]]; then
         clear
         echo "Terminal session ended and secured."
     fi
 
-    echo "SENTINEL: Secure cleanup complete."
+    echo "VANTAGE: Secure cleanup complete."
 }
 
 # -------------------------------
@@ -331,6 +331,6 @@ alias secure-logout-add-dir='secure_logout_add_dir'
 alias secure-logout-cleanup='secure_logout_cleanup'
 
 # Initial load message.
-if [[ "${SENTINEL_QUIET_MODE:-0}" != "1" && "${SENTINEL_SUPPRESS_MODULE_MESSAGES:-0}" != "1" ]]; then
-    echo "SENTINEL: Secure logout module loaded. Type 'secure-logout-config' to view your settings."
+if [[ "${VANTAGE_QUIET_MODE:-0}" != "1" && "${VANTAGE_SUPPRESS_MODULE_MESSAGES:-0}" != "1" ]]; then
+    echo "VANTAGE: Secure logout module loaded. Type 'secure-logout-config' to view your settings."
 fi

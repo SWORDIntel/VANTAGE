@@ -1,10 +1,10 @@
 local wezterm = require 'wezterm'
-local state = require 'sentinel.state'
+local state = require 'vantage.state'
 
 local M = {}
 
--- This function draws the WezTerm native TUI replacement for sentinel_toggles_tui.py
-function M.show_sentinel_menu(window, pane)
+-- This function draws the WezTerm native TUI replacement for vantage_toggles_tui.py
+function M.show_vantage_menu(window, pane)
     -- Read the current state of modules from state.json
     local current_state = state.read_state()
     
@@ -31,7 +31,7 @@ function M.show_sentinel_menu(window, pane)
         wezterm.action.InputSelector {
             action = wezterm.action_callback(function(inner_window, inner_pane, id, label)
                 if not id or id == "cancel" then
-                    wezterm.log_info 'SENTINEL menu closed.'
+                    wezterm.log_info 'VANTAGE menu closed.'
                     return
                 end
 
@@ -40,13 +40,13 @@ function M.show_sentinel_menu(window, pane)
                 state.write_state(current_state)
 
                 local new_status = current_state[id] and "ENABLED" or "DISABLED"
-                wezterm.log_info("SENTINEL Module: " .. id .. " is now " .. new_status)
+                wezterm.log_info("VANTAGE Module: " .. id .. " is now " .. new_status)
                 
                 -- Tell WezTerm to emit a toast notification
-                inner_window:toast_notification("SENTINEL Control", id .. " is now " .. new_status, nil, 2000)
+                inner_window:toast_notification("VANTAGE Control", id .. " is now " .. new_status, nil, 2000)
 
             end),
-            title = 'SENTINEL Master Control',
+            title = 'VANTAGE Master Control',
             choices = choices,
             alphabet = '123456789', -- Allows pressing 1-9 to select options instantly
             description = 'Select a module to toggle. Changes save to state.json instantly.',

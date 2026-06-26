@@ -1,6 +1,6 @@
-# SENTINEL Contrib Components
+# VANTAGE Contrib Components
 
-The `contrib/` directory contains optional Python utilities that extend the shell-centric core of SENTINEL. These are not the primary installer entrypoints, but several are exercised by the broader test suite and the Python integration bridge.
+The `contrib/` directory contains optional Python utilities that extend the shell-centric core of VANTAGE. These are not the primary installer entrypoints, but several are exercised by the broader test suite and the Python integration bridge.
 
 ## What Lives Here
 
@@ -15,18 +15,18 @@ Current contrib scripts include optional helpers for:
 
 Representative files:
 
-- `sentinel_context.py`
-- `sentinel_chat.py`
-- `sentinel_chain_predict.py`
-- `sentinel_gitstar.py`
-- `sentinel_osint.py`
-- `sentinel_cybersec_ml.py`
-- `sentinel_integration_test.py`
+- `vantage_context.py`
+- `vantage_chat.py`
+- `vantage_chain_predict.py`
+- `vantage_gitstar.py`
+- `vantage_osint.py`
+- `vantage_cybersec_ml.py`
+- `vantage_integration_test.py`
 
 ## How They Fit Into The Repo
 
 - The shell side lives primarily in `bash_modules.d/python_integration.module`.
-- The contrib integration smoke test is `contrib/sentinel_integration_test.py`.
+- The contrib integration smoke test is `contrib/vantage_integration_test.py`.
 - Broad local validation runs that integration path through `make test`.
 
 ## Running Validation
@@ -40,7 +40,7 @@ make test
 If you only want to validate the Python bridge path directly:
 
 ```bash
-bash -lc 'source bash_modules.d/python_integration.module >/dev/null && python3 contrib/sentinel_integration_test.py'
+bash -lc 'source bash_modules.d/python_integration.module >/dev/null && python3 contrib/vantage_integration_test.py'
 ```
 
 ## Optional Dependencies

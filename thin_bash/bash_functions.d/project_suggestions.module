@@ -1,14 +1,14 @@
 
 #!/usr/bin/env bash
-# SENTINEL - Project-Specific Suggestions Module
+# VANTAGE - Project-Specific Suggestions Module
 # Version: 2.0.0
 # Description: Provides context-aware suggestions based on project type detection
 # Dependencies: ble.sh (optional, enhances functionality), hmac.module
-# Maintainer: SENTINEL Team
+# Maintainer: VANTAGE Team
 
 # Prevent double loading
-[[ -n "${_SENTINEL_PROJECT_SUGGESTIONS_LOADED}" ]] && return 0
-export _SENTINEL_PROJECT_SUGGESTIONS_LOADED=1
+[[ -n "${_VANTAGE_PROJECT_SUGGESTIONS_LOADED}" ]] && return 0
+export _VANTAGE_PROJECT_SUGGESTIONS_LOADED=1
 
 # Make sure we have color variables defined to prevent crashes
 RED="\033[0;31m" 2>/dev/null || RED=""
@@ -22,7 +22,7 @@ NC="\033[0m" 2>/dev/null || NC=""
 
 # FEATURE: Project-Specific Suggestions
 # Detects project types and provides contextually relevant suggestions
-_sentinel_project_suggestions() {
+_vantage_project_suggestions() {
     # Add error handling to prevent terminal crashes
     local current_dir=$(pwd 2>/dev/null) || local current_dir="$HOME"
     local project_root="$current_dir"
@@ -189,7 +189,7 @@ _sentinel_project_suggestions() {
     [[ -z "$project_type" ]] && return
     
     # Create project settings file if it doesn't exist
-    local project_file=~/.sentinel/autocomplete/projects/$(echo "$project_root" | tr '/' '_').project
+    local project_file=~/.vantage/autocomplete/projects/$(echo "$project_root" | tr '/' '_').project
     
     if [[ ! -f "$project_file" ]]; then
         {
@@ -425,7 +425,7 @@ _sentinel_project_suggestions() {
     esac
     
     # Collect recently used commands for this project
-    local project_history_file=~/.sentinel/autocomplete/projects/$(echo "$project_root" | tr '/' '_').history
+    local project_history_file=~/.vantage/autocomplete/projects/$(echo "$project_root" | tr '/' '_').history
     if [[ ! -f "$project_history_file" ]]; then
         # Create empty history file
         touch "$project_history_file"
@@ -455,15 +455,15 @@ _sentinel_project_suggestions() {
 # Logging functions with error handling
 _projects_log_error() {
     local msg="$1"
-    { mkdir -p ~/.sentinel/logs; } 2>/dev/null || return 0
-    { echo "[$(date '+%Y-%m-%d %H:%M:%S' 2>/dev/null || echo 'unknown')] ERROR: $msg" >> ~/.sentinel/logs/errors-$(date +%Y%m%d 2>/dev/null || echo 'unknown').log; } 2>/dev/null || true
+    { mkdir -p ~/.vantage/logs; } 2>/dev/null || return 0
+    { echo "[$(date '+%Y-%m-%d %H:%M:%S' 2>/dev/null || echo 'unknown')] ERROR: $msg" >> ~/.vantage/logs/errors-$(date +%Y%m%d 2>/dev/null || echo 'unknown').log; } 2>/dev/null || true
     return 0
 }
 
 _projects_log_warning() {
     local msg="$1"
-    { mkdir -p ~/.sentinel/logs; } 2>/dev/null || return 0
-    { echo "[$(date '+%Y-%m-%d %H:%M:%S' 2>/dev/null || echo 'unknown')] WARNING: $msg" >> ~/.sentinel/logs/warnings-$(date +%Y%m%d 2>/dev/null || echo 'unknown').log; } 2>/dev/null || true
+    { mkdir -p ~/.vantage/logs; } 2>/dev/null || return 0
+    { echo "[$(date '+%Y-%m-%d %H:%M:%S' 2>/dev/null || echo 'unknown')] WARNING: $msg" >> ~/.vantage/logs/warnings-$(date +%Y%m%d 2>/dev/null || echo 'unknown').log; } 2>/dev/null || true
     return 0
 }
 
@@ -473,15 +473,15 @@ _register_project_hook() {
     if type -t blehook &>/dev/null; then
         # Check if hook exists first with proper error handling
         local hook_exists=0
-        { blehook ATTACH_LINE_END 2>/dev/null | grep -q _sentinel_project_suggestions && hook_exists=1; } 2>/dev/null || true
+        { blehook ATTACH_LINE_END 2>/dev/null | grep -q _vantage_project_suggestions && hook_exists=1; } 2>/dev/null || true
         
         if [[ $hook_exists -eq 0 ]]; then
-            { blehook ATTACH_LINE_END+=_sentinel_project_suggestions; } 2>/dev/null || true
+            { blehook ATTACH_LINE_END+=_vantage_project_suggestions; } 2>/dev/null || true
         fi
     else
         # Fallback to PROMPT_COMMAND if ble.sh not available - with error handling
-        if [[ ! "${PROMPT_COMMAND:-}" =~ _sentinel_project_suggestions ]]; then
-            PROMPT_COMMAND="_sentinel_project_suggestions 2>/dev/null || true;${PROMPT_COMMAND:-:}"
+        if [[ ! "${PROMPT_COMMAND:-}" =~ _vantage_project_suggestions ]]; then
+            PROMPT_COMMAND="_vantage_project_suggestions 2>/dev/null || true;${PROMPT_COMMAND:-:}"
         fi
     fi
     
@@ -489,18 +489,18 @@ _register_project_hook() {
 }
 
 # Initialize the project suggestion system with robust error handling
-sentinel_init_project_suggestions() {
+vantage_init_project_suggestions() {
     # Skip if not in interactive shell
     [[ $- != *i* ]] && return 0
     
     # Create required directories with error handling
-    { mkdir -p ~/.sentinel/autocomplete/projects; } 2>/dev/null || true
+    { mkdir -p ~/.vantage/autocomplete/projects; } 2>/dev/null || true
     
     # Register with the appropriate hook system
     { _register_project_hook; } 2>/dev/null || true
     
     # Create initial project detection in background with proper isolation
-    ( { _sentinel_project_suggestions; } &>/dev/null & ) 2>/dev/null || true
+    ( { _vantage_project_suggestions; } &>/dev/null & ) 2>/dev/null || true
     
     # Log startup with error handling
     { _projects_log_warning "Project suggestion system initialized"; } 2>/dev/null || true
@@ -509,7 +509,7 @@ sentinel_init_project_suggestions() {
 }
 
 # Run initialization with error handling to prevent terminal crashes
-{ sentinel_init_project_suggestions; } 2>/dev/null || true
+{ vantage_init_project_suggestions; } 2>/dev/null || true
 
 # Always return success to prevent terminal crashes
 return 0

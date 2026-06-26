@@ -432,7 +432,7 @@
 ## Monitoring tools 
 
 * [Shodmon](https://github.com/inishantgrover/Shodmon)
-* [Microsoft Sentinel Shodan Monitor](https://github.com/mikoiv/MicrosoftSentinel-ShodanMonitor)
+* [Microsoft Vantage Shodan Monitor](https://github.com/mikoiv/MicrosoftVantage-ShodanMonitor)
 * [GreyWatch (GreyNoise)](https://github.com/hrbrmstr/greywatch)
 
 

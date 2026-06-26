@@ -1,4 +1,4 @@
-# SENTINEL Current State
+# VANTAGE Current State
 
 ## Last Updated: 2025-01-11
 
@@ -128,13 +128,13 @@
 | module_manager | ✅ Active | None | Module control |
 | obfuscate | ✅ Active | None | Security tool |
 | project_suggestions | ⚠️ Beta | Python | Needs work |
-| sentinel_* | ⚠️ Mixed | Various | Some need Python deps |
+| vantage_* | ⚠️ Mixed | Various | Some need Python deps |
 | shell_security | ✅ Active | None | Important hardening |
 
 ## Configuration Flags
 
 ### Active by Default
-- `SENTINEL_ML_ENABLED=false` (requires manual enable)
+- `VANTAGE_ML_ENABLED=false` (requires manual enable)
 - `VENV_AUTO=true` (auto-activate Python venvs)
 - `MODULE_LAZY_LOAD=true` (performance)
 - `CONFIG_CACHE_ENABLED=true` (performance)

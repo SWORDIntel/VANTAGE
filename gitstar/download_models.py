@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """
-SENTINEL Small Model Downloader
+VANTAGE Small Model Downloader
 -------------------------------
-Downloads and sets up small language models for use with SENTINEL.
+Downloads and sets up small language models for use with VANTAGE.
 
 This script downloads various small (<2GB) language models from Hugging Face
 to be used for local embedding, text generation, and other AI tasks.
@@ -27,10 +27,10 @@ logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s [%(levelname)s] %(message)s'
 )
-logger = logging.getLogger("sentinel_model_downloader")
+logger = logging.getLogger("vantage_model_downloader")
 
 # Directory setup
-MODEL_DIR = os.path.expanduser("~/Documents/GitHub/SENTINEL/gitstar/models")
+MODEL_DIR = os.path.expanduser("~/Documents/GitHub/VANTAGE/gitstar/models")
 Path(MODEL_DIR).mkdir(parents=True, exist_ok=True)
 
 # Define available models with their Hugging Face repo info
@@ -110,7 +110,7 @@ def download_all_models():
     return success
 
 def main():
-    parser = argparse.ArgumentParser(description="Download small language models for SENTINEL")
+    parser = argparse.ArgumentParser(description="Download small language models for VANTAGE")
     group = parser.add_mutually_exclusive_group(required=True)
     group.add_argument("--model", type=str, help="Specific model to download")
     group.add_argument("--all", action="store_true", help="Download all available models")

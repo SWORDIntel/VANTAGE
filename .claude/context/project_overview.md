@@ -1,8 +1,8 @@
-# SENTINEL Project Overview
+# VANTAGE Project Overview
 
-## What is SENTINEL?
+## What is VANTAGE?
 
-SENTINEL (Secure ENhanced Terminal INtelligent Layer) is a comprehensive bash environment enhancement system designed for cybersecurity professionals and power users. It provides a modular, secure, and feature-rich command-line experience with integrated ML/AI capabilities.
+VANTAGE (Secure ENhanced Terminal INtelligent Layer) is a comprehensive bash environment enhancement system designed for cybersecurity professionals and power users. It provides a modular, secure, and feature-rich command-line experience with integrated ML/AI capabilities.
 
 ## Core Components
 
@@ -24,11 +24,11 @@ SENTINEL (Secure ENhanced Terminal INtelligent Layer) is a comprehensive bash en
 ### 3. Python ML/AI Integration
 - **Location**: `contrib/`
 - **Features**:
-  - Local LLM chat interface (`sentinel_chat.py`)
-  - Command prediction (`sentinel_chain_predict.py`)
-  - Context awareness (`sentinel_context.py`)
-  - OSINT tools (`sentinel_osint.py`)
-  - Cybersecurity ML (`sentinel_cybersec_ml.py`)
+  - Local LLM chat interface (`vantage_chat.py`)
+  - Command prediction (`vantage_chain_predict.py`)
+  - Context awareness (`vantage_context.py`)
+  - OSINT tools (`vantage_osint.py`)
+  - Cybersecurity ML (`vantage_cybersec_ml.py`)
 
 ### 4. GitStar System
 - **Purpose**: Categorize and analyze GitHub repositories
@@ -118,7 +118,7 @@ The project uses a hardened installation script (`install.sh`) that:
 ## Configuration
 
 Configuration is managed through:
-- Environment variables (SENTINEL_*)
+- Environment variables (VANTAGE_*)
 - Module-specific configs
 - User preferences in bashrc.postcustom
 - Cached configurations for performance

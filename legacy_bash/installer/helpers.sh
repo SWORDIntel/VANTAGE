@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# SENTINEL Installer - Helper Functions
+# VANTAGE Installer - Helper Functions
 
 # Colour helpers (safe on dark backgrounds and TTY-agnostic)
 init_colour_palette() {
@@ -339,14 +339,14 @@ create_rollback_script() {
     step "Creating rollback script at ${ROLLBACK_SCRIPT}"
     cat > "${ROLLBACK_SCRIPT}" <<'EOF'
 #!/bin/bash
-# SENTINEL Rollback Script
+# VANTAGE Rollback Script
 # Created: $(date)
-# This script will restore your system to pre-SENTINEL state
+# This script will restore your system to pre-VANTAGE state
 
-echo "Starting SENTINEL rollback..."
+echo "Starting VANTAGE rollback..."
 
 # Restore bashrc from most recent backup
-LATEST_BACKUP=$(ls -t "${HOME}"/.bashrc.sentinel.bak.* 2>/dev/null | head -1)
+LATEST_BACKUP=$(ls -t "${HOME}"/.bashrc.vantage.bak.* 2>/dev/null | head -1)
 if [[ -n "$LATEST_BACKUP" && -f "$LATEST_BACKUP" ]]; then
     cp "$LATEST_BACKUP" "${HOME}/.bashrc"
     echo "✔ Restored .bashrc from $LATEST_BACKUP"
@@ -354,7 +354,7 @@ else
     echo "✖ No .bashrc backup found"
 fi
 
-# Remove SENTINEL directories
+# Remove VANTAGE directories
 for dir in bash_modules.d autocomplete logs; do
     if [[ -d "${HOME}/$dir" ]]; then
         rm -rf "${HOME}/$dir"
@@ -362,8 +362,8 @@ for dir in bash_modules.d autocomplete logs; do
     fi
 done
 
-# Remove SENTINEL files
-for file in .bashrc.sentinel bashrc.postcustom blesh_loader.sh .bash_modules install.state; do
+# Remove VANTAGE files
+for file in .bashrc.vantage bashrc.postcustom blesh_loader.sh .bash_modules install.state; do
     if [[ -f "${HOME}/$file" ]]; then
         rm -f "${HOME}/$file"
         echo "✔ Removed $file"

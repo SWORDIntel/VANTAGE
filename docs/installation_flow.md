@@ -1,8 +1,8 @@
-# SENTINEL Installation and Configuration Flow
+# VANTAGE Installation and Configuration Flow
 
 ## Overview
 
-This document details the complete installation process, configuration management, and initialization flow of SENTINEL. Understanding this flow is crucial for troubleshooting, customization, and development.
+This document details the complete installation process, configuration management, and initialization flow of VANTAGE. Understanding this flow is crucial for troubleshooting, customization, and development.
 
 ## Installation Process
 
@@ -29,16 +29,16 @@ The installer (`install.sh`) verifies:
 #### Backup Process
 ```bash
 # Backs up existing configurations
-~/.bashrc → ~/.bashrc.sentinel.backup
-~/.bash_aliases → ~/.bash_aliases.sentinel.backup
-~/.bash_functions → ~/.bash_functions.sentinel.backup
+~/.bashrc → ~/.bashrc.vantage.backup
+~/.bash_aliases → ~/.bash_aliases.vantage.backup
+~/.bash_functions → ~/.bash_functions.vantage.backup
 ```
 
 ### 2. Core Installation Phase
 
 #### Directory Structure Creation
 ```bash
-$SENTINEL_BASE_PATH/
+$VANTAGE_BASE_PATH/
 ├── bash_modules.d/      # Module directory
 ├── bash_aliases.d/      # Alias collections
 ├── bash_functions.d/    # Function collections
@@ -54,16 +54,16 @@ $SENTINEL_BASE_PATH/
 # Core files
 install.sh copies:
 - bashrc → ~/.bashrc (or integrates with existing)
-- bash_modules → $SENTINEL_BASE_PATH/
-- bash_modules.d/* → $SENTINEL_BASE_PATH/bash_modules.d/
-- contrib/* → $SENTINEL_BASE_PATH/contrib/
+- bash_modules → $VANTAGE_BASE_PATH/
+- bash_modules.d/* → $VANTAGE_BASE_PATH/bash_modules.d/
+- contrib/* → $VANTAGE_BASE_PATH/contrib/
 ```
 
 ### 3. Module Installation Phase
 
 #### Module Discovery and Validation
 ```bash
-for module in $SENTINEL_BASE_PATH/bash_modules.d/*.module; do
+for module in $VANTAGE_BASE_PATH/bash_modules.d/*.module; do
     # Validate module header
     validate_module_header "$module"
     
@@ -87,17 +87,17 @@ Load Order: Core Module → Module B → Module A
 #### Virtual Environment Creation
 ```bash
 # Create isolated Python environment
-python3 -m venv $SENTINEL_BASE_PATH/venv
+python3 -m venv $VANTAGE_BASE_PATH/venv
 
 # Activate and install dependencies
-source $SENTINEL_BASE_PATH/venv/bin/activate
+source $VANTAGE_BASE_PATH/venv/bin/activate
 pip install -r requirements.txt
 ```
 
 #### Python Component Verification
 ```python
 # Test each Python component
-for component in contrib/sentinel_*.py:
+for component in contrib/vantage_*.py:
     python -m pytest tests/test_${component}
 ```
 
@@ -107,9 +107,9 @@ for component in contrib/sentinel_*.py:
 ```
 1. Default Configuration (built-in)
     ↓
-2. System Configuration (/etc/sentinel/)
+2. System Configuration (/etc/vantage/)
     ↓
-3. User Configuration (~/.sentinel/)
+3. User Configuration (~/.vantage/)
     ↓
 4. Environment Variables
     ↓
@@ -119,17 +119,17 @@ for component in contrib/sentinel_*.py:
 #### Initial Configuration
 ```bash
 # Generate default configuration
-cat > ~/.sentinel/config.yaml << EOF
-sentinel:
+cat > ~/.vantage/config.yaml << EOF
+vantage:
   version: $(get_version)
   features:
     ml_enabled: true
     chat_enabled: false
     osint_enabled: true
   paths:
-    base: $SENTINEL_BASE_PATH
-    cache: $HOME/.cache/sentinel
-    logs: $HOME/.local/share/sentinel/logs
+    base: $VANTAGE_BASE_PATH
+    cache: $HOME/.cache/vantage
+    logs: $HOME/.local/share/vantage/logs
 EOF
 ```
 
@@ -138,8 +138,8 @@ EOF
 #### Bashrc Integration
 ```bash
 # Add to ~/.bashrc
-if [ -f "$SENTINEL_BASE_PATH/bashrc" ]; then
-    source "$SENTINEL_BASE_PATH/bashrc"
+if [ -f "$VANTAGE_BASE_PATH/bashrc" ]; then
+    source "$VANTAGE_BASE_PATH/bashrc"
 fi
 ```
 
@@ -165,20 +165,20 @@ esac
 1. **Module Loading Test**
    ```bash
    source ~/.bashrc
-   sentinel module list
+   vantage module list
    ```
 
 2. **Component Health Check**
    ```bash
-   sentinel_postinstall_check.sh
+   scripts/vantage_postinstall_check.sh
    ```
 
 3. **Feature Verification**
    ```bash
    # Test key features
-   sentinel test ml
-   sentinel test chat
-   sentinel test osint
+   vantage test ml
+   vantage test chat
+   vantage test osint
    ```
 
 ## Configuration Management
@@ -189,15 +189,15 @@ esac
 Located in module files and Python components:
 ```bash
 # In modules
-DEFAULT_TIMEOUT=${SENTINEL_TIMEOUT:-30}
-DEFAULT_CACHE_SIZE=${SENTINEL_CACHE_SIZE:-1000}
+DEFAULT_TIMEOUT=${VANTAGE_TIMEOUT:-30}
+DEFAULT_CACHE_SIZE=${VANTAGE_CACHE_SIZE:-1000}
 ```
 
 #### 2. Configuration Files
 
-**Global Configuration** (`/etc/sentinel/config.yaml`):
+**Global Configuration** (`/etc/vantage/config.yaml`):
 ```yaml
-sentinel:
+vantage:
   system:
     max_memory: 2G
     max_cpu: 50%
@@ -206,9 +206,9 @@ sentinel:
     encryption: enabled
 ```
 
-**User Configuration** (`~/.sentinel/config.yaml`):
+**User Configuration** (`~/.vantage/config.yaml`):
 ```yaml
-sentinel:
+vantage:
   preferences:
     theme: dark
     suggestions: true
@@ -224,18 +224,18 @@ sentinel:
 #### 3. Environment Variables
 ```bash
 # Core settings
-export SENTINEL_BASE_PATH="/opt/sentinel"
-export SENTINEL_DEBUG="false"
-export SENTINEL_LOG_LEVEL="info"
+export VANTAGE_BASE_PATH="/opt/vantage"
+export VANTAGE_DEBUG="false"
+export VANTAGE_LOG_LEVEL="info"
 
 # Feature flags
-export SENTINEL_ML_ENABLED="true"
-export SENTINEL_CHAT_MODEL="llama2"
-export SENTINEL_OSINT_SOURCES="github,shodan"
+export VANTAGE_ML_ENABLED="true"
+export VANTAGE_CHAT_MODEL="llama2"
+export VANTAGE_OSINT_SOURCES="github,shodan"
 
 # Performance tuning
-export SENTINEL_CACHE_SIZE="1000"
-export SENTINEL_PARALLEL_JOBS="4"
+export VANTAGE_CACHE_SIZE="1000"
+export VANTAGE_PARALLEL_JOBS="4"
 ```
 
 ### Configuration Loading Flow
@@ -258,14 +258,14 @@ graph LR
 
 ```bash
 # Runtime configuration changes
-sentinel config set ml.enabled true
-sentinel config set chat.model "mistral"
+vantage config set ml.enabled true
+vantage config set chat.model "mistral"
 
 # Reload configuration
-sentinel reload
+vantage reload
 
 # View current configuration
-sentinel config show
+vantage config show
 ```
 
 ## Initialization Flow
@@ -277,7 +277,7 @@ Shell Start
     ↓
 .bashrc sourced
     ↓
-SENTINEL bashrc sourced
+VANTAGE bashrc sourced
     ↓
 bashrc.precustom executed
     ↓
@@ -294,10 +294,10 @@ Shell ready
 
 ```bash
 # 1. Initialize module system
-source $SENTINEL_BASE_PATH/bash_modules
+source $VANTAGE_BASE_PATH/bash_modules
 
 # 2. Discover available modules
-MODULES=$(find $SENTINEL_BASE_PATH/bash_modules.d -name "*.module")
+MODULES=$(find $VANTAGE_BASE_PATH/bash_modules.d -name "*.module")
 
 # 3. Parse module metadata
 for module in $MODULES; do
@@ -327,7 +327,7 @@ def init_python_component(component_name):
         return LOADED_COMPONENTS[component_name]
     
     # Import component
-    module = importlib.import_module(f"sentinel_{component_name}")
+    module = importlib.import_module(f"vantage_{component_name}")
     
     # Initialize
     component = module.init()
@@ -363,10 +363,10 @@ warm_caches() {
 ```bash
 # Save user data
 backup_user_data() {
-    tar -czf ~/sentinel_backup_$(date +%Y%m%d).tar.gz \
-        ~/.sentinel/config.yaml \
-        ~/.sentinel/data/ \
-        ~/.sentinel/logs/
+    tar -czf ~/vantage_backup_$(date +%Y%m%d).tar.gz \
+        ~/.vantage/config.yaml \
+        ~/.vantage/data/ \
+        ~/.vantage/logs/
 }
 ```
 
@@ -384,8 +384,8 @@ backup_user_data() {
 ```bash
 # Restore original files
 restore_original_configs() {
-    mv ~/.bashrc.sentinel.backup ~/.bashrc
-    mv ~/.bash_aliases.sentinel.backup ~/.bash_aliases
+    mv ~/.bashrc.vantage.backup ~/.bashrc
+    mv ~/.bash_aliases.vantage.backup ~/.bash_aliases
     # ... etc
 }
 ```
@@ -397,56 +397,56 @@ restore_original_configs() {
 #### 1. Module Loading Failures
 ```bash
 # Debug module loading
-export SENTINEL_MODULE_DEBUG=1
+export VANTAGE_MODULE_DEBUG=1
 source ~/.bashrc
 
 # Check specific module
-bash -x $SENTINEL_BASE_PATH/bash_modules.d/problematic.module
+bash -x $VANTAGE_BASE_PATH/bash_modules.d/problematic.module
 ```
 
 #### 2. Python Component Issues
 ```bash
 # Verify Python environment
-source $SENTINEL_BASE_PATH/venv/bin/activate
+source $VANTAGE_BASE_PATH/venv/bin/activate
 python --version
 pip list
 
 # Test component directly
-python $SENTINEL_BASE_PATH/contrib/sentinel_component.py --test
+python $VANTAGE_BASE_PATH/contrib/vantage_component.py --test
 ```
 
 #### 3. Configuration Problems
 ```bash
 # Validate configuration
-sentinel config validate
+vantage config validate
 
 # Reset to defaults
-sentinel config reset
+vantage config reset
 
 # Show configuration sources
-sentinel config sources
+vantage config sources
 ```
 
 ### Installation Logs
 
 ```bash
 # Installation log locations
-/tmp/sentinel_install.log      # Main installation log
-~/.sentinel/logs/modules.log   # Module loading log
-~/.sentinel/logs/config.log    # Configuration log
+/tmp/vantage_install.log      # Main installation log
+~/.vantage/logs/modules.log   # Module loading log
+~/.vantage/logs/config.log    # Configuration log
 ```
 
 ### Recovery Mode
 
 ```bash
 # Start with minimal configuration
-bash --rcfile $SENTINEL_BASE_PATH/emergency.bashrc
+bash --rcfile $VANTAGE_BASE_PATH/scripts/emergency.bashrc
 
 # Diagnose issues
-sentinel diagnose
+vantage diagnose
 
 # Repair installation
-sentinel repair
+vantage repair
 ```
 
 ## Best Practices
@@ -468,10 +468,10 @@ sentinel repair
 
 ## Conclusion
 
-Understanding the SENTINEL installation and configuration flow enables:
+Understanding the VANTAGE installation and configuration flow enables:
 - Efficient troubleshooting
 - Custom deployments
 - Module development
 - System optimization
 
-The modular architecture and clear initialization sequence make SENTINEL both powerful and maintainable.
+The modular architecture and clear initialization sequence make VANTAGE both powerful and maintainable.

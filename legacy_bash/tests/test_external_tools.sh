@@ -40,14 +40,14 @@ source "$(dirname "$0")/test_framework.sh" 2>/dev/null || {
 test_setup() {
     set -x
     # Create test directory
-    export SENTINEL_TOOLS_DIR="/tmp/sentinel_tools_test_$$"
-    export SENTINEL_TOOLS_REGISTRY="$SENTINEL_TOOLS_DIR/registry.json"
-    export SENTINEL_TOOLS_SANDBOX_DIR="$SENTINEL_TOOLS_DIR/sandbox"
-    export SENTINEL_TOOLS_PLUGINS_DIR="$SENTINEL_TOOLS_DIR/plugins"
-    export SENTINEL_TOOLS_ALLOWED_COMMANDS="git,docker,kubectl,terraform,ansible,mocktool,infotest"
+    export VANTAGE_TOOLS_DIR="/tmp/vantage_tools_test_$$"
+    export VANTAGE_TOOLS_REGISTRY="$VANTAGE_TOOLS_DIR/registry.json"
+    export VANTAGE_TOOLS_SANDBOX_DIR="$VANTAGE_TOOLS_DIR/sandbox"
+    export VANTAGE_TOOLS_PLUGINS_DIR="$VANTAGE_TOOLS_DIR/plugins"
+    export VANTAGE_TOOLS_ALLOWED_COMMANDS="git,docker,kubectl,terraform,ansible,mocktool,infotest"
     
     # Disable MCP for testing
-    export SENTINEL_MCP_ENABLED=0
+    export VANTAGE_MCP_ENABLED=0
     
     # Source the module
     source "$(dirname "$0")/../bash_modules.d/logging.module"
@@ -57,14 +57,14 @@ test_setup() {
 
 # Test cleanup
 test_cleanup() {
-    rm -rf "$SENTINEL_TOOLS_DIR"
+    rm -rf "$VANTAGE_TOOLS_DIR"
 }
 
 # Tests
 test_module_loading() {
     test_case "module loading"
     
-    if [[ -n "${_SENTINEL_EXTERNAL_TOOLS_LOADED}" ]]; then
+    if [[ -n "${_VANTAGE_EXTERNAL_TOOLS_LOADED}" ]]; then
         test_pass
     else
         test_fail "Module not loaded"
@@ -74,7 +74,7 @@ test_module_loading() {
 test_directory_creation() {
     test_case "directory creation"
     
-    if [[ -d "$SENTINEL_TOOLS_DIR" && -d "$SENTINEL_TOOLS_SANDBOX_DIR" && -d "$SENTINEL_TOOLS_PLUGINS_DIR" ]]; then
+    if [[ -d "$VANTAGE_TOOLS_DIR" && -d "$VANTAGE_TOOLS_SANDBOX_DIR" && -d "$VANTAGE_TOOLS_PLUGINS_DIR" ]]; then
         test_pass
     else
         test_fail "Directories not created"
@@ -84,8 +84,8 @@ test_directory_creation() {
 test_registry_initialization() {
     test_case "registry initialization"
     
-    if [[ -f "$SENTINEL_TOOLS_REGISTRY" ]]; then
-        local version=$(jq -r '.version' "$SENTINEL_TOOLS_REGISTRY" 2>/dev/null)
+    if [[ -f "$VANTAGE_TOOLS_REGISTRY" ]]; then
+        local version=$(jq -r '.version' "$VANTAGE_TOOLS_REGISTRY" 2>/dev/null)
         if [[ "$version" == "1.0.0" ]]; then
             test_pass
         else
@@ -106,9 +106,9 @@ test_tool_registration() {
     chmod +x "$mock_tool"
     
     # Register the tool
-    if sentinel_tool_register "mocktool" "$mock_tool" '{"type":"test"}'; then
+    if vantage_tool_register "mocktool" "$mock_tool" '{"type":"test"}'; then
         # Check if registered
-        local registered=$(jq -r '.tools.mocktool.path' "$SENTINEL_TOOLS_REGISTRY" 2>/dev/null)
+        local registered=$(jq -r '.tools.mocktool.path' "$VANTAGE_TOOLS_REGISTRY" 2>/dev/null)
         if [[ "$registered" == "$mock_tool" ]]; then
             test_pass
         else
@@ -126,7 +126,7 @@ test_tool_verification() {
     
     # Test allowed command
     if which git >/dev/null 2>&1; then
-        if sentinel_tool_verify "$(which git)" >/dev/null 2>&1; then
+        if vantage_tool_verify "$(which git)" >/dev/null 2>&1; then
             test_pass
         else
             test_fail "Failed to verify allowed tool"
@@ -147,9 +147,9 @@ test_sandbox_wrapper() {
     chmod +x "$mock_tool"
     
     # Create wrapper
-    sentinel_tool_create_sandbox_wrapper "mockwrap" "$mock_tool"
+    vantage_tool_create_sandbox_wrapper "mockwrap" "$mock_tool"
     
-    if [[ -x "$SENTINEL_TOOLS_SANDBOX_DIR/mockwrap" ]]; then
+    if [[ -x "$VANTAGE_TOOLS_SANDBOX_DIR/mockwrap" ]]; then
         test_pass
     else
         test_fail "Wrapper not created"
@@ -162,7 +162,7 @@ test_tool_list() {
     test_case "tool listing"
     
     # List tools and check output
-    if sentinel_tool_list json >/dev/null 2>&1; then
+    if vantage_tool_list json >/dev/null 2>&1; then
         test_pass
     else
         test_fail "List command failed"
@@ -177,9 +177,9 @@ test_tool_info() {
     touch "$mock_tool"
     chmod +x "$mock_tool"
     
-    sentinel_tool_register "infotest" "$mock_tool" '{"type":"test"}' >/dev/null 2>&1
+    vantage_tool_register "infotest" "$mock_tool" '{"type":"test"}' >/dev/null 2>&1
     
-    local info=$(sentinel_tool_info "infotest")
+    local info=$(vantage_tool_info "infotest")
     if [[ -n "$info" ]] && [[ "$info" != *"error"* ]]; then
         test_pass
     else
@@ -193,16 +193,16 @@ test_plugin_structure() {
     test_case "plugin structure"
     
     # Create a test plugin
-    cat > "$SENTINEL_TOOLS_PLUGINS_DIR/test.plugin" <<'EOF'
+    cat > "$VANTAGE_TOOLS_PLUGINS_DIR/test.plugin" <<'EOF'
 #!/usr/bin/env bash
-SENTINEL_PLUGIN_NAME="test"
-SENTINEL_PLUGIN_VERSION="1.0.0"
+VANTAGE_PLUGIN_NAME="test"
+VANTAGE_PLUGIN_VERSION="1.0.0"
 test_plugin_init() { return 0; }
 test_plugin_init
 EOF
-    chmod +x "$SENTINEL_TOOLS_PLUGINS_DIR/test.plugin"
+    chmod +x "$VANTAGE_TOOLS_PLUGINS_DIR/test.plugin"
     
-    if sentinel_plugin_load "test" >/dev/null 2>&1; then
+    if vantage_plugin_load "test" >/dev/null 2>&1; then
         test_pass
     else
         test_fail "Plugin load failed"
@@ -213,7 +213,7 @@ test_tool_alias() {
     test_case "tool alias creation"
     
     # Create alias
-    sentinel_tool_alias "testalias" "echo" "test message"
+    vantage_tool_alias "testalias" "echo" "test message"
     
     # Test if function exists
     if type testalias >/dev/null 2>&1; then

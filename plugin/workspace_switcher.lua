@@ -4,7 +4,7 @@ local module = {}
 
 local function get_workspaces()
   local success, stdout, stderr = wezterm.run_child_process({
-    "bash", "-c", "ls -d ~/SENTINEL/* ~/.config/* 2>/dev/null"
+    "bash", "-c", "ls -d ~/VANTAGE/* ~/.config/* 2>/dev/null"
   })
 
   local choices = {}

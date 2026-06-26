@@ -1,20 +1,20 @@
 #!/usr/bin/env bash
 #-----------------------------------------------------------------------------
-# SENTINEL  ⟩  autocomplete.module (Unified Manager & Core)
+# VANTAGE  ⟩  autocomplete.module (Unified Manager & Core)
 # Unified autocomplete manager, BLE.sh integration, and snippet engine
 # Version : 3.0.0          (2025-05-16)
-# Author  : SENTINEL Team
+# Author  : VANTAGE Team
 # License : MIT
 #-----------------------------------------------------------------------------
 # DO NOT use strict error handling as it can cause terminal crashes
 # set -euo pipefail
 
 # Module dependencies
-SENTINEL_MODULE_DEPENDENCIES=""
+VANTAGE_MODULE_DEPENDENCIES=""
 
 # Prevent multiple loading
-[[ -n "${_SENTINEL_AUTOCOMPLETE_LOADED}" ]] && return 0
-export _SENTINEL_AUTOCOMPLETE_LOADED=1
+[[ -n "${_VANTAGE_AUTOCOMPLETE_LOADED}" ]] && return 0
+export _VANTAGE_AUTOCOMPLETE_LOADED=1
 
 # Make sure we have color variables defined to prevent crashes
 RED="\033[0;31m" 2>/dev/null || RED=""
@@ -26,88 +26,88 @@ NC="\033[0m" 2>/dev/null || NC=""
 ###############################################################################
 # 0.  Metadata
 ###############################################################################
-SENTINEL_AUTOCOMPLETE_VERSION="3.0.0"
-SENTINEL_AUTOCOMPLETE_DESCRIPTION="Unified autocomplete manager, BLE.sh, and snippet engine"
-SENTINEL_AUTOCOMPLETE_AUTHOR="SENTINEL Team"
+VANTAGE_AUTOCOMPLETE_VERSION="3.0.0"
+VANTAGE_AUTOCOMPLETE_DESCRIPTION="Unified autocomplete manager, BLE.sh, and snippet engine"
+VANTAGE_AUTOCOMPLETE_AUTHOR="VANTAGE Team"
 
 ###############################################################################
 # 1.  Logging (secure, robust)
 ###############################################################################
-SENTINEL_LOG_DIR="${HOME}/logs"
+VANTAGE_LOG_DIR="${HOME}/logs"
 # Create directory with error handling
-{ mkdir -p "$SENTINEL_LOG_DIR"; } 2>/dev/null || true
-_sentinel_log() {
+{ mkdir -p "$VANTAGE_LOG_DIR"; } 2>/dev/null || true
+_vantage_log() {
     # Exit early if no arguments to prevent crashes
     [[ $# -lt 1 ]] && return 0
     
     local level="$1"; shift
     # Use protected commands with error handling
     { 
-        echo "[$(date '+%Y-%m-%d %H:%M:%S' 2>/dev/null || echo 'unknown')] $level: $*" >> "$SENTINEL_LOG_DIR/autocomplete-$(date +%Y%m%d 2>/dev/null || echo 'unknown').log"; 
+        echo "[$(date '+%Y-%m-%d %H:%M:%S' 2>/dev/null || echo 'unknown')] $level: $*" >> "$VANTAGE_LOG_DIR/autocomplete-$(date +%Y%m%d 2>/dev/null || echo 'unknown').log"; 
     } 2>/dev/null || true
     
     # Always return success
     return 0
 }
-_sentinel_log_info()    { _sentinel_log "INFO"    "$@"; }
-_sentinel_log_warning() { _sentinel_log "WARNING" "$@"; }
-_sentinel_log_error()   { _sentinel_log "ERROR"   "$@"; }
+_vantage_log_info()    { _vantage_log "INFO"    "$@"; }
+_vantage_log_warning() { _vantage_log "WARNING" "$@"; }
+_vantage_log_error()   { _vantage_log "ERROR"   "$@"; }
 
 ###############################################################################
 # 2.  Module Registry
 ###############################################################################
-declare -A SENTINEL_AUTOCOMPLETE_MODULES
-declare -A SENTINEL_AUTOCOMPLETE_MODULE_PATHS
+declare -A VANTAGE_AUTOCOMPLETE_MODULES
+declare -A VANTAGE_AUTOCOMPLETE_MODULE_PATHS
 
-sentinel_autocomplete_register_module() {
+vantage_autocomplete_register_module() {
     local module_name="$1" module_version="$2" module_path="$3"
-    SENTINEL_AUTOCOMPLETE_MODULES["$module_name"]="$module_version"
-    SENTINEL_AUTOCOMPLETE_MODULE_PATHS["$module_name"]="$module_path"
-    _sentinel_log_info "Registered module: $module_name v$module_version at $module_path"
+    VANTAGE_AUTOCOMPLETE_MODULES["$module_name"]="$module_version"
+    VANTAGE_AUTOCOMPLETE_MODULE_PATHS["$module_name"]="$module_path"
+    _vantage_log_info "Registered module: $module_name v$module_version at $module_path"
 }
 
 ###############################################################################
 # 3.  BLE.sh Integration
 ###############################################################################
-# SENTINEL_BLESH_LOADER="${HOME}/blesh_loader.sh" # BLE.sh is being removed
-sentinel_check_blesh() {
-    { _sentinel_log_info "BLE.sh check skipped as it is being removed."; } 2>/dev/null || true
+# VANTAGE_BLESH_LOADER="${HOME}/blesh_loader.sh" # BLE.sh is being removed
+vantage_check_blesh() {
+    { _vantage_log_info "BLE.sh check skipped as it is being removed."; } 2>/dev/null || true
     # Always return success to prevent terminal crashes
     return 0
 }
 
-sentinel_blesh_status() {
+vantage_blesh_status() {
     echo "BLE.sh       : Functionality removed."
 }
 
 ###############################################################################
 # 4.  Snippet Engine (Depends on BLE.sh - will be disabled)
 ###############################################################################
-SENTINEL_SNIPPET_DIR="${HOME}/autocomplete/snippets"
-_sentinel_snippet_import_all() {
-    # [[ -d $SENTINEL_SNIPPET_DIR ]] || return 0
-    # sentinel_check_blesh || return 0 # BLE.sh dependency
-    # for f in "$SENTINEL_SNIPPET_DIR"/*.snippet; do
+VANTAGE_SNIPPET_DIR="${HOME}/autocomplete/snippets"
+_vantage_snippet_import_all() {
+    # [[ -d $VANTAGE_SNIPPET_DIR ]] || return 0
+    # vantage_check_blesh || return 0 # BLE.sh dependency
+    # for f in "$VANTAGE_SNIPPET_DIR"/*.snippet; do
     #     [[ -f $f ]] || continue
     #     local name="${f##*/}"; name="${name%.snippet}"
     #     local cmd; cmd="$(sed ':a;N;$!ba;s/\n/\\n/g' "$f")"
     #     ble-sabbrev -m "$name=$cmd" # BLE.sh command
     # done
-    { _sentinel_log_info "Snippet import skipped (BLE.sh dependency removed)."; } 2>/dev/null || true
+    { _vantage_log_info "Snippet import skipped (BLE.sh dependency removed)."; } 2>/dev/null || true
     echo "Snippet engine disabled (dependency on BLE.sh removed)." >&2
 }
-sentinel_snippet_add() {
+vantage_snippet_add() {
     # local name="$1" cmd="$2"
-    # [[ -z $name || -z $cmd ]] && { echo "Usage: sentinel_snippet_add <n> <command...>" >&2; return 0; }
-    # mkdir -p "$SENTINEL_SNIPPET_DIR"
-    # printf '%s\n' "$cmd" > "$SENTINEL_SNIPPET_DIR/$name.snippet"
-    # _sentinel_log_info "snippet $name added"
-    # _sentinel_snippet_import_all
+    # [[ -z $name || -z $cmd ]] && { echo "Usage: vantage_snippet_add <n> <command...>" >&2; return 0; }
+    # mkdir -p "$VANTAGE_SNIPPET_DIR"
+    # printf '%s\n' "$cmd" > "$VANTAGE_SNIPPET_DIR/$name.snippet"
+    # _vantage_log_info "snippet $name added"
+    # _vantage_snippet_import_all
     echo "Snippet engine disabled (dependency on BLE.sh removed)." >&2
 }
-sentinel_snippet_list() {
-    # [[ -d $SENTINEL_SNIPPET_DIR ]] || { echo "No snippets."; return; }
-    # for f in "$SENTINEL_SNIPPET_DIR"/*.snippet; do
+vantage_snippet_list() {
+    # [[ -d $VANTAGE_SNIPPET_DIR ]] || { echo "No snippets."; return; }
+    # for f in "$VANTAGE_SNIPPET_DIR"/*.snippet; do
     #     [[ -f $f ]] || continue
     #     printf '%-20s %s\n' "${f##*/}" "$(head -n1 "$f")"
     # done | column -t
@@ -117,26 +117,26 @@ sentinel_snippet_list() {
 ###############################################################################
 # 5.  Command Routing & User Interface
 ###############################################################################
-@autocomplete() { sentinel_autocomplete_command "$@"; }
-sentinel_autocomplete_command() {
+@autocomplete() { vantage_autocomplete_command "$@"; }
+vantage_autocomplete_command() {
     local cmd="${1:-}"; shift || true
     case "$cmd" in
-        help|--help|-h|"") sentinel_autocomplete_help ;;
-        status|--status|-s) sentinel_autocomplete_status ;;
-        fix|--fix|-f) sentinel_autocomplete_fix ;; # Will be modified
-        reload|--reload|-r) sentinel_autocomplete_reload ;;
-        install|--install|-i) sentinel_autocomplete_install ;; # Will be modified
-        modules|--modules|-m) sentinel_autocomplete_list_modules ;;
+        help|--help|-h|"") vantage_autocomplete_help ;;
+        status|--status|-s) vantage_autocomplete_status ;;
+        fix|--fix|-f) vantage_autocomplete_fix ;; # Will be modified
+        reload|--reload|-r) vantage_autocomplete_reload ;;
+        install|--install|-i) vantage_autocomplete_install ;; # Will be modified
+        modules|--modules|-m) vantage_autocomplete_list_modules ;;
         *)
             if [[ "$cmd" == *":"* ]]; then
                 local module_name="${cmd%%:*}"
                 local module_cmd="${cmd#*:}"
-                local module_func="sentinel_${module_name}_${module_cmd}"
+                local module_func="vantage_${module_name}_${module_cmd}"
                 if type -t "$module_func" &>/dev/null; then
                     "$module_func" "$@"
                 else
                     echo "Unknown module command: $cmd"
-                    echo "Available modules: $(sentinel_autocomplete_list_modules_names)"
+                    echo "Available modules: $(vantage_autocomplete_list_modules_names)"
                 fi
             else
                 echo "Unknown command: $cmd"
@@ -146,15 +146,15 @@ sentinel_autocomplete_command() {
             ;;
     esac
 }
-sentinel_autocomplete_help() {
-    echo -e "\033[1;32mSENTINEL Autocomplete Commands:\033[0m"
+vantage_autocomplete_help() {
+    echo -e "\033[1;32mVANTAGE Autocomplete Commands:\033[0m"
     echo -e "  \033[1;34m@autocomplete\033[0m                   - Show this help"
     echo -e "  \033[1;34m@autocomplete status\033[0m            - Check autocomplete status"
     echo -e "  \033[1;34m@autocomplete fix\033[0m               - Fix common issues"
     echo -e "  \033[1;34m@autocomplete reload\033[0m            - Reload autocomplete system"
     echo -e "  \033[1;34m@autocomplete install\033[0m           - Force reinstall"
     echo -e "  \033[1;34m@autocomplete modules\033[0m           - List loaded modules"
-    echo -e "\nSnippets: sentinel_snippet_add <n> <command>"
+    echo -e "\nSnippets: vantage_snippet_add <n> <command>"
     echo -e "\n\033[1;32mUsage:\033[0m"
     echo -e "  - Press \033[1;34mTab\033[0m to see suggestions"
     echo -e "  - Press \033[1;34mRight Arrow\033[0m to accept suggestion"
@@ -164,12 +164,12 @@ sentinel_autocomplete_help() {
     echo -e "  2. Close and reopen your terminal"
     echo -e "  3. If still not working, run '@autocomplete install'"
 }
-sentinel_autocomplete_status() {
-    echo -e "\033[1;32mSENTINEL Autocomplete Status:\033[0m"
-    _sentinel_log_info "Checking autocomplete status"
+vantage_autocomplete_status() {
+    echo -e "\033[1;32mVANTAGE Autocomplete Status:\033[0m"
+    _vantage_log_info "Checking autocomplete status"
     echo -e "\n\033[1;32mLoaded Modules:\033[0m"
-    for module in "${!SENTINEL_AUTOCOMPLETE_MODULES[@]}"; do
-        local version="${SENTINEL_AUTOCOMPLETE_MODULES[$module]}"
+    for module in "${!VANTAGE_AUTOCOMPLETE_MODULES[@]}"; do
+        local version="${VANTAGE_AUTOCOMPLETE_MODULES[$module]}"
         echo -e "  \033[1;34m$module\033[0m v$version"
     done
     # Remove BLE.sh status check
@@ -179,11 +179,11 @@ sentinel_autocomplete_status() {
         echo -n "  $dir: "
         [[ -d "$dir" ]] && echo -e "\033[1;32mExists\033[0m" || echo -e "\033[1;31mMissing\033[0m"
     done
-    _sentinel_log_info "Autocomplete status check completed"
+    _vantage_log_info "Autocomplete status check completed"
 }
-sentinel_autocomplete_fix() {
+vantage_autocomplete_fix() {
     echo "Fixing autocomplete issues..."
-    _sentinel_log_info "Running autocomplete fix procedure" 2>/dev/null || true
+    _vantage_log_info "Running autocomplete fix procedure" 2>/dev/null || true
     
     # Create required directories with correct permissions, with error handling
     mkdir -p ${HOME}/autocomplete/{snippets,context,projects,params} ${HOME}/logs 2>/dev/null || {
@@ -226,41 +226,41 @@ sentinel_autocomplete_fix() {
     echo "Note: BLE.sh specific fixes are no longer applicable."
     return 0
 }
-sentinel_autocomplete_reload() {
+vantage_autocomplete_reload() {
     echo "Reloading autocomplete system..."
-    _sentinel_log_info "Reloading autocomplete system"
-    # _sentinel_snippet_import_all # Snippet engine disabled
-    # Source the new sentinel completion script if it exists
-    if [[ -f "$HOME/.bash_completion.d/sentinel-completion.bash" ]]; then
-        source "$HOME/.bash_completion.d/sentinel-completion.bash"
-        echo "Sourced sentinel-completion.bash"
-    elif [[ -f "/etc/bash_completion.d/sentinel" ]]; then # Example system path
-        source "/etc/bash_completion.d/sentinel"
-        echo "Sourced system sentinel completion"
+    _vantage_log_info "Reloading autocomplete system"
+    # _vantage_snippet_import_all # Snippet engine disabled
+    # Source the new vantage completion script if it exists
+    if [[ -f "$HOME/.bash_completion.d/vantage-completion.bash" ]]; then
+        source "$HOME/.bash_completion.d/vantage-completion.bash"
+        echo "Sourced vantage-completion.bash"
+    elif [[ -f "/etc/bash_completion.d/vantage" ]]; then # Example system path
+        source "/etc/bash_completion.d/vantage"
+        echo "Sourced system vantage completion"
     else
-        echo "New sentinel completion script not found to source."
+        echo "New vantage completion script not found to source."
     fi
     echo "Autocomplete system reload attempted."
-    _sentinel_log_info "Autocomplete system reload attempt completed"
+    _vantage_log_info "Autocomplete system reload attempt completed"
 }
-sentinel_autocomplete_install() {
+vantage_autocomplete_install() {
     echo "Installing autocomplete system (now standard bash-completion)."
-    _sentinel_log_info "Installing new autocomplete system"
-    # sentinel_check_blesh # BLE.sh check removed
-    echo "Ensure 'sentinel-completion.bash' is in your bash_completion.d directory and your .bashrc sources bash_completion."
+    _vantage_log_info "Installing new autocomplete system"
+    # vantage_check_blesh # BLE.sh check removed
+    echo "Ensure 'vantage-completion.bash' is in your bash_completion.d directory and your .bashrc sources bash_completion."
     echo "For Python autocompletion, ensure 'argcomplete' is installed (pip install argcomplete)."
     echo "Installation instructions updated. Please restart your terminal."
-    _sentinel_log_info "Autocomplete system installation instructions provided"
+    _vantage_log_info "Autocomplete system installation instructions provided"
 }
-sentinel_autocomplete_list_modules() {
+vantage_autocomplete_list_modules() {
     echo -e "\033[1;32mLoaded Autocomplete Modules:\033[0m"
-    for module in "${!SENTINEL_AUTOCOMPLETE_MODULES[@]}"; do
-        echo -e "  \033[1;34m$module\033[0m v${SENTINEL_AUTOCOMPLETE_MODULES[$module]}"
+    for module in "${!VANTAGE_AUTOCOMPLETE_MODULES[@]}"; do
+        echo -e "  \033[1;34m$module\033[0m v${VANTAGE_AUTOCOMPLETE_MODULES[$module]}"
     done
 }
-sentinel_autocomplete_list_modules_names() {
+vantage_autocomplete_list_modules_names() {
     local names=""
-    for module in "${!SENTINEL_AUTOCOMPLETE_MODULES[@]}"; do
+    for module in "${!VANTAGE_AUTOCOMPLETE_MODULES[@]}"; do
         names+=" $module"
     done
     echo "$names"
@@ -269,7 +269,7 @@ sentinel_autocomplete_list_modules_names() {
 ###############################################################################
 # 6.  Initialization
 ###############################################################################
-sentinel_autocomplete_init() {
+vantage_autocomplete_init() {
     # Skip if not in interactive shell
     [[ $- != *i* ]] && return 0
     
@@ -286,25 +286,25 @@ sentinel_autocomplete_init() {
     } 2>/dev/null || true
     
     # Initialize with robust error handling
-    { _sentinel_log_info "Initializing autocomplete system"; } 2>/dev/null || true
-    { sentinel_autocomplete_register_module "manager" "$SENTINEL_AUTOCOMPLETE_VERSION" "${BASH_SOURCE[0]}"; } 2>/dev/null || true
-    { _sentinel_snippet_import_all; } 2>/dev/null || true
+    { _vantage_log_info "Initializing autocomplete system"; } 2>/dev/null || true
+    { vantage_autocomplete_register_module "manager" "$VANTAGE_AUTOCOMPLETE_VERSION" "${BASH_SOURCE[0]}"; } 2>/dev/null || true
+    { _vantage_snippet_import_all; } 2>/dev/null || true
     
     # Output only if in verbose mode
-    [[ "${SENTINEL_VERBOSE:-0}" == "1" ]] && { echo "SENTINEL Autocomplete v${SENTINEL_AUTOCOMPLETE_VERSION} loaded"; } 2>/dev/null || true
+    [[ "${VANTAGE_VERBOSE:-0}" == "1" ]] && { echo "VANTAGE Autocomplete v${VANTAGE_AUTOCOMPLETE_VERSION} loaded"; } 2>/dev/null || true
     
     # Always return success
     return 0
 }
-sentinel_autocomplete_init
+vantage_autocomplete_init
 
 ###############################################################################
 # 7.  Export for shell use
 ###############################################################################
-export -f sentinel_autocomplete_command
+export -f vantage_autocomplete_command
 export -f @autocomplete
-export -f sentinel_snippet_add
-export -f sentinel_snippet_list
+export -f vantage_snippet_add
+export -f vantage_snippet_list
 
 # Optionally, add a shell alias for user convenience:
-alias @autocomplete='sentinel_autocomplete_command'
+alias @autocomplete='vantage_autocomplete_command'

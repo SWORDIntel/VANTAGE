@@ -34,14 +34,14 @@ function module.apply_to_config(config)
 
       local gpu_type = (wezterm.run_child_process{"nvidia-smi"}) and "nvidia" or "cpu"
       local use_framewerx = false
-      local sentinel_path = os.getenv("HOME") .. "/SENTINEL"
+      local vantage_path = os.getenv("HOME") .. "/VANTAGE"
       
-      local f = io.open(sentinel_path .. "/framewerx_engine/fw_launcher.py", "r")
+      local f = io.open(vantage_path .. "/framewerx_engine/fw_launcher.py", "r")
       if f then
           f:close()
           use_framewerx = true
       end
-      local fw_native_dir = io.open(sentinel_path .. "/framewerx_engine/native/", "r")
+      local fw_native_dir = io.open(vantage_path .. "/framewerx_engine/native/", "r")
       if fw_native_dir then
           fw_native_dir:close()
           use_framewerx = true
@@ -53,7 +53,7 @@ function module.apply_to_config(config)
           wezterm.log_info("Git Agent: Using TurboQuant via Framewerx fallback")
           local fw_success, fw_stdout, fw_stderr = wezterm.run_child_process {
               "python3",
-              sentinel_path .. "/framewerx_engine/fw_launcher.py",
+              vantage_path .. "/framewerx_engine/fw_launcher.py",
               "--prompt",
               prompt
           }

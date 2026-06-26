@@ -1,23 +1,23 @@
 #!/usr/bin/env bash
-# SENTINEL Error Recovery and Graceful Degradation Test Suite
+# VANTAGE Error Recovery and Graceful Degradation Test Suite
 # Tests circuit breakers, fallbacks, and degradation modes
 
-export SENTINEL_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")"/.. && pwd)"
+export VANTAGE_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")"/.. && pwd)"
 
 # Source required modules
-SENTINEL_MODULES_PATH="${SENTINEL_MODULES_PATH:-${SENTINEL_ROOT}/bash_modules.d}"
+VANTAGE_MODULES_PATH="${VANTAGE_MODULES_PATH:-${VANTAGE_ROOT}/bash_modules.d}"
 
 # Load core modules
-source "${SENTINEL_MODULES_PATH}/logging.module" 2>/dev/null || {
+source "${VANTAGE_MODULES_PATH}/logging.module" 2>/dev/null || {
     echo "Warning: Logging module not available, using stdout" >&2
 }
 
-source "${SENTINEL_MODULES_PATH}/error_recovery.module" || {
+source "${VANTAGE_MODULES_PATH}/error_recovery.module" || {
     echo "Error: Could not load error recovery module" >&2
     exit 1
 }
 
-source "${SENTINEL_MODULES_PATH}/fallback_registry.module" || {
+source "${VANTAGE_MODULES_PATH}/fallback_registry.module" || {
     echo "Error: Could not load fallback registry module" >&2
     exit 1
 }
@@ -51,29 +51,29 @@ test_fail() {
 test_start "Circuit Breaker Basic Functionality"
 
 # Initialize circuit breaker
-sentinel_circuit_breaker_init "test_component" 3 60
+vantage_circuit_breaker_init "test_component" 3 60
 
 # Test initial state
-if [[ "${SENTINEL_CIRCUIT_BREAKERS[test_component]}" == "closed" ]]; then
+if [[ "${VANTAGE_CIRCUIT_BREAKERS[test_component]}" == "closed" ]]; then
     test_pass "Circuit breaker initialized in closed state"
 else
     test_fail "Circuit breaker not properly initialized"
 fi
 
 # Test failure tracking
-sentinel_circuit_breaker_failure "test_component" "Test failure 1"
-sentinel_circuit_breaker_failure "test_component" "Test failure 2"
+vantage_circuit_breaker_failure "test_component" "Test failure 1"
+vantage_circuit_breaker_failure "test_component" "Test failure 2"
 
-if [[ "${SENTINEL_CIRCUIT_BREAKER_FAILURES[test_component]}" == "2" ]]; then
+if [[ "${VANTAGE_CIRCUIT_BREAKER_FAILURES[test_component]}" == "2" ]]; then
     test_pass "Failure count tracked correctly"
 else
-    test_fail "Failure count incorrect: ${SENTINEL_CIRCUIT_BREAKER_FAILURES[test_component]}"
+    test_fail "Failure count incorrect: ${VANTAGE_CIRCUIT_BREAKER_FAILURES[test_component]}"
 fi
 
 # Test circuit breaker opening
-sentinel_circuit_breaker_failure "test_component" "Test failure 3"
+vantage_circuit_breaker_failure "test_component" "Test failure 3"
 
-if [[ "${SENTINEL_CIRCUIT_BREAKERS[test_component]}" == "open" ]]; then
+if [[ "${VANTAGE_CIRCUIT_BREAKERS[test_component]}" == "open" ]]; then
     test_pass "Circuit breaker opened after threshold"
 else
     test_fail "Circuit breaker failed to open"
@@ -94,18 +94,18 @@ failing_function() {
 }
 
 # Test successful execution
-if sentinel_with_circuit_breaker "test_success" successful_function >/dev/null 2>&1; then
+if vantage_with_circuit_breaker "test_success" successful_function >/dev/null 2>&1; then
     test_pass "Successful function executed through circuit breaker"
 else
     test_fail "Circuit breaker blocked successful function"
 fi
 
 # Test failing execution
-sentinel_circuit_breaker_init "test_fail" 2 60
-sentinel_with_circuit_breaker "test_fail" failing_function >/dev/null 2>&1
-sentinel_with_circuit_breaker "test_fail" failing_function >/dev/null 2>&1
+vantage_circuit_breaker_init "test_fail" 2 60
+vantage_with_circuit_breaker "test_fail" failing_function >/dev/null 2>&1
+vantage_with_circuit_breaker "test_fail" failing_function >/dev/null 2>&1
 
-if [[ "${SENTINEL_CIRCUIT_BREAKERS[test_fail]}" == "open" ]]; then
+if [[ "${VANTAGE_CIRCUIT_BREAKERS[test_fail]}" == "open" ]]; then
     test_pass "Circuit breaker opened on repeated failures"
 else
     test_fail "Circuit breaker failed to open on failures"
@@ -121,16 +121,16 @@ test_fallback() {
 }
 
 # Register fallback
-sentinel_register_fallback "test_fallback_component" "test_fallback"
+vantage_register_fallback "test_fallback_component" "test_fallback"
 
-if [[ "${SENTINEL_MODULE_FALLBACKS[test_fallback_component]}" == "test_fallback" ]]; then
+if [[ "${VANTAGE_MODULE_FALLBACKS[test_fallback_component]}" == "test_fallback" ]]; then
     test_pass "Fallback registered successfully"
 else
     test_fail "Fallback registration failed"
 fi
 
 # Trigger fallback
-output=$(sentinel_trigger_fallback "test_fallback_component" 2>&1)
+output=$(vantage_trigger_fallback "test_fallback_component" 2>&1)
 if [[ "$output" == *"Fallback executed"* ]]; then
     test_pass "Fallback executed successfully"
 else
@@ -141,21 +141,21 @@ fi
 test_start "Degradation Modes"
 
 # Test mode switching
-sentinel_set_degradation_mode "minimal"
-if [[ "$SENTINEL_FALLBACK_MODE" == "minimal" ]]; then
+vantage_set_degradation_mode "minimal"
+if [[ "$VANTAGE_FALLBACK_MODE" == "minimal" ]]; then
     test_pass "Degradation mode set to minimal"
 else
     test_fail "Failed to set degradation mode"
 fi
 
 # Test feature availability
-if sentinel_feature_available "core_feature" "core"; then
+if vantage_feature_available "core_feature" "core"; then
     test_pass "Core features available in minimal mode"
 else
     test_fail "Core features not available in minimal mode"
 fi
 
-if ! sentinel_feature_available "optional_feature" "optional"; then
+if ! vantage_feature_available "optional_feature" "optional"; then
     test_pass "Optional features correctly disabled in minimal mode"
 else
     test_fail "Optional features incorrectly available in minimal mode"
@@ -165,10 +165,10 @@ fi
 test_start "Error Context Capture"
 
 # Capture error context
-sentinel_capture_error_context "test_component" "test_phase"
+vantage_capture_error_context "test_component" "test_phase"
 
 # Check if context file was created
-context_files=$(find "$SENTINEL_ERROR_RECOVERY_DIR" -name "test_component_test_phase_*.context" 2>/dev/null | wc -l)
+context_files=$(find "$VANTAGE_ERROR_RECOVERY_DIR" -name "test_component_test_phase_*.context" 2>/dev/null | wc -l)
 if [[ $context_files -gt 0 ]]; then
     test_pass "Error context captured successfully"
 else
@@ -187,7 +187,7 @@ else
 fi
 
 # Test ML fallback
-sentinel_ml_fallback >/dev/null 2>&1
+vantage_ml_fallback >/dev/null 2>&1
 if type suggest_command &>/dev/null; then
     test_pass "ML fallback functions created"
 else
@@ -204,7 +204,7 @@ nonexistent_module_fallback() {
 }
 
 # Try to load non-existent module with fallback
-sentinel_safe_module_load "nonexistent_module" "nonexistent_module_fallback" >/dev/null 2>&1
+vantage_safe_module_load "nonexistent_module" "nonexistent_module_fallback" >/dev/null 2>&1
 
 if [[ -n "${_MODULE_NONEXISTENT_LOADED}" ]]; then
     test_pass "Safe module load triggered fallback"
@@ -216,7 +216,7 @@ fi
 test_start "Error Recovery Status"
 
 # Generate status report
-status_output=$(sentinel_error_recovery_status 2>&1)
+status_output=$(vantage_error_recovery_status 2>&1)
 if [[ "$status_output" == *"Circuit Breaker States:"* ]] && [[ "$status_output" == *"Registered Fallbacks:"* ]]; then
     test_pass "Error recovery status report generated"
 else
@@ -227,16 +227,16 @@ fi
 test_start "Graceful Degradation in Safe Mode"
 
 # Switch to safe mode
-sentinel_set_degradation_mode "safe"
+vantage_set_degradation_mode "safe"
 
 # Test that only core features are available
-if sentinel_feature_available "logging" "core"; then
+if vantage_feature_available "logging" "core"; then
     test_pass "Core features available in safe mode"
 else
     test_fail "Core features not available in safe mode"
 fi
 
-if ! sentinel_feature_available "ml_predict" "optional"; then
+if ! vantage_feature_available "ml_predict" "optional"; then
     test_pass "Optional features correctly disabled in safe mode"
 else
     test_fail "Optional features incorrectly available in safe mode"
@@ -246,12 +246,12 @@ fi
 test_start "Error Report Generation"
 
 # Generate error report
-report_file=$(sentinel_generate_error_report 2>&1 | tail -1)
+report_file=$(vantage_generate_error_report 2>&1 | tail -1)
 if [[ -f "$report_file" ]]; then
     test_pass "Error report generated: $report_file"
     
     # Check report contents
-    if grep -q "SENTINEL Error Report" "$report_file"; then
+    if grep -q "VANTAGE Error Report" "$report_file"; then
         test_pass "Error report contains expected content"
     else
         test_fail "Error report missing expected content"
@@ -273,14 +273,14 @@ echo "========================================"
 # Cleanup
 echo ""
 echo "Cleaning up test artifacts..."
-rm -f "$SENTINEL_ERROR_RECOVERY_DIR"/test_component_*.context 2>/dev/null
-unset SENTINEL_CIRCUIT_BREAKERS[test_component]
-unset SENTINEL_CIRCUIT_BREAKERS[test_success]
-unset SENTINEL_CIRCUIT_BREAKERS[test_fail]
+rm -f "$VANTAGE_ERROR_RECOVERY_DIR"/test_component_*.context 2>/dev/null
+unset VANTAGE_CIRCUIT_BREAKERS[test_component]
+unset VANTAGE_CIRCUIT_BREAKERS[test_success]
+unset VANTAGE_CIRCUIT_BREAKERS[test_fail]
 unset _MODULE_NONEXISTENT_LOADED
 
 # Reset to graceful mode
-sentinel_set_degradation_mode "graceful"
+vantage_set_degradation_mode "graceful"
 
 # Exit with appropriate code
 if [[ $FAIL_COUNT -eq 0 ]]; then

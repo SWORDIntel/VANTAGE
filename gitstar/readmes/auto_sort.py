@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Auto-sort script for SENTINEL repository
+Auto-sort script for VANTAGE repository
 Automatically sorts remaining files in UNSORTED directory based on keyword matching
 """
 

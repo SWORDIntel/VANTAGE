@@ -1,6 +1,6 @@
-# SENTINEL Installation Guide
+# VANTAGE Installation Guide
 
-This document covers the supported installation, reinstallation, removal, and validation paths for SENTINEL.
+This document covers the supported installation, reinstallation, removal, and validation paths for VANTAGE.
 
 ## Requirements
 
@@ -9,27 +9,27 @@ This document covers the supported installation, reinstallation, removal, and va
 - `git`
 - Standard shell tooling used by the installer
 
-Optional features such as the Markov generator require additional Python packages documented in [`requirements-markov.txt`](../requirements-markov.txt).
+Optional features such as the Markov generator require additional Python packages documented in [`requirements.txt`](../requirements.txt).
 
 ## Standard Installation
 
 ```bash
-git clone https://github.com/SWORDIntel/SENTINEL.git
-cd SENTINEL
+git clone https://github.com/SWORDIntel/VANTAGE.git
+cd VANTAGE
 bash install.sh
 source ~/.bashrc
 ```
 
-The installer configures the shell integration, installs the core SENTINEL files, and wires the module system into your shell startup.
+The installer configures the shell integration, installs the core VANTAGE files, and wires the module system into your shell startup.
 
 ## Kitty-Focused Installation
 
 If you use kitty as your primary terminal:
 
 ```bash
-git clone https://github.com/SWORDIntel/SENTINEL.git
-cd SENTINEL
-bash install_kitty.sh
+git clone https://github.com/SWORDIntel/VANTAGE.git
+cd VANTAGE
+bash install.sh kitty
 ```
 
 You can also run `bash install.sh` and choose the kitty pathway when prompted.
@@ -49,11 +49,11 @@ This path is the right choice for CI, remote bootstrap scripts, or scripted work
 Top-level maintenance scripts are included in the repository:
 
 ```bash
-bash reinstall.sh
-bash uninstall.sh
+bash install.sh reinstall
+bash install.sh uninstall
 ```
 
-Use `reinstall.sh` if the shell wiring is damaged or you want to refresh a local install without manually removing files first.
+Use `install.sh reinstall` if the shell wiring is damaged or you want to refresh a local install without manually removing files first.
 
 ## Validation
 
@@ -72,7 +72,7 @@ make test RUN_OPTIONAL=1
 To enable the optional Markov lane:
 
 ```bash
-python3 -m pip install -r requirements-markov.txt
+python3 -m pip install -r requirements.txt
 ```
 
 ## Repository Layout Notes
@@ -85,5 +85,5 @@ python3 -m pip install -r requirements-markov.txt
 
 - Check `~/logs/` for runtime and installer logs.
 - Re-run the installer with `--non-interactive --headless` to get a cleaner failure surface.
-- If optional tests are skipped, install `requirements-markov.txt` before rerunning `make test RUN_OPTIONAL=1`.
+- If optional tests are skipped, install `requirements.txt` before rerunning `make test RUN_OPTIONAL=1`.
 - If a specific module is causing trouble, inspect it directly in `bash_modules.d/` and validate module loading with `bash test_module_loading.sh`.

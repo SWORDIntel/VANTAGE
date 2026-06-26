@@ -3,7 +3,7 @@ local io = require 'io'
 local os = require 'os'
 local M = {}
 
-local state_path = os.getenv("HOME") .. "/.config/sentinel/state.json"
+local state_path = os.getenv("HOME") .. "/.config/vantage/state.json"
 
 function M.read_state()
   local file = io.open(state_path, "r")

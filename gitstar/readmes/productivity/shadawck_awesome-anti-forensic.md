@@ -187,7 +187,7 @@ on the DMCrypt kernel module.
 - [Silk Guardian](https://github.com/NateBrune/silk-guardian) : Anti-forensic kill-switch that waits for a change on your usb ports and then wipes your ram, deletes precious files, and turns off your computer.
 - [USB Kill](https://github.com/hephaest0s/usbkill) : Anti-forensic kill-switch that waits for a change on your USB ports and then immediately shuts down your computer.
 - [USB Death](https://github.com/trpt/usbdeath) : Anti-forensic tool that writes udev rules for known usb devices and do some things at unknown usb insertion or specific usb device removal.
-- [xxUSBSentinel](https://github.com/thereisnotime/xxUSBSentinel) : Windows anti-forensics USB monitoring tool.
+- [xxUSBVantage](https://github.com/thereisnotime/xxUSBVantage) : Windows anti-forensics USB monitoring tool.
 
 ### Android App
 

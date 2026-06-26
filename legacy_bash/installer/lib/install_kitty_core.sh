@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# SENTINEL Installer - Core Installation for Kitty Primary CLI Pathway
+# VANTAGE Installer - Core Installation for Kitty Primary CLI Pathway
 
 # Source kitty-specific functions
 source "${PROJECT_ROOT}/installer/kitty.sh"

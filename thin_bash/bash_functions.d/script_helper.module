@@ -1,20 +1,20 @@
 #!/usr/bin/env bash
-# SENTINEL - Script Helper Module
+# VANTAGE - Script Helper Module
 # Version: 1.0.0
 # Description: Automatically makes scripts executable after creation or editing.
 # Dependencies: logging
 
 # --- Module Metadata ---
-SENTINEL_MODULE_NAME="script_helper"
-SENTINEL_MODULE_DESCRIPTION="Automatically makes scripts executable"
-SENTINEL_MODULE_VERSION="1.0.0"
-SENTINEL_MODULE_DEPENDENCIES="logging"
+VANTAGE_MODULE_NAME="script_helper"
+VANTAGE_MODULE_DESCRIPTION="Automatically makes scripts executable"
+VANTAGE_MODULE_VERSION="1.0.0"
+VANTAGE_MODULE_DEPENDENCIES="logging"
 
 # --- Prevent double loading ---
-if [[ -n "${_SENTINEL_SCRIPT_HELPER_LOADED}" ]]; then
+if [[ -n "${_VANTAGE_SCRIPT_HELPER_LOADED}" ]]; then
     return 0
 fi
-export _SENTINEL_SCRIPT_HELPER_LOADED=1
+export _VANTAGE_SCRIPT_HELPER_LOADED=1
 
 # --- Core Logic ---
 
@@ -30,7 +30,7 @@ _make_script_executable() {
             # Check if the file is already executable
             if [[ ! -x "$file_path" ]]; then
                 chmod +x "$file_path"
-                sentinel_log_info "script_helper" "Made script executable: $file_path"
+                vantage_log_info "script_helper" "Made script executable: $file_path"
             fi
         fi
     fi

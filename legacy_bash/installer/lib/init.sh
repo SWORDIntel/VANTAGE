@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# SENTINEL Installer - Initialization
+# VANTAGE Installer - Initialization
 
 # Strict mode to catch errors
 set -euo pipefail
@@ -16,7 +16,7 @@ fi
 export INSTALLER_VERSION
 LOG_DIR="${HOME}/logs"
 STATE_FILE="${HOME}/install.state"
-ROLLBACK_SCRIPT="${HOME}/.sentinel_rollback.sh"
+ROLLBACK_SCRIPT="${HOME}/.vantage_rollback.sh"
 BLESH_DIR="${HOME}/.local/share/blesh"
 BLESH_LOADER="${HOME}/blesh_loader.sh"
 MODULES_DIR="${HOME}/bash_modules.d"

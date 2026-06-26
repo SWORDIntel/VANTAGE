@@ -1,62 +1,62 @@
 #!/usr/bin/env bash
-# SENTINEL Kitty Integration Module
+# VANTAGE Kitty Integration Module
 # Provides kitty-specific optimizations and detection functions
 
 # Prevent multiple loading
-[[ -n "${_SENTINEL_KITTY_INTEGRATION_LOADED}" ]] && return 0
-export _SENTINEL_KITTY_INTEGRATION_LOADED=1
+[[ -n "${_VANTAGE_KITTY_INTEGRATION_LOADED}" ]] && return 0
+export _VANTAGE_KITTY_INTEGRATION_LOADED=1
 
 # Detect if running in kitty terminal
-sentinel_is_kitty() {
+vantage_is_kitty() {
     [[ -n "${KITTY_WINDOW_ID:-}" ]] || \
     [[ "${TERM:-}" == "xterm-kitty" ]] || \
     [[ "${TERM_PROGRAM:-}" == "kitty" ]] || \
-    [[ "${SENTINEL_KITTY_PRIMARY_CLI:-0}" == "1" ]]
+    [[ "${VANTAGE_KITTY_PRIMARY_CLI:-0}" == "1" ]]
 }
 
 # Detect if kitty is available (even if not currently running in it)
-sentinel_kitty_available() {
+vantage_kitty_available() {
     command -v kitty >/dev/null 2>&1 && \
     [[ -n "${WAYLAND_DISPLAY:-}" || -n "${DISPLAY:-}" ]]
 }
 
 # Get kitty window ID if available
-sentinel_kitty_window_id() {
+vantage_kitty_window_id() {
     echo "${KITTY_WINDOW_ID:-}"
 }
 
 # Send OSC commands to kitty (for advanced features)
-sentinel_kitty_osc() {
-    if sentinel_is_kitty && [[ -n "${KITTY_WINDOW_ID:-}" ]]; then
+vantage_kitty_osc() {
+    if vantage_is_kitty && [[ -n "${KITTY_WINDOW_ID:-}" ]]; then
         printf "\033]%s\033\\" "$1" >&2
     fi
 }
 
 # Set kitty window title
-sentinel_kitty_set_title() {
-    local title="${1:-SENTINEL}"
-    sentinel_kitty_osc "2;${title}"
+vantage_kitty_set_title() {
+    local title="${1:-VANTAGE}"
+    vantage_kitty_osc "2;${title}"
 }
 
 # Set kitty tab title
-sentinel_kitty_set_tab_title() {
-    local title="${1:-SENTINEL}"
-    sentinel_kitty_osc "30;${title}"
+vantage_kitty_set_tab_title() {
+    local title="${1:-VANTAGE}"
+    vantage_kitty_osc "30;${title}"
 }
 
 # Enable kitty shell integration features
-sentinel_kitty_enable_features() {
-    if sentinel_is_kitty; then
+vantage_kitty_enable_features() {
+    if vantage_is_kitty; then
         # Enable kitty's shell integration
         if [[ -n "${KITTY_SHELL_INTEGRATION:-}" ]]; then
             export KITTY_SHELL_INTEGRATION="enabled"
         fi
         
         # Set GPU acceleration flag
-        export SENTINEL_KITTY_GPU_ACCEL=1
+        export VANTAGE_KITTY_GPU_ACCEL=1
         
         # Optimize colors for kitty
-        export SENTINEL_TERMINAL_COLORS=256
+        export VANTAGE_TERMINAL_COLORS=256
         
         return 0
     fi
@@ -64,9 +64,9 @@ sentinel_kitty_enable_features() {
 }
 
 # Initialize kitty integration
-if sentinel_is_kitty; then
-    sentinel_kitty_enable_features
+if vantage_is_kitty; then
+    vantage_kitty_enable_features
     
     # Set initial window title
-    sentinel_kitty_set_title "SENTINEL - Kitty Primary CLI"
+    vantage_kitty_set_title "VANTAGE - Kitty Primary CLI"
 fi

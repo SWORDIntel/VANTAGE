@@ -1,22 +1,22 @@
 #!/usr/bin/env bash
 
-# SENTINEL - Auto Install Module
+# VANTAGE - Auto Install Module
 # Description: Automatically installs missing common tools like fzf and ccache.
 # Dependencies: logging (optional)
 
 # Module dependencies
-SENTINEL_MODULE_DEPENDENCIES="logging"
+VANTAGE_MODULE_DEPENDENCIES="logging"
 
 # Prevent multiple loading
-[[ -n "${_SENTINEL_AUTO_INSTALL_LOADED}" ]] && return 0
-export _SENTINEL_AUTO_INSTALL_LOADED=1
+[[ -n "${_VANTAGE_AUTO_INSTALL_LOADED}" ]] && return 0
+export _VANTAGE_AUTO_INSTALL_LOADED=1
 
 # --- Configuration ---
-: "${SENTINEL_AUTO_INSTALL_ENABLED:=1}"
-: "${SENTINEL_VERBOSE:=0}" # Assuming SENTINEL_VERBOSE might be used elsewhere
+: "${VANTAGE_AUTO_INSTALL_ENABLED:=1}"
+: "${VANTAGE_VERBOSE:=0}" # Assuming VANTAGE_VERBOSE might be used elsewhere
 
 # --- Colors (if not already defined) ---
-if ! type -t _sentinel_color_yellow &>/dev/null; then # Check if a color function/alias exists
+if ! type -t _vantage_color_yellow &>/dev/null; then # Check if a color function/alias exists
     export YELLOW='\033[1;33m'
     export GREEN='\033[0;32m'
     export RED='\033[0;31m'
@@ -33,21 +33,21 @@ _auto_install_log() {
         WARN) color="$YELLOW" ;;
         ERROR) color="$RED" ;;
     esac
-    if command -v sentinel_log_info &>/dev/null && [[ "$level" == "INFO" ]]; then
-        sentinel_log_info "auto_install" "$message"
-    elif command -v sentinel_log_warning &>/dev/null && [[ "$level" == "WARN" ]]; then
-        sentinel_log_warning "auto_install" "$message"
-    elif command -v sentinel_log_error &>/dev/null && [[ "$level" == "ERROR" ]]; then
-        sentinel_log_error "auto_install" "$message"
+    if command -v vantage_log_info &>/dev/null && [[ "$level" == "INFO" ]]; then
+        vantage_log_info "auto_install" "$message"
+    elif command -v vantage_log_warning &>/dev/null && [[ "$level" == "WARN" ]]; then
+        vantage_log_warning "auto_install" "$message"
+    elif command -v vantage_log_error &>/dev/null && [[ "$level" == "ERROR" ]]; then
+        vantage_log_error "auto_install" "$message"
     else
         echo -e "${color}[AutoInstall] ${level}: ${message}${NC}" >&2
     fi
 }
 
 # --- Check if module is enabled ---
-if [[ "${SENTINEL_AUTO_INSTALL_ENABLED:-0}" != "1" ]]; then
-    if [[ "${SENTINEL_VERBOSE:-0}" == "1" ]]; then
-        _auto_install_log "INFO" "Module disabled by SENTINEL_AUTO_INSTALL_ENABLED."
+if [[ "${VANTAGE_AUTO_INSTALL_ENABLED:-0}" != "1" ]]; then
+    if [[ "${VANTAGE_VERBOSE:-0}" == "1" ]]; then
+        _auto_install_log "INFO" "Module disabled by VANTAGE_AUTO_INSTALL_ENABLED."
     fi
     return 0 2>/dev/null || true # Silently exit if disabled
 fi
@@ -115,7 +115,7 @@ if ! command -v fzf &>/dev/null; then
         fi
     fi
 else
-    if [[ "${SENTINEL_VERBOSE:-0}" == "1" ]]; then
+    if [[ "${VANTAGE_VERBOSE:-0}" == "1" ]]; then
         _auto_install_log "INFO" "fzf is already installed."
     fi
 fi
@@ -125,7 +125,7 @@ if ! command -v ccache &>/dev/null; then
     _auto_install_log "WARN" "ccache not found."
     _try_install "ccache"
 else
-    if [[ "${SENTINEL_VERBOSE:-0}" == "1" ]]; then
+    if [[ "${VANTAGE_VERBOSE:-0}" == "1" ]]; then
         _auto_install_log "INFO" "ccache is already installed."
     fi
 fi

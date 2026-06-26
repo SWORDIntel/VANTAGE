@@ -1,2 +1,0 @@
-# Using custom OpenVINO build - do not install via pip
-openvino==0.0.0

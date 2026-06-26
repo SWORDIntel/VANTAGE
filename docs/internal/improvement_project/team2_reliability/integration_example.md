@@ -1,6 +1,6 @@
-# SENTINEL Error Recovery Integration Example
+# VANTAGE Error Recovery Integration Example
 
-This document demonstrates how to integrate the error recovery and graceful degradation system into existing SENTINEL modules.
+This document demonstrates how to integrate the error recovery and graceful degradation system into existing VANTAGE modules.
 
 ## Integration Steps
 
@@ -9,7 +9,7 @@ This document demonstrates how to integrate the error recovery and graceful degr
 Add `error_recovery` to your module's dependencies:
 
 ```bash
-SENTINEL_MODULE_DEPENDENCIES="error_recovery logging"
+VANTAGE_MODULE_DEPENDENCIES="error_recovery logging"
 ```
 
 ### 2. Implement Fallback Functions
@@ -27,7 +27,7 @@ advanced_feature() {
 
 # Fallback function
 advanced_feature_fallback() {
-    sentinel_log_warning "my_module" "Using fallback for advanced_feature"
+    vantage_log_warning "my_module" "Using fallback for advanced_feature"
     # Simple alternative implementation
     select file in $(ls); do
         [[ -n "$file" ]] && echo "$file" && break
@@ -35,8 +35,8 @@ advanced_feature_fallback() {
 }
 
 # Register the fallback
-if type sentinel_register_fallback &>/dev/null; then
-    sentinel_register_fallback "advanced_feature" "advanced_feature_fallback"
+if type vantage_register_fallback &>/dev/null; then
+    vantage_register_fallback "advanced_feature" "advanced_feature_fallback"
 fi
 ```
 
@@ -49,8 +49,8 @@ Use circuit breaker protection for operations that might fail:
 process_file() {
     local file="$1"
     
-    if type sentinel_with_circuit_breaker &>/dev/null; then
-        sentinel_with_circuit_breaker "file_processor" \
+    if type vantage_with_circuit_breaker &>/dev/null; then
+        vantage_with_circuit_breaker "file_processor" \
             _do_process_file "$file"
     else
         _do_process_file "$file"
@@ -75,11 +75,11 @@ init_module() {
     load_core_features
     
     # Load optional features based on mode
-    if sentinel_feature_available "ml_integration" "optional"; then
+    if vantage_feature_available "ml_integration" "optional"; then
         load_ml_features
     fi
     
-    if sentinel_feature_available "advanced_ui" "important"; then
+    if vantage_feature_available "advanced_ui" "important"; then
         load_advanced_ui
     fi
 }
@@ -91,43 +91,43 @@ Here's a complete example of a module with error recovery integration:
 
 ```bash
 #!/usr/bin/env bash
-# SENTINEL Example Module with Error Recovery
+# VANTAGE Example Module with Error Recovery
 # Version: 1.0.0
 # Description: Demonstrates error recovery integration
 # Dependencies: error_recovery logging
 
-SENTINEL_MODULE_DESCRIPTION="Example module with error recovery"
-SENTINEL_MODULE_VERSION="1.0.0"
-SENTINEL_MODULE_DEPENDENCIES="error_recovery logging"
+VANTAGE_MODULE_DESCRIPTION="Example module with error recovery"
+VANTAGE_MODULE_VERSION="1.0.0"
+VANTAGE_MODULE_DEPENDENCIES="error_recovery logging"
 
 # Prevent double loading
-[[ -n "${_SENTINEL_EXAMPLE_LOADED}" ]] && return 0
-export _SENTINEL_EXAMPLE_LOADED=1
+[[ -n "${_VANTAGE_EXAMPLE_LOADED}" ]] && return 0
+export _VANTAGE_EXAMPLE_LOADED=1
 
 # Configuration
-: "${EXAMPLE_CACHE_DIR:=$HOME/.sentinel/example}"
+: "${EXAMPLE_CACHE_DIR:=$HOME/.vantage/example}"
 : "${EXAMPLE_TIMEOUT:=30}"
 
 # Initialize module with error handling
 init_example_module() {
     # Create cache directory with fallback
     if ! mkdir -p "$EXAMPLE_CACHE_DIR" 2>/dev/null; then
-        EXAMPLE_CACHE_DIR="/tmp/sentinel_example_$$"
+        EXAMPLE_CACHE_DIR="/tmp/vantage_example_$$"
         mkdir -p "$EXAMPLE_CACHE_DIR"
-        sentinel_log_warning "example" "Using temporary cache directory"
+        vantage_log_warning "example" "Using temporary cache directory"
     fi
     
     # Initialize circuit breaker for external API
-    sentinel_circuit_breaker_init "example_api" 3 300
+    vantage_circuit_breaker_init "example_api" 3 300
     
     # Load features based on degradation mode
-    if sentinel_feature_available "example_advanced" "optional"; then
+    if vantage_feature_available "example_advanced" "optional"; then
         load_advanced_features
     else
-        sentinel_log_info "example" "Advanced features disabled in current mode"
+        vantage_log_info "example" "Advanced features disabled in current mode"
     fi
     
-    sentinel_log_info "example" "Example module initialized"
+    vantage_log_info "example" "Example module initialized"
 }
 
 # Advanced feature with fallback
@@ -135,7 +135,7 @@ fetch_data() {
     local query="$1"
     
     # Try with circuit breaker protection
-    if sentinel_with_circuit_breaker "example_api" \
+    if vantage_with_circuit_breaker "example_api" \
         _fetch_data_api "$query"; then
         return 0
     else
@@ -155,7 +155,7 @@ _fetch_data_api() {
 fetch_data_fallback() {
     local query="$1"
     
-    sentinel_log_warning "example" "Using cached data for query: $query"
+    vantage_log_warning "example" "Using cached data for query: $query"
     
     # Try to use cached data
     local cache_file="$EXAMPLE_CACHE_DIR/$(echo "$query" | md5sum | cut -d' ' -f1)"
@@ -172,12 +172,12 @@ process_data() {
     local input="$1"
     
     # Capture pre-execution context
-    sentinel_capture_error_context "example_process" "pre-execution"
+    vantage_capture_error_context "example_process" "pre-execution"
     
     # Process with error handling
     if ! _do_process "$input"; then
         # Capture failure context
-        sentinel_capture_error_context "example_process" "post-failure"
+        vantage_capture_error_context "example_process" "post-failure"
         
         # Try recovery
         if type process_data_recovery &>/dev/null; then
@@ -198,7 +198,7 @@ _do_process() {
 process_data_recovery() {
     local input="$1"
     
-    sentinel_log_info "example" "Attempting data processing recovery"
+    vantage_log_info "example" "Attempting data processing recovery"
     
     # Simple recovery logic
     echo "Recovered: $input (simplified)"
@@ -212,7 +212,7 @@ load_advanced_features() {
         }
     else
         # Register fallback
-        sentinel_register_fallback "example_interactive" \
+        vantage_register_fallback "example_interactive" \
             "example_interactive_fallback"
         
         example_interactive_select() {
@@ -222,7 +222,7 @@ load_advanced_features() {
 }
 
 example_interactive_fallback() {
-    sentinel_log_warning "example" "Using basic selection (FZF unavailable)"
+    vantage_log_warning "example" "Using basic selection (FZF unavailable)"
     
     select item in $(cat); do
         [[ -n "$item" ]] && echo "$item" && break
@@ -244,11 +244,11 @@ example_health_check() {
     fi
     
     # Check circuit breaker state
-    local cb_state="${SENTINEL_CIRCUIT_BREAKERS[example_api]:-unknown}"
+    local cb_state="${VANTAGE_CIRCUIT_BREAKERS[example_api]:-unknown}"
     echo "  - API circuit breaker: $cb_state"
     
     # Check feature availability
-    if sentinel_feature_available "example_advanced" "optional"; then
+    if vantage_feature_available "example_advanced" "optional"; then
         echo "  ✓ Advanced features: Available"
     else
         echo "  - Advanced features: Disabled"
@@ -259,9 +259,9 @@ example_health_check() {
 
 # Register all fallbacks
 register_example_fallbacks() {
-    sentinel_register_fallback "fetch_data" "fetch_data_fallback"
-    sentinel_register_fallback "process_data" "process_data_recovery"
-    sentinel_register_fallback "example_interactive" "example_interactive_fallback"
+    vantage_register_fallback "fetch_data" "fetch_data_fallback"
+    vantage_register_fallback "process_data" "process_data_recovery"
+    vantage_register_fallback "example_interactive" "example_interactive_fallback"
 }
 
 # Export functions
@@ -286,13 +286,13 @@ for i in {1..5}; do
 done
 
 # Check circuit breaker state
-sentinel_error_recovery_status
+vantage_error_recovery_status
 
 # Test degradation modes
-sentinel_set_degradation_mode "minimal"
+vantage_set_degradation_mode "minimal"
 example_health_check
 
-sentinel_set_degradation_mode "safe"
+vantage_set_degradation_mode "safe"
 example_health_check
 ```
 
@@ -316,7 +316,7 @@ for i in {1..5}; do
 done
 
 # Check if circuit is open
-if [[ "${SENTINEL_CIRCUIT_BREAKERS[example_api]}" == "open" ]]; then
+if [[ "${VANTAGE_CIRCUIT_BREAKERS[example_api]}" == "open" ]]; then
     echo "✓ Circuit breaker opened correctly"
 else
     echo "✗ Circuit breaker failed to open"
@@ -337,8 +337,8 @@ fi
 
 # Test 3: Feature availability
 echo "Testing feature availability..."
-sentinel_set_degradation_mode "safe"
-if ! sentinel_feature_available "example_advanced" "optional"; then
+vantage_set_degradation_mode "safe"
+if ! vantage_feature_available "example_advanced" "optional"; then
     echo "✓ Optional features correctly disabled in safe mode"
 else
     echo "✗ Feature availability check failed"
@@ -353,7 +353,7 @@ Add your module to the health dashboard:
 
 ```bash
 # In ~/.bashrc or monitoring script
-sentinel_module_health_check() {
+vantage_module_health_check() {
     echo "=== Module Health Status ==="
     
     # Check each module
@@ -365,8 +365,8 @@ sentinel_module_health_check() {
     
     echo ""
     echo "=== Circuit Breaker Summary ==="
-    for component in "${!SENTINEL_CIRCUIT_BREAKERS[@]}"; do
-        printf "%-20s: %s\n" "$component" "${SENTINEL_CIRCUIT_BREAKERS[$component]}"
+    for component in "${!VANTAGE_CIRCUIT_BREAKERS[@]}"; do
+        printf "%-20s: %s\n" "$component" "${VANTAGE_CIRCUIT_BREAKERS[$component]}"
     done
 }
 ```
@@ -377,9 +377,9 @@ Ensure proper logging for debugging:
 
 ```bash
 # Use structured logging
-sentinel_log_info "example" "Operation started" 
-sentinel_log_error "example" "Operation failed: $error_message"
-sentinel_log_debug "example" "Debug info: $debug_data"
+vantage_log_info "example" "Operation started" 
+vantage_log_error "example" "Operation failed: $error_message"
+vantage_log_debug "example" "Debug info: $debug_data"
 ```
 
 ## Best Practices Summary
@@ -400,8 +400,8 @@ sentinel_log_debug "example" "Debug info: $debug_data"
 1. **Circuit breaker stuck open**
    ```bash
    # Manually reset if needed
-   SENTINEL_CIRCUIT_BREAKERS["component_name"]="closed"
-   SENTINEL_CIRCUIT_BREAKER_FAILURES["component_name"]=0
+   VANTAGE_CIRCUIT_BREAKERS["component_name"]="closed"
+   VANTAGE_CIRCUIT_BREAKER_FAILURES["component_name"]=0
    ```
 
 2. **Fallback not triggering**
@@ -418,15 +418,15 @@ sentinel_log_debug "example" "Debug info: $debug_data"
 
 ```bash
 # Full system status
-sentinel_error_recovery_status
+vantage_error_recovery_status
 
 # Generate error report
-sentinel_generate_error_report
+vantage_generate_error_report
 
 # Check specific component
-echo "State: ${SENTINEL_CIRCUIT_BREAKERS[component_name]}"
-echo "Failures: ${SENTINEL_CIRCUIT_BREAKER_FAILURES[component_name]}"
+echo "State: ${VANTAGE_CIRCUIT_BREAKERS[component_name]}"
+echo "Failures: ${VANTAGE_CIRCUIT_BREAKER_FAILURES[component_name]}"
 
 # View error contexts
-ls -la ~/.sentinel/error_recovery/*.context
+ls -la ~/.vantage/error_recovery/*.context
 ```

@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
-# SENTINEL Module System
+# VANTAGE Module System
 # Provides dynamic loading and management of bashrc extensions
 
 # Prevent multiple loading
-[[ -n "${_SENTINEL_MODULES_LOADED}" ]] && return 0
-export _SENTINEL_MODULES_LOADED=1
+[[ -n "${_VANTAGE_MODULES_LOADED}" ]] && return 0
+export _VANTAGE_MODULES_LOADED=1
 
 # Define colors for prettier output
 export RED="\033[0;31m"
@@ -15,44 +15,44 @@ export MAGENTA="\033[0;35m"
 export CYAN="\033[0;36m"
 export NC="\033[0m" # No Color
 
-# Determine SENTINEL_ROOT dynamically
-# This script is located at SENTINEL_ROOT/bash_modules
-# So, SENTINEL_ROOT is the directory containing this script.
-export SENTINEL_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# Determine VANTAGE_ROOT dynamically
+# This script is located at VANTAGE_ROOT/bash_modules
+# So, VANTAGE_ROOT is the directory containing this script.
+export VANTAGE_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 # Module directory path - check multiple locations
-if [[ -d "${SENTINEL_ROOT}/bash_modules.d" ]]; then
-    export SENTINEL_MODULES_PATH="${SENTINEL_ROOT}/bash_modules.d"
-elif [[ -d "$HOME/Documents/GitHub/SENTINEL/bash_modules.d" ]]; then
-    export SENTINEL_MODULES_PATH="$HOME/Documents/GitHub/SENTINEL/bash_modules.d"
+if [[ -d "${VANTAGE_ROOT}/bash_modules.d" ]]; then
+    export VANTAGE_MODULES_PATH="${VANTAGE_ROOT}/bash_modules.d"
+elif [[ -d "$HOME/Documents/GitHub/VANTAGE/bash_modules.d" ]]; then
+    export VANTAGE_MODULES_PATH="$HOME/Documents/GitHub/VANTAGE/bash_modules.d"
 elif [[ -d "$HOME/bash_modules.d" ]]; then
-    export SENTINEL_MODULES_PATH="$HOME/bash_modules.d"
+    export VANTAGE_MODULES_PATH="$HOME/bash_modules.d"
 else
     # Fallback to standard location
-    export SENTINEL_MODULES_PATH="$HOME/bash_modules.d"
-    ewarn "SENTINEL_MODULES_PATH: No existing module directory found, using default $SENTINEL_MODULES_PATH"
+    export VANTAGE_MODULES_PATH="$HOME/bash_modules.d"
+    ewarn "VANTAGE_MODULES_PATH: No existing module directory found, using default $VANTAGE_MODULES_PATH"
 fi
 
 # Also export MODULES_DIR for compatibility with installer scripts
-export MODULES_DIR="$SENTINEL_MODULES_PATH"
+export MODULES_DIR="$VANTAGE_MODULES_PATH"
 
 # Registry of loaded modules
-declare -A SENTINEL_LOADED_MODULES
+declare -A VANTAGE_LOADED_MODULES
 
 # Registry of lazy-loaded modules
-declare -A SENTINEL_LAZY_MODULES
+declare -A VANTAGE_LAZY_MODULES
 
 # Configuration for module loading strategy
-declare -A SENTINEL_MODULE_LOADING_STRATEGY
+declare -A VANTAGE_MODULE_LOADING_STRATEGY
 
 # Load lazy loading configuration if it exists
-declare -a SENTINEL_CORE_MODULES
-declare -a SENTINEL_LAZY_LOAD_MODULES
+declare -a VANTAGE_CORE_MODULES
+declare -a VANTAGE_LAZY_LOAD_MODULES
 
-if [[ -n "${SENTINEL_CORE_MODULES:-}" ]]; then
-    read -r -a SENTINEL_CORE_MODULES <<< "${SENTINEL_CORE_MODULES}"
+if [[ -n "${VANTAGE_CORE_MODULES:-}" ]]; then
+    read -r -a VANTAGE_CORE_MODULES <<< "${VANTAGE_CORE_MODULES}"
 else
-    SENTINEL_CORE_MODULES=(
+    VANTAGE_CORE_MODULES=(
         blesh_installer
         autocomplete
         logging
@@ -63,19 +63,19 @@ else
     )
 fi
 
-if [[ -n "${SENTINEL_LAZY_LOAD_MODULES:-}" ]]; then
-    read -r -a SENTINEL_LAZY_LOAD_MODULES <<< "${SENTINEL_LAZY_LOAD_MODULES}"
+if [[ -n "${VANTAGE_LAZY_LOAD_MODULES:-}" ]]; then
+    read -r -a VANTAGE_LAZY_LOAD_MODULES <<< "${VANTAGE_LAZY_LOAD_MODULES}"
 else
-    SENTINEL_LAZY_LOAD_MODULES=(
-        sentinel_ml
-        sentinel_ml_enhanced
-        sentinel_osint
-        sentinel_cybersec_ml
-        sentinel_chat
-        sentinel_gitstar
-        sentinel_context
-        sentinel_markov
-        sentinel_smallllm
+    VANTAGE_LAZY_LOAD_MODULES=(
+        vantage_ml
+        vantage_ml_enhanced
+        vantage_osint
+        vantage_cybersec_ml
+        vantage_chat
+        vantage_gitstar
+        vantage_context
+        vantage_markov
+        vantage_smallllm
         hashcat
         obfuscate
         aws_security
@@ -86,9 +86,9 @@ else
 fi
 
 # Initialize modules directory if it doesn't exist
-if [[ ! -d "$SENTINEL_MODULES_PATH" ]]; then
-    mkdir -p "$SENTINEL_MODULES_PATH"
-    echo "Created modules directory: $SENTINEL_MODULES_PATH"
+if [[ ! -d "$VANTAGE_MODULES_PATH" ]]; then
+    mkdir -p "$VANTAGE_MODULES_PATH"
+    echo "Created modules directory: $VANTAGE_MODULES_PATH"
 fi
 
 # Check if list of modules file exists
@@ -98,7 +98,7 @@ fi
 
 # Output functions with verbosity control
 emsg() {
-    [[ "$SENTINEL_QUIET_MODULES" != "1" ]] && echo "$@"
+    [[ "$VANTAGE_QUIET_MODULES" != "1" ]] && echo "$@"
 }
 
 ewarn() {
@@ -114,7 +114,7 @@ eerror() {
 # Function to recursively find all modules (including those in subdirectories)
 find_all_modules() {
     local search_path="$1"
-    local debug_mode="${SENTINEL_DEBUG_MODULES:-0}"
+    local debug_mode="${VANTAGE_DEBUG_MODULES:-0}"
     
     [[ "$debug_mode" == "1" ]] && echo "DEBUG: Searching for modules in $search_path and subdirectories" >&2
     
@@ -132,7 +132,7 @@ is_loadable_module_file() {
 
     [[ -f "$module_path" ]] || return 1
 
-    if grep -qE '(^### BEGIN MODULE INFO|^# SENTINEL Module:|SENTINEL_MODULE_DESCRIPTION=)' "$module_path" 2>/dev/null; then
+    if grep -qE '(^### BEGIN MODULE INFO|^# VANTAGE Module:|VANTAGE_MODULE_DESCRIPTION=)' "$module_path" 2>/dev/null; then
         return 0
     fi
 
@@ -153,25 +153,25 @@ is_lazy_load_module() {
     local module_name="$1"
     
     # Check if lazy loading is disabled globally
-    if [[ "${SENTINEL_LAZY_LOADING_ENABLED:-1}" == "0" ]]; then
+    if [[ "${VANTAGE_LAZY_LOADING_ENABLED:-1}" == "0" ]]; then
         return 1
     fi
     
     # Check module-specific override
-    local override_var="SENTINEL_${module_name^^}_LAZY_LOAD"
+    local override_var="VANTAGE_${module_name^^}_LAZY_LOAD"
     if [[ -n "${!override_var}" ]]; then
         [[ "${!override_var}" == "1" ]] && return 0 || return 1
     fi
     
     # Check if module is in the lazy load list
-    for lazy_module in "${SENTINEL_LAZY_LOAD_MODULES[@]}"; do
+    for lazy_module in "${VANTAGE_LAZY_LOAD_MODULES[@]}"; do
         if [[ "$module_name" == "$lazy_module" ]]; then
             return 0
         fi
     done
     
     # Check if module is in the core modules list (should NOT be lazy loaded)
-    for core_module in "${SENTINEL_CORE_MODULES[@]}"; do
+    for core_module in "${VANTAGE_CORE_MODULES[@]}"; do
         if [[ "$module_name" == "$core_module" ]]; then
             return 1
         fi
@@ -187,7 +187,7 @@ create_lazy_proxy() {
     local module_file="$2"
     
     # Mark module as lazy-loaded (but not actually loaded yet)
-    SENTINEL_LAZY_MODULES["$module_name"]="$module_file"
+    VANTAGE_LAZY_MODULES["$module_name"]="$module_file"
     
     # Create proxy functions for common module patterns
     # This is a generic approach - specific modules might need custom proxies
@@ -196,8 +196,8 @@ create_lazy_proxy() {
     eval "
     ${module_name}() {
         # First time this function is called, load the actual module
-        if [[ \"\${SENTINEL_LAZY_MODULES[$module_name]:-}\" != \"loaded\" ]]; then
-            local module_file=\"\${SENTINEL_LAZY_MODULES[$module_name]}\"
+        if [[ \"\${VANTAGE_LAZY_MODULES[$module_name]:-}\" != \"loaded\" ]]; then
+            local module_file=\"\${VANTAGE_LAZY_MODULES[$module_name]}\"
             emsg \"[LAZY] Loading module '$module_name' on first use...\"
             
             # Remove the proxy function
@@ -207,7 +207,7 @@ create_lazy_proxy() {
             module_enable \"$module_name\" \"0\" \"lazy\"
             
             # Mark as loaded
-            SENTINEL_LAZY_MODULES[\"$module_name\"]=\"loaded\"
+            VANTAGE_LAZY_MODULES[\"$module_name\"]=\"loaded\"
         fi
         
         # Call the real function if it exists
@@ -221,15 +221,15 @@ create_lazy_proxy() {
     "
     
     # Create proxy commands from configuration
-    if [[ -n "${SENTINEL_LAZY_COMMANDS[@]}" ]]; then
-        for cmd in "${!SENTINEL_LAZY_COMMANDS[@]}"; do
-            if [[ "${SENTINEL_LAZY_COMMANDS[$cmd]}" == "$module_name" ]]; then
+    if [[ -n "${VANTAGE_LAZY_COMMANDS[@]}" ]]; then
+        for cmd in "${!VANTAGE_LAZY_COMMANDS[@]}"; do
+            if [[ "${VANTAGE_LAZY_COMMANDS[$cmd]}" == "$module_name" ]]; then
                 eval "
                 $cmd() {
-                    if [[ \"\${SENTINEL_LAZY_MODULES[$module_name]:-}\" != \"loaded\" ]]; then
-                        [[ \"\${SENTINEL_LAZY_SHOW_LOADING:-1}\" == \"1\" ]] && emsg \"[LAZY] Loading module '$module_name' for command '$cmd'...\"
+                    if [[ \"\${VANTAGE_LAZY_MODULES[$module_name]:-}\" != \"loaded\" ]]; then
+                        [[ \"\${VANTAGE_LAZY_SHOW_LOADING:-1}\" == \"1\" ]] && emsg \"[LAZY] Loading module '$module_name' for command '$cmd'...\"
                         module_enable \"$module_name\" \"0\" \"lazy\"
-                        SENTINEL_LAZY_MODULES[\"$module_name\"]=\"loaded\"
+                        VANTAGE_LAZY_MODULES[\"$module_name\"]=\"loaded\"
                     fi
                     if type $cmd &>/dev/null; then
                         $cmd \"\$@\"
@@ -245,13 +245,13 @@ create_lazy_proxy() {
     
     # For ML modules, create common proxy functions
     case "$module_name" in
-        sentinel_ml*)
+        vantage_ml*)
             eval "
             ml_suggest() {
-                if [[ \"\${SENTINEL_LAZY_MODULES[$module_name]:-}\" != \"loaded\" ]]; then
-                    [[ \"\${SENTINEL_LAZY_SHOW_LOADING:-1}\" == \"1\" ]] && emsg \"[LAZY] Loading ML module for suggestions...\"
+                if [[ \"\${VANTAGE_LAZY_MODULES[$module_name]:-}\" != \"loaded\" ]]; then
+                    [[ \"\${VANTAGE_LAZY_SHOW_LOADING:-1}\" == \"1\" ]] && emsg \"[LAZY] Loading ML module for suggestions...\"
                     module_enable \"$module_name\" \"0\" \"lazy\"
-                    SENTINEL_LAZY_MODULES[\"$module_name\"]=\"loaded\"
+                    VANTAGE_LAZY_MODULES[\"$module_name\"]=\"loaded\"
                 fi
                 if type ml_suggest &>/dev/null; then
                     ml_suggest \"\$@\"
@@ -259,13 +259,13 @@ create_lazy_proxy() {
             }
             "
             ;;
-        sentinel_osint*)
+        vantage_osint*)
             eval "
             osint() {
-                if [[ \"\${SENTINEL_LAZY_MODULES[$module_name]:-}\" != \"loaded\" ]]; then
-                    [[ \"\${SENTINEL_LAZY_SHOW_LOADING:-1}\" == \"1\" ]] && emsg \"[LAZY] Loading OSINT module...\"
+                if [[ \"\${VANTAGE_LAZY_MODULES[$module_name]:-}\" != \"loaded\" ]]; then
+                    [[ \"\${VANTAGE_LAZY_SHOW_LOADING:-1}\" == \"1\" ]] && emsg \"[LAZY] Loading OSINT module...\"
                     module_enable \"$module_name\" \"0\" \"lazy\"
-                    SENTINEL_LAZY_MODULES[\"$module_name\"]=\"loaded\"
+                    VANTAGE_LAZY_MODULES[\"$module_name\"]=\"loaded\"
                 fi
                 if type osint &>/dev/null; then
                     osint \"\$@\"
@@ -273,13 +273,13 @@ create_lazy_proxy() {
             }
             "
             ;;
-        sentinel_chat*)
+        vantage_chat*)
             eval "
             chat() {
-                if [[ \"\${SENTINEL_LAZY_MODULES[$module_name]:-}\" != \"loaded\" ]]; then
-                    [[ \"\${SENTINEL_LAZY_SHOW_LOADING:-1}\" == \"1\" ]] && emsg \"[LAZY] Loading chat module...\"
+                if [[ \"\${VANTAGE_LAZY_MODULES[$module_name]:-}\" != \"loaded\" ]]; then
+                    [[ \"\${VANTAGE_LAZY_SHOW_LOADING:-1}\" == \"1\" ]] && emsg \"[LAZY] Loading chat module...\"
                     module_enable \"$module_name\" \"0\" \"lazy\"
-                    SENTINEL_LAZY_MODULES[\"$module_name\"]=\"loaded\"
+                    VANTAGE_LAZY_MODULES[\"$module_name\"]=\"loaded\"
                 fi
                 if type chat &>/dev/null; then
                     chat \"\$@\"
@@ -287,13 +287,13 @@ create_lazy_proxy() {
             }
             "
             ;;
-        sentinel_gitstar*)
+        vantage_gitstar*)
             eval "
             gitstar() {
-                if [[ \"\${SENTINEL_LAZY_MODULES[$module_name]:-}\" != \"loaded\" ]]; then
-                    [[ \"\${SENTINEL_LAZY_SHOW_LOADING:-1}\" == \"1\" ]] && emsg \"[LAZY] Loading GitStar module...\"
+                if [[ \"\${VANTAGE_LAZY_MODULES[$module_name]:-}\" != \"loaded\" ]]; then
+                    [[ \"\${VANTAGE_LAZY_SHOW_LOADING:-1}\" == \"1\" ]] && emsg \"[LAZY] Loading GitStar module...\"
                     module_enable \"$module_name\" \"0\" \"lazy\"
-                    SENTINEL_LAZY_MODULES[\"$module_name\"]=\"loaded\"
+                    VANTAGE_LAZY_MODULES[\"$module_name\"]=\"loaded\"
                 fi
                 if type gitstar &>/dev/null; then
                     gitstar \"\$@\"
@@ -311,7 +311,7 @@ module_enable() {
     local force="${2:-0}"
     local called_by="${3:-direct}"
     local module_file=""
-    local debug_mode="${SENTINEL_DEBUG_MODULES:-0}"
+    local debug_mode="${VANTAGE_DEBUG_MODULES:-0}"
     
     # Return early if module name is empty to prevent crashes
     if [[ -z "$module_name" ]]; then
@@ -328,7 +328,7 @@ module_enable() {
     [[ "$debug_mode" == "1" ]] && echo "DEBUG: Attempting to load module '$module_name'" >&2 2>/dev/null || true
     
     # Define module path with safer default
-    local module_path="${SENTINEL_MODULES_PATH:-$HOME/.bash_modules.d}"
+    local module_path="${VANTAGE_MODULES_PATH:-$HOME/.bash_modules.d}"
     
     # First try to find module in root directory with error handling
     if [[ -d "$module_path" ]]; then
@@ -353,8 +353,8 @@ module_enable() {
     fi
     
     # Check if module is already loaded - with error handling
-    if [[ "${SENTINEL_LOADED_MODULES[$module_name]:-}" == "1" ]] && [[ "$force" != "1" ]]; then
-        [[ "$called_by" == "direct" && "${SENTINEL_QUIET_MODULES:-0}" != "1" ]] && \
+    if [[ "${VANTAGE_LOADED_MODULES[$module_name]:-}" == "1" ]] && [[ "$force" != "1" ]]; then
+        [[ "$called_by" == "direct" && "${VANTAGE_QUIET_MODULES:-0}" != "1" ]] && \
             emsg "Module '$module_name' is already loaded." 2>/dev/null || true
         return 0
     fi
@@ -367,7 +367,7 @@ module_enable() {
         if [[ -n "$module_file" ]]; then
             create_lazy_proxy "$module_name" "$module_file"
             # Mark in loaded modules as "lazy" to prevent duplicate loading
-            SENTINEL_LOADED_MODULES["$module_name"]="lazy"
+            VANTAGE_LOADED_MODULES["$module_name"]="lazy"
             return 0
         fi
     fi
@@ -413,7 +413,7 @@ module_enable() {
     fi
     
     # Security: Verify module integrity if HMAC verification is enabled - with error handling
-    if [[ "${SENTINEL_VERIFY_MODULES:-0}" == "1" ]] && command -v openssl &>/dev/null; then
+    if [[ "${VANTAGE_VERIFY_MODULES:-0}" == "1" ]] && command -v openssl &>/dev/null; then
         [[ "$debug_mode" == "1" ]] && echo "DEBUG: HMAC verification enabled" >&2 2>/dev/null || true
         
         if [[ -f "$module_file.hmac" ]]; then
@@ -423,12 +423,12 @@ module_enable() {
             
             # Get machine-id safely
             if [[ -f "/etc/machine-id" ]]; then
-                machine_id=$(cat "/etc/machine-id" 2>/dev/null) || machine_id="SENTINEL_FALLBACK_KEY"
+                machine_id=$(cat "/etc/machine-id" 2>/dev/null) || machine_id="VANTAGE_FALLBACK_KEY"
             else
-                machine_id="SENTINEL_FALLBACK_KEY"
+                machine_id="VANTAGE_FALLBACK_KEY"
             fi
             
-            hmac_key="${SENTINEL_HMAC_KEY:-$machine_id}"
+            hmac_key="${VANTAGE_HMAC_KEY:-$machine_id}"
             
             # Calculate HMAC with error handling
             local calculated_hmac=""
@@ -447,14 +447,14 @@ module_enable() {
                     fi
                 fi
             fi
-        elif [[ "${SENTINEL_REQUIRE_HMAC:-0}" == "1" && "$force" != "1" ]]; then
+        elif [[ "${VANTAGE_REQUIRE_HMAC:-0}" == "1" && "$force" != "1" ]]; then
             ewarn "Security warning: Module '$module_name' has no HMAC signature" 2>/dev/null || true
             # Skip but don't fail - log warning and continue
         fi
     fi
     
     # Security: Check for suspicious patterns in module - with error handling
-    if [[ "${SENTINEL_CHECK_MODULE_CONTENT:-0}" == "1" ]] && command -v grep &>/dev/null; then
+    if [[ "${VANTAGE_CHECK_MODULE_CONTENT:-0}" == "1" ]] && command -v grep &>/dev/null; then
         local suspicious_patterns=(
             'curl.*\|.*sh'
             'wget.*\|.*sh'
@@ -482,8 +482,8 @@ module_enable() {
     # Load module source to extract metadata without executing - with error handling
     local dependencies=""
     if command -v grep &>/dev/null; then
-        if grep -q "SENTINEL_MODULE_DEPENDENCIES=" "$module_file" 2>/dev/null; then
-            dependencies=$(grep "SENTINEL_MODULE_DEPENDENCIES=" "$module_file" 2>/dev/null | head -n1 2>/dev/null | cut -d'"' -f2 2>/dev/null) || dependencies=""
+        if grep -q "VANTAGE_MODULE_DEPENDENCIES=" "$module_file" 2>/dev/null; then
+            dependencies=$(grep "VANTAGE_MODULE_DEPENDENCIES=" "$module_file" 2>/dev/null | head -n1 2>/dev/null | cut -d'"' -f2 2>/dev/null) || dependencies=""
         fi
     fi
     
@@ -499,7 +499,7 @@ module_enable() {
                 [[ -z "$dep" ]] && continue
                 
                 # Skip if already loaded or loading
-                if [[ "${SENTINEL_LOADED_MODULES[$dep]:-}" != "1" ]]; then
+                if [[ "${VANTAGE_LOADED_MODULES[$dep]:-}" != "1" ]]; then
                     # Increase recursion depth counter
                     local new_depth=$((dep_depth + 1))
                     
@@ -515,7 +515,7 @@ module_enable() {
     
     # Actually load the module - with error handling
     # Mark as loading to detect circular dependencies
-    SENTINEL_LOADED_MODULES["$module_name"]="loading"
+    VANTAGE_LOADED_MODULES["$module_name"]="loading"
     
     # Flag to track loading success
     local module_loaded=0
@@ -535,7 +535,7 @@ module_enable() {
     
     # Process the loading result - with error handling
     if [[ $module_loaded -eq 1 ]]; then
-        SENTINEL_LOADED_MODULES["$module_name"]="1"
+        VANTAGE_LOADED_MODULES["$module_name"]="1"
         
         # Add to enabled modules list if it's not already there - with error handling
         if command -v grep &>/dev/null; then
@@ -548,12 +548,12 @@ module_enable() {
         fi
         
         # Only show success message if direct call and not in quiet mode
-        [[ "$called_by" == "direct" && "${SENTINEL_QUIET_MODULES:-0}" != "1" ]] && \
+        [[ "$called_by" == "direct" && "${VANTAGE_QUIET_MODULES:-0}" != "1" ]] && \
             # Module loaded silently 2>/dev/null || true
         return 0
     else
         # Even if module loading failed, don't crash the terminal
-        SENTINEL_LOADED_MODULES["$module_name"]="loaded"  # Mark as loaded anyway to prevent repeated failures
+        VANTAGE_LOADED_MODULES["$module_name"]="loaded"  # Mark as loaded anyway to prevent repeated failures
         
         if [[ "$called_by" == "direct" ]]; then
             ewarn "Note: Module '$module_name' may have warnings but will continue" 2>/dev/null || true
@@ -566,17 +566,17 @@ module_enable() {
 # Function to load all modules in enabled modules list with enhanced error handling
 # to prevent terminal crashes
 _load_enabled_modules() {
-    # Skip loading if the SENTINEL_SKIP_AUTO_LOAD flag is set
+    # Skip loading if the VANTAGE_SKIP_AUTO_LOAD flag is set
     # This prevents duplicate loading when called from .bashrc
-    if [[ "${SENTINEL_SKIP_AUTO_LOAD:-0}" == "1" ]]; then
-        [[ "${SENTINEL_DEBUG_MODULES:-0}" == "1" ]] && echo "DEBUG: Skipping automatic module loading due to SENTINEL_SKIP_AUTO_LOAD flag" >&2
+    if [[ "${VANTAGE_SKIP_AUTO_LOAD:-0}" == "1" ]]; then
+        [[ "${VANTAGE_DEBUG_MODULES:-0}" == "1" ]] && echo "DEBUG: Skipping automatic module loading due to VANTAGE_SKIP_AUTO_LOAD flag" >&2
         return 0
     fi
     
     # First set up safety nets
     trap '' ERR
     set +e
-    local debug_mode="${SENTINEL_DEBUG_MODULES:-0}"
+    local debug_mode="${VANTAGE_DEBUG_MODULES:-0}"
     
     [[ "$debug_mode" == "1" ]] && echo "DEBUG: Loading enabled modules from $HOME/.enabled_modules" >&2 2>/dev/null || true
     
@@ -604,9 +604,9 @@ _load_enabled_modules() {
             [[ -z "$module_name" || "$module_name" =~ ^# ]] && continue
             
             # Enable the module if it's not already loaded - with error handling
-            if [[ "${SENTINEL_LOADED_MODULES[$module_name]:-}" != "1" ]]; then
+            if [[ "${VANTAGE_LOADED_MODULES[$module_name]:-}" != "1" ]]; then
                 if is_lazy_load_module "$module_name"; then
-                    create_lazy_proxy "$module_name" "$SENTINEL_MODULES_PATH/$module_name.module"
+                    create_lazy_proxy "$module_name" "$VANTAGE_MODULES_PATH/$module_name.module"
                 else
                     module_enable "$module_name" "0" "startup" 2>/dev/null || true
                 fi
@@ -622,12 +622,12 @@ _load_enabled_modules() {
 
 # Function to recursively load all modules in all subdirectories
 _load_all_modules() {
-    local debug_mode="${SENTINEL_DEBUG_MODULES:-0}"
+    local debug_mode="${VANTAGE_DEBUG_MODULES:-0}"
     
-    [[ "$debug_mode" == "1" ]] && echo "DEBUG: Recursively loading all modules in $SENTINEL_MODULES_PATH" >&2
+    [[ "$debug_mode" == "1" ]] && echo "DEBUG: Recursively loading all modules in $VANTAGE_MODULES_PATH" >&2
     
     # Find all modules
-    local all_modules=$(find_all_modules "$SENTINEL_MODULES_PATH")
+    local all_modules=$(find_all_modules "$VANTAGE_MODULES_PATH")
     
         # Load each module if not already loaded
         echo "$all_modules" | while IFS= read -r module_path; do
@@ -643,7 +643,7 @@ _load_all_modules() {
             local module_name=$(get_module_name_from_path "$module_path")
         
         # Skip if already loaded
-        if [[ "${SENTINEL_LOADED_MODULES[$module_name]}" == "1" ]]; then
+        if [[ "${VANTAGE_LOADED_MODULES[$module_name]}" == "1" ]]; then
             [[ "$debug_mode" == "1" ]] && echo "DEBUG: Module $module_name already loaded, skipping" >&2
             continue
         fi
@@ -664,8 +664,8 @@ module_disable() {
         
         # If module is loaded in current session, mark it as unloaded
         # (can't actually unload it without starting a new session)
-        if [[ "${SENTINEL_LOADED_MODULES[$module_name]}" == "1" ]]; then
-            unset "SENTINEL_LOADED_MODULES[$module_name]"
+        if [[ "${VANTAGE_LOADED_MODULES[$module_name]}" == "1" ]]; then
+            unset "VANTAGE_LOADED_MODULES[$module_name]"
             emsg "Module '$module_name' disabled. It will not be loaded in future sessions."
             emsg "Note: The module remains active in the current session."
         else
@@ -684,13 +684,13 @@ module_sign() {
     local module_file=""
     
     # Check for both .sh and .module extensions
-    if [[ -f "$SENTINEL_MODULES_PATH/$module_name.sh" ]]; then
-        module_file="$SENTINEL_MODULES_PATH/$module_name.sh"
-    elif [[ -f "$SENTINEL_MODULES_PATH/$module_name.module" ]]; then
-        module_file="$SENTINEL_MODULES_PATH/$module_name.module"
+    if [[ -f "$VANTAGE_MODULES_PATH/$module_name.sh" ]]; then
+        module_file="$VANTAGE_MODULES_PATH/$module_name.sh"
+    elif [[ -f "$VANTAGE_MODULES_PATH/$module_name.module" ]]; then
+        module_file="$VANTAGE_MODULES_PATH/$module_name.module"
     else
         # Search in subdirectories
-        local subdir_module=$(find "$SENTINEL_MODULES_PATH" -path "*/$module_name.module" -o -path "*/$module_name.sh" 2>/dev/null | head -n 1)
+        local subdir_module=$(find "$VANTAGE_MODULES_PATH" -path "*/$module_name.module" -o -path "*/$module_name.sh" 2>/dev/null | head -n 1)
         if [[ -n "$subdir_module" ]]; then
             module_file="$subdir_module"
         fi
@@ -709,7 +709,7 @@ module_sign() {
     fi
     
     # Use the HMAC key from environment or a default derived from machine-id
-    local hmac_key="${SENTINEL_HMAC_KEY:-$(cat /etc/machine-id 2>/dev/null || echo "SENTINEL_DEFAULT_KEY")}"
+    local hmac_key="${VANTAGE_HMAC_KEY:-$(cat /etc/machine-id 2>/dev/null || echo "VANTAGE_DEFAULT_KEY")}"
     
     # Calculate and store HMAC
     local hmac=$(openssl dgst -sha256 -hmac "$hmac_key" "$module_file" | cut -d' ' -f2)
@@ -722,14 +722,14 @@ module_sign() {
 
 # List lazy loading status
 module_lazy_status() {
-    echo "SENTINEL Lazy Loading Status"
+    echo "VANTAGE Lazy Loading Status"
     echo "============================"
     echo
-    echo "Lazy Loading: ${SENTINEL_LAZY_LOADING_ENABLED:-1}"
+    echo "Lazy Loading: ${VANTAGE_LAZY_LOADING_ENABLED:-1}"
     echo
     echo "Lazy-Loaded Modules:"
-    for module in "${!SENTINEL_LAZY_MODULES[@]}"; do
-        local status="${SENTINEL_LAZY_MODULES[$module]}"
+    for module in "${!VANTAGE_LAZY_MODULES[@]}"; do
+        local status="${VANTAGE_LAZY_MODULES[$module]}"
         if [[ "$status" == "loaded" ]]; then
             echo "  [$module] - Loaded on demand"
         else
@@ -738,8 +738,8 @@ module_lazy_status() {
     done
     echo
     echo "Core Modules (always eager):"
-    for module in "${SENTINEL_CORE_MODULES[@]}"; do
-        if [[ "${SENTINEL_LOADED_MODULES[$module]:-}" == "1" ]]; then
+    for module in "${VANTAGE_CORE_MODULES[@]}"; do
+        if [[ "${VANTAGE_LOADED_MODULES[$module]:-}" == "1" ]]; then
             echo "  [$module] - Loaded"
         else
             echo "  [$module] - Not loaded"
@@ -749,20 +749,20 @@ module_lazy_status() {
 
 # List all available and loaded modules, including those in subdirectories
 module_list() {
-    local debug_mode="${SENTINEL_DEBUG_MODULES:-0}"
+    local debug_mode="${VANTAGE_DEBUG_MODULES:-0}"
     local recursive="${1:-1}"  # Default to recursive
     
-    echo "SENTINEL Module Registry"
+    echo "VANTAGE Module Registry"
     echo "======================="
     
     # Find all modules
     local all_modules
     
     if [[ "$recursive" == "1" ]]; then
-        all_modules=$(find_all_modules "$SENTINEL_MODULES_PATH")
+        all_modules=$(find_all_modules "$VANTAGE_MODULES_PATH")
     else
         # Non-recursive - just list modules in the root directory
-        all_modules=$(find "$SENTINEL_MODULES_PATH" -maxdepth 1 -type f \( -name "*.module" -o -name "*.sh" \) 2>/dev/null | sort)
+        all_modules=$(find "$VANTAGE_MODULES_PATH" -maxdepth 1 -type f \( -name "*.module" -o -name "*.sh" \) 2>/dev/null | sort)
     fi
     
     if [[ -z "$all_modules" ]]; then
@@ -782,16 +782,16 @@ module_list() {
         
         # Extract module name and directory
         local module_name=$(get_module_name_from_path "$module_file")
-        local module_dir=$(dirname "$module_file" | sed "s|$SENTINEL_MODULES_PATH||" | sed 's|^/||')
+        local module_dir=$(dirname "$module_file" | sed "s|$VANTAGE_MODULES_PATH||" | sed 's|^/||')
         
         # Get module description
         local description=""
-        if grep -q "SENTINEL_MODULE_DESCRIPTION=" "$module_file" 2>/dev/null; then
-            description=$(grep "SENTINEL_MODULE_DESCRIPTION=" "$module_file" | head -n1 | cut -d'"' -f2)
+        if grep -q "VANTAGE_MODULE_DESCRIPTION=" "$module_file" 2>/dev/null; then
+            description=$(grep "VANTAGE_MODULE_DESCRIPTION=" "$module_file" | head -n1 | cut -d'"' -f2)
         else
             # Try to extract from header comment
-            description=$(grep -A1 "# SENTINEL Module:" "$module_file" 2>/dev/null | tail -n1 | sed 's/# //')
-            [[ "$description" == *"SENTINEL Module:"* ]] && description=""
+            description=$(grep -A1 "# VANTAGE Module:" "$module_file" 2>/dev/null | tail -n1 | sed 's/# //')
+            [[ "$description" == *"VANTAGE Module:"* ]] && description=""
         fi
         
         # Determine module status
@@ -806,7 +806,7 @@ module_list() {
         fi
         
         # Check if currently loaded
-        if [[ "${SENTINEL_LOADED_MODULES[$module_name]}" == "1" ]]; then
+        if [[ "${VANTAGE_LOADED_MODULES[$module_name]}" == "1" ]]; then
             status="L"
             status_color="${BLUE}"
             loaded_modules=$((loaded_modules + 1))
@@ -816,9 +816,9 @@ module_list() {
                 status="*"
                 status_color="${GREEN}"
             fi
-        elif [[ "${SENTINEL_LOADED_MODULES[$module_name]}" == "lazy" ]]; then
+        elif [[ "${VANTAGE_LOADED_MODULES[$module_name]}" == "lazy" ]]; then
             # Module is set up for lazy loading
-            if [[ "${SENTINEL_LAZY_MODULES[$module_name]}" == "loaded" ]]; then
+            if [[ "${VANTAGE_LAZY_MODULES[$module_name]}" == "loaded" ]]; then
                 status="Z"  # Lazy loaded and now active
                 status_color="${YELLOW}"
             else
@@ -854,9 +854,9 @@ module_install() {
     fi
     
     # Determine target path
-    local target_path="$SENTINEL_MODULES_PATH"
+    local target_path="$VANTAGE_MODULES_PATH"
     if [[ -n "$subdirectory" ]]; then
-        target_path="$SENTINEL_MODULES_PATH/$subdirectory"
+        target_path="$VANTAGE_MODULES_PATH/$subdirectory"
         mkdir -p "$target_path"
     fi
     
@@ -898,15 +898,15 @@ bash_list_modules() {
 # Module configuration
 # Configure modules in ~/.bashrc.postcustom, not here
 # Example in ~/.bashrc.postcustom:
-#   export SENTINEL_OSINT_ENABLED=1       # Enable OSINT module
-#   export SENTINEL_OBFUSCATE_ENABLED=0   # Disable obfuscation module
+#   export VANTAGE_OSINT_ENABLED=1       # Enable OSINT module
+#   export VANTAGE_OBFUSCATE_ENABLED=0   # Disable obfuscation module
 
 # Ensure compatibility with bashrc module registry
-if [[ -n "${SENTINEL_MODULES+x}" ]]; then
-    # Update the main SENTINEL_MODULES registry if it exists
-    for module_name in "${!SENTINEL_LOADED_MODULES[@]}"; do
-        if [[ "${SENTINEL_LOADED_MODULES[$module_name]}" == "1" ]]; then
-            SENTINEL_MODULES["$module_name"]=1
+if [[ -n "${VANTAGE_MODULES+x}" ]]; then
+    # Update the main VANTAGE_MODULES registry if it exists
+    for module_name in "${!VANTAGE_LOADED_MODULES[@]}"; do
+        if [[ "${VANTAGE_LOADED_MODULES[$module_name]}" == "1" ]]; then
+            VANTAGE_MODULES["$module_name"]=1
         fi
     done
 fi
@@ -977,7 +977,7 @@ safe_module_loader _load_enabled_modules
 # Load every discoverable module only when explicitly requested. The default
 # startup path should respect the enabled-module registry and avoid helper
 # scripts in bash_modules.d with installer side effects.
-if [[ "${SENTINEL_LOAD_ALL_MODULES:-0}" == "1" && "${SENTINEL_SKIP_AUTO_LOAD:-0}" != "1" ]]; then
+if [[ "${VANTAGE_LOAD_ALL_MODULES:-0}" == "1" && "${VANTAGE_SKIP_AUTO_LOAD:-0}" != "1" ]]; then
     safe_module_loader _load_all_modules
 fi
 
@@ -985,7 +985,7 @@ fi
 module_menu() {
     while true; do
         clear
-        echo "SENTINEL Module Management"
+        echo "VANTAGE Module Management"
         echo "=========================="
         echo
         echo "1. List all modules"

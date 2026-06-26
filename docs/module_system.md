@@ -1,8 +1,8 @@
-# SENTINEL Module System Documentation
+# VANTAGE Module System Documentation
 
 ## Overview
 
-The SENTINEL module system is a sophisticated framework for extending bash functionality through self-contained, dynamically loadable modules. This document details how the module system works, how to create modules, and how modules interact with the core system.
+The VANTAGE module system is a sophisticated framework for extending bash functionality through self-contained, dynamically loadable modules. This document details how the module system works, how to create modules, and how modules interact with the core system.
 
 ## Module Architecture
 
@@ -127,25 +127,25 @@ FZF (Fuzzy Finder) integration:
 
 ### 4. ML/AI Modules
 
-#### sentinel_ml.module
+#### vantage_ml.module
 Core ML functionality:
 - Model loading and management
 - Inference pipeline
 - Feature extraction
 
-#### sentinel_chat.module
+#### vantage_chat.module
 LLM chat integration:
 - Local model support
 - Context management
 - Conversation history
 
-#### sentinel_context.module
+#### vantage_context.module
 Context awareness system:
 - Working directory tracking
 - Command context analysis
 - Project detection
 
-#### sentinel_cybersec_ml.module
+#### vantage_cybersec_ml.module
 Cybersecurity-focused ML features:
 - Threat detection
 - Anomaly detection
@@ -153,13 +153,13 @@ Cybersecurity-focused ML features:
 
 ### 5. OSINT Modules
 
-#### sentinel_osint.module
+#### vantage_osint.module
 OSINT data collection:
 - Multiple data source integration
 - Data aggregation
 - Result formatting
 
-#### sentinel_gitstar.module
+#### vantage_gitstar.module
 GitHub repository analysis:
 - Repository discovery
 - Code analysis
@@ -374,7 +374,7 @@ test_module_integration() {
        "version": "1.0.0",
        "description": "My custom module",
        "dependencies": ["logging"],
-       "sentinel_version": ">=2.0.0"
+       "vantage_version": ">=2.0.0"
    }
    ```
 
@@ -383,13 +383,13 @@ test_module_integration() {
 ```bash
 # Download and extract
 wget https://example.com/modules/cool_module.tar.gz
-tar -xzf cool_module.tar.gz -C ~/.sentinel/modules/
+tar -xzf cool_module.tar.gz -C ~/.vantage/modules/
 
 # Install
-sentinel module install cool_module
+vantage module install cool_module
 
 # Enable
-sentinel module enable cool_module
+vantage module enable cool_module
 ```
 
 ## Module Security
@@ -467,24 +467,24 @@ secure_module_validate_input() {
 Enable module debugging:
 
 ```bash
-export SENTINEL_MODULE_DEBUG=1
-export SENTINEL_MODULE_TRACE=1
+export VANTAGE_MODULE_DEBUG=1
+export VANTAGE_MODULE_TRACE=1
 ```
 
 ### Module Diagnostics
 
 ```bash
 # Check module status
-sentinel module status my_module
+vantage module status my_module
 
 # Verify module integrity
-sentinel module verify my_module
+vantage module verify my_module
 
 # Show module dependencies
-sentinel module deps my_module
+vantage module deps my_module
 
 # Profile module performance
-sentinel module profile my_module
+vantage module profile my_module
 ```
 
 ## Future Enhancements
@@ -506,4 +506,4 @@ sentinel module profile my_module
 
 ## Conclusion
 
-The SENTINEL module system provides a powerful and flexible framework for extending bash functionality. By following the guidelines and best practices outlined in this document, developers can create robust, secure, and efficient modules that enhance the SENTINEL experience.
+The VANTAGE module system provides a powerful and flexible framework for extending bash functionality. By following the guidelines and best practices outlined in this document, developers can create robust, secure, and efficient modules that enhance the VANTAGE experience.

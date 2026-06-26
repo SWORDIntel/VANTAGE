@@ -2,7 +2,7 @@ local wezterm = require 'wezterm'
 
 local M = {}
 
--- A predefined list of complex SENTINEL command chains
+-- A predefined list of complex VANTAGE command chains
 local command_chains = {
     { id = "tar_gz", label = "Extract tar.gz securely", cmd = "tar -xzf archive.tar.gz" },
     { id = "find_large", label = "Find files > 1GB", cmd = "find . -type f -size +1G -exec ls -lh {} \\;" },
@@ -27,7 +27,7 @@ function M.show_command_chains(window, pane)
                     inner_pane:send_text(id)
                 end
             end),
-            title = 'Fuzzy Command Chains (SENTINEL)',
+            title = 'Fuzzy Command Chains (VANTAGE)',
             choices = choices,
             alphabet = '123456789',
             description = 'Fuzzy-search and select a chain to inject into the active pane:',
@@ -45,16 +45,16 @@ function M.ai_suggest(window, pane)
     if not highlighted or highlighted == "" then
         window:perform_action(
             wezterm.action.PromptInputLine {
-                description = 'Describe the command you want to build (SENTINEL AI):',
+                description = 'Describe the command you want to build (VANTAGE AI):',
                 action = wezterm.action_callback(function(inner_window, inner_pane, line)
                     if line and line ~= "" then
-                        -- In production, this spawns sentinel_smallllm.py as a background process.
+                        -- In production, this spawns vantage_smallllm.py as a background process.
                         -- It returns the output and triggers a toast notification.
-                        inner_window:toast_notification("SENTINEL AI", "Analyzing request: " .. line, nil, 3000)
+                        inner_window:toast_notification("VANTAGE AI", "Analyzing request: " .. line, nil, 3000)
                         
                         -- Scaffold: Simulate the AI response delay and injection
                         wezterm.time.call_after(1.5, function()
-                            inner_window:toast_notification("SENTINEL AI", "Ready! Injecting suggestion.", nil, 2000)
+                            inner_window:toast_notification("VANTAGE AI", "Ready! Injecting suggestion.", nil, 2000)
                             inner_pane:send_text("# AI Suggestion for: " .. line .. "\n")
                         end)
                     end
@@ -64,7 +64,7 @@ function M.ai_suggest(window, pane)
         )
     else
         -- If text is highlighted, we ask the AI to EXPLAIN the command
-        inner_window:toast_notification("SENTINEL AI", "Analyzing highlighted command...", nil, 3000)
+        inner_window:toast_notification("VANTAGE AI", "Analyzing highlighted command...", nil, 3000)
     end
 end
 

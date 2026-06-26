@@ -1,8 +1,8 @@
-# SENTINEL Graceful Degradation Strategies
+# VANTAGE Graceful Degradation Strategies
 
 ## Overview
 
-Graceful degradation ensures SENTINEL remains functional even when components fail. This document outlines strategies for maintaining core functionality while non-critical features may be unavailable.
+Graceful degradation ensures VANTAGE remains functional even when components fail. This document outlines strategies for maintaining core functionality while non-critical features may be unavailable.
 
 ## Degradation Hierarchy
 
@@ -71,13 +71,13 @@ ml_suggestions_fallback() {
 # Primary: Advanced logging with rotation
 logging_fallback() {
     # Fallback to simple echo-based logging
-    sentinel_log() {
+    vantage_log() {
         echo "[$(date '+%Y-%m-%d %H:%M:%S')] $*" >&2
     }
     
-    sentinel_log_error() { sentinel_log "ERROR: $*"; }
-    sentinel_log_warning() { sentinel_log "WARN: $*"; }
-    sentinel_log_info() { sentinel_log "INFO: $*"; }
+    vantage_log_error() { vantage_log "ERROR: $*"; }
+    vantage_log_warning() { vantage_log "WARN: $*"; }
+    vantage_log_info() { vantage_log "INFO: $*"; }
 }
 ```
 
@@ -106,9 +106,9 @@ load_feature() {
     local feature_name="$1"
     local criticality="$2"
     
-    if sentinel_feature_available "$feature_name" "$criticality"; then
+    if vantage_feature_available "$feature_name" "$criticality"; then
         # Load the feature
-        source "${SENTINEL_MODULES_PATH}/${feature_name}.module"
+        source "${VANTAGE_MODULES_PATH}/${feature_name}.module"
     else
         # Use fallback or skip
         local fallback="${feature_name}_fallback"
@@ -128,12 +128,12 @@ setup_completion() {
     complete -F _basic_completion -D
     
     # Enhanced completion (if available)
-    if sentinel_feature_available "advanced_completion" "important"; then
+    if vantage_feature_available "advanced_completion" "important"; then
         source ~/.bash_completion
     fi
     
     # FZF completion (if available)
-    if sentinel_feature_available "fzf_completion" "optional"; then
+    if vantage_feature_available "fzf_completion" "optional"; then
         source /usr/share/fzf/completion.bash
     fi
 }
@@ -149,9 +149,9 @@ setup_lazy_feature() {
     
     # Create wrapper function
     eval "${command}() {
-        if sentinel_feature_available '$feature' 'optional'; then
+        if vantage_feature_available '$feature' 'optional'; then
             unset -f $command
-            source '${SENTINEL_MODULES_PATH}/${feature}.module'
+            source '${VANTAGE_MODULES_PATH}/${feature}.module'
             $command \"\$@\"
         else
             echo '${command}: Feature unavailable in current mode' >&2
@@ -175,25 +175,25 @@ monitor_system_health() {
     local threshold=10
     
     # Count recent errors
-    error_count=$(sentinel_show_logs all 100 2>/dev/null | grep -c ERROR || echo 0)
+    error_count=$(vantage_show_logs all 100 2>/dev/null | grep -c ERROR || echo 0)
     
     # Adjust mode based on health
     if (( error_count > threshold )); then
-        sentinel_set_degradation_mode "minimal"
+        vantage_set_degradation_mode "minimal"
         echo "System experiencing issues, switching to minimal mode" >&2
     elif (( error_count > threshold/2 )); then
-        sentinel_set_degradation_mode "graceful"
+        vantage_set_degradation_mode "graceful"
     fi
 }
 
 # Run health check periodically
-[[ -z "$SENTINEL_HEALTH_CHECK_PID" ]] && {
+[[ -z "$VANTAGE_HEALTH_CHECK_PID" ]] && {
     (
         while sleep 300; do
             monitor_system_health
         done
     ) &
-    export SENTINEL_HEALTH_CHECK_PID=$!
+    export VANTAGE_HEALTH_CHECK_PID=$!
 }
 ```
 
@@ -201,10 +201,10 @@ monitor_system_health() {
 
 ```bash
 # User commands for mode control
-alias sentinel-mode-safe='sentinel_set_degradation_mode safe'
-alias sentinel-mode-minimal='sentinel_set_degradation_mode minimal'
-alias sentinel-mode-full='sentinel_set_degradation_mode graceful'
-alias sentinel-mode-status='sentinel_error_recovery_status'
+alias vantage-mode-safe='vantage_set_degradation_mode safe'
+alias vantage-mode-minimal='vantage_set_degradation_mode minimal'
+alias vantage-mode-full='vantage_set_degradation_mode graceful'
+alias vantage-mode-status='vantage_error_recovery_status'
 ```
 
 ## Testing Degradation
@@ -214,13 +214,13 @@ alias sentinel-mode-status='sentinel_error_recovery_status'
 ```bash
 # Test different degradation scenarios
 test_degradation_modes() {
-    local original_mode="$SENTINEL_FALLBACK_MODE"
+    local original_mode="$VANTAGE_FALLBACK_MODE"
     
     echo "Testing degradation modes..."
     
     for mode in safe minimal graceful; do
         echo "Testing $mode mode..."
-        sentinel_set_degradation_mode "$mode"
+        vantage_set_degradation_mode "$mode"
         
         # Test core features
         echo -n "  Core features: "
@@ -244,7 +244,7 @@ test_degradation_modes() {
     done
     
     # Restore original mode
-    sentinel_set_degradation_mode "$original_mode"
+    vantage_set_degradation_mode "$original_mode"
 }
 ```
 
@@ -259,13 +259,13 @@ simulate_component_failure() {
     echo "Simulating $failure_count failures for $component..."
     
     for ((i=1; i<=failure_count; i++)); do
-        sentinel_circuit_breaker_failure "$component" "Simulated failure $i"
+        vantage_circuit_breaker_failure "$component" "Simulated failure $i"
         sleep 0.1
     done
     
     echo "Component $component status:"
-    echo "  State: ${SENTINEL_CIRCUIT_BREAKERS[$component]}"
-    echo "  Failures: ${SENTINEL_CIRCUIT_BREAKER_FAILURES[$component]}"
+    echo "  State: ${VANTAGE_CIRCUIT_BREAKERS[$component]}"
+    echo "  Failures: ${VANTAGE_CIRCUIT_BREAKER_FAILURES[$component]}"
 }
 ```
 
@@ -305,7 +305,7 @@ notify_degradation() {
     fi
     
     # Log for non-interactive sessions
-    sentinel_log_warning "degradation" "$feature degraded: $reason"
+    vantage_log_warning "degradation" "$feature degraded: $reason"
 }
 ```
 
@@ -319,14 +319,14 @@ attempt_recovery() {
     local component="$1"
     
     # Check if circuit breaker can be reset
-    if sentinel_circuit_breaker_check "$component"; then
+    if vantage_circuit_breaker_check "$component"; then
         echo "Attempting recovery for $component..."
         
         # Try to reinitialize
         if type "${component}_init" &>/dev/null; then
             "${component}_init" && {
                 echo "$component recovered successfully"
-                sentinel_circuit_breaker_success "$component"
+                vantage_circuit_breaker_success "$component"
             }
         fi
     fi
@@ -337,12 +337,12 @@ attempt_recovery() {
 
 ```bash
 # User-initiated recovery
-sentinel_recover() {
+vantage_recover() {
     local component="${1:-all}"
     
     if [[ "$component" == "all" ]]; then
         # Recover all components
-        for comp in "${!SENTINEL_CIRCUIT_BREAKERS[@]}"; do
+        for comp in "${!VANTAGE_CIRCUIT_BREAKERS[@]}"; do
             attempt_recovery "$comp"
         done
     else
@@ -375,28 +375,28 @@ sentinel_recover() {
 
 ```bash
 # Display system health dashboard
-sentinel_health_dashboard() {
+vantage_health_dashboard() {
     clear
-    echo "=== SENTINEL Health Dashboard ==="
-    echo "Mode: $SENTINEL_FALLBACK_MODE"
+    echo "=== VANTAGE Health Dashboard ==="
+    echo "Mode: $VANTAGE_FALLBACK_MODE"
     echo ""
     echo "Component Status:"
     printf "%-20s %-10s %s\n" "Component" "State" "Failures"
     printf "%-20s %-10s %s\n" "--------" "-----" "--------"
     
-    for component in "${!SENTINEL_CIRCUIT_BREAKERS[@]}"; do
+    for component in "${!VANTAGE_CIRCUIT_BREAKERS[@]}"; do
         printf "%-20s %-10s %d\n" \
             "$component" \
-            "${SENTINEL_CIRCUIT_BREAKERS[$component]}" \
-            "${SENTINEL_CIRCUIT_BREAKER_FAILURES[$component]:-0}"
+            "${VANTAGE_CIRCUIT_BREAKERS[$component]}" \
+            "${VANTAGE_CIRCUIT_BREAKER_FAILURES[$component]:-0}"
     done
     
     echo ""
     echo "Recent Errors:"
-    sentinel_show_logs all 10 2>/dev/null | grep ERROR | tail -5
+    vantage_show_logs all 10 2>/dev/null | grep ERROR | tail -5
 }
 ```
 
 ## Conclusion
 
-Graceful degradation ensures SENTINEL remains usable under all conditions. By classifying features, implementing fallbacks, and providing clear communication, users maintain productivity even during system issues.
+Graceful degradation ensures VANTAGE remains usable under all conditions. By classifying features, implementing fallbacks, and providing clear communication, users maintain productivity even during system issues.

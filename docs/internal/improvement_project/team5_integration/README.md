@@ -2,12 +2,12 @@
 
 ## Overview
 
-Team 5 Agent 2 has implemented a comprehensive external tool integration system for SENTINEL, providing secure plugin management, standardized APIs for third-party tools, and Model Context Protocol (MCP) support for AI integration.
+Team 5 Agent 2 has implemented a comprehensive external tool integration system for VANTAGE, providing secure plugin management, standardized APIs for third-party tools, and Model Context Protocol (MCP) support for AI integration.
 
 ## Key Components Delivered
 
 ### 1. Core Module: `external_tools.module`
-- **Location**: `/opt/github/SENTINEL/bash_modules.d/external_tools.module`
+- **Location**: `/opt/github/VANTAGE/bash_modules.d/external_tools.module`
 - **Features**:
   - Tool discovery and registration system
   - Security sandboxing for tool execution
@@ -18,7 +18,7 @@ Team 5 Agent 2 has implemented a comprehensive external tool integration system 
 ### 2. Example Plugins
 
 #### Git Integration Plugin
-- **Location**: `/opt/github/SENTINEL/bash_modules.d/plugins/git_integration.plugin`
+- **Location**: `/opt/github/VANTAGE/bash_modules.d/plugins/git_integration.plugin`
 - **Features**:
   - Enhanced git workflows (feature, hotfix, release)
   - Smart commit templates
@@ -27,7 +27,7 @@ Team 5 Agent 2 has implemented a comprehensive external tool integration system 
   - MCP handlers for git operations
 
 #### Docker Integration Plugin
-- **Location**: `/opt/github/SENTINEL/bash_modules.d/plugins/docker_integration.plugin`
+- **Location**: `/opt/github/VANTAGE/bash_modules.d/plugins/docker_integration.plugin`
 - **Features**:
   - Security scanning (Trivy, Snyk, Docker native)
   - Safe container execution with resource limits
@@ -36,7 +36,7 @@ Team 5 Agent 2 has implemented a comprehensive external tool integration system 
   - Cleanup utilities
 
 #### Kubernetes Integration Plugin
-- **Location**: `/opt/github/SENTINEL/bash_modules.d/plugins/k8s_integration.plugin`
+- **Location**: `/opt/github/VANTAGE/bash_modules.d/plugins/k8s_integration.plugin`
 - **Features**:
   - Context management
   - Security scanning (RBAC, pods, network policies)
@@ -51,19 +51,19 @@ Team 5 Agent 2 has implemented a comprehensive external tool integration system 
 - **This README**: `/docs/internal/improvement_project/team5_integration/README.md`
 
 ### 4. Testing
-- **Test Script**: `/opt/github/SENTINEL/tests/test_external_tools.sh`
+- **Test Script**: `/opt/github/VANTAGE/tests/test_external_tools.sh`
 - **Coverage**: Module loading, registration, sandboxing, plugin system
 
 ## Quick Start
 
 ### 1. Enable the Module
 
-Add to your `.bashrc` or SENTINEL configuration:
+Add to your `.bashrc` or VANTAGE configuration:
 ```bash
 # Enable external tools module
 echo "external_tools" >> ~/.bash_modules
 
-# Reload SENTINEL
+# Reload VANTAGE
 source ~/.bashrc
 ```
 
@@ -71,37 +71,37 @@ source ~/.bashrc
 
 ```bash
 # Auto-discover tools
-sentinel_tool_discover
+vantage_tool_discover
 
 # Or manually register
-sentinel_tool_register git /usr/bin/git '{"type": "vcs"}'
-sentinel_tool_register docker /usr/bin/docker '{"type": "container"}'
-sentinel_tool_register kubectl /usr/bin/kubectl '{"type": "orchestration"}'
+vantage_tool_register git /usr/bin/git '{"type": "vcs"}'
+vantage_tool_register docker /usr/bin/docker '{"type": "container"}'
+vantage_tool_register kubectl /usr/bin/kubectl '{"type": "orchestration"}'
 ```
 
 ### 3. Load Plugins
 
 ```bash
 # Load included plugins
-sentinel_plugin_load git_integration
-sentinel_plugin_load docker_integration
-sentinel_plugin_load k8s_integration
+vantage_plugin_load git_integration
+vantage_plugin_load docker_integration
+vantage_plugin_load k8s_integration
 ```
 
 ### 4. Use Enhanced Features
 
 ```bash
 # Git workflows
-sentinel_git_workflow feature my-feature
-sentinel_git_analyze
+vantage_git_workflow feature my-feature
+vantage_git_analyze
 
 # Docker security
-sentinel_docker_scan nginx:latest
-sentinel_docker_monitor
+vantage_docker_scan nginx:latest
+vantage_docker_monitor
 
 # Kubernetes operations
-sentinel_k8s_scan all
-sentinel_k8s_monitor pods
+vantage_k8s_scan all
+vantage_k8s_monitor pods
 ```
 
 ## Security Features
@@ -116,7 +116,7 @@ sentinel_k8s_monitor pods
 
 Enable AI model integration:
 ```bash
-export SENTINEL_MCP_ENABLED=1
+export VANTAGE_MCP_ENABLED=1
 ```
 
 AI models can then interact with tools via JSON protocol:
@@ -150,7 +150,7 @@ AI models can then interact with tools via JSON protocol:
 
 Run the test suite:
 ```bash
-/opt/github/SENTINEL/tests/test_external_tools.sh
+/opt/github/VANTAGE/tests/test_external_tools.sh
 ```
 
 ## Contributing
@@ -168,8 +168,8 @@ To create a new plugin:
 For issues or questions:
 1. Check documentation in `/docs/internal/improvement_project/team5_integration/`
 2. Review test examples
-3. Enable debug mode: `export SENTINEL_MODULE_DEBUG=1`
+3. Enable debug mode: `export VANTAGE_MODULE_DEBUG=1`
 
 ---
 
-*Implemented by Team 5 Agent 2 as part of the SENTINEL Improvement Project*
+*Implemented by Team 5 Agent 2 as part of the VANTAGE Improvement Project*

@@ -1,16 +1,16 @@
 #!/usr/bin/env bash
-# SENTINEL Parallel Loading Enabler
-# This script enables the parallel loading system for SENTINEL modules
+# VANTAGE Parallel Loading Enabler
+# This script enables the parallel loading system for VANTAGE modules
 
 set -euo pipefail
 
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
-SENTINEL_ROOT="${SENTINEL_ROOT:-$(cd -- "$SCRIPT_DIR/../.." && pwd -P)}"
-MODULES_DIR="${SENTINEL_ROOT}/bash_modules.d"
+VANTAGE_ROOT="${VANTAGE_ROOT:-$(cd -- "$SCRIPT_DIR/../.." && pwd -P)}"
+MODULES_DIR="${VANTAGE_ROOT}/bash_modules.d"
 ENABLED_MODULES="$HOME/.enabled_modules"
 
-if [[ "${SENTINEL_QUIET_MODE:-0}" != "1" && "${SENTINEL_SUPPRESS_MODULE_MESSAGES:-0}" != "1" ]]; then
-    echo "=== SENTINEL Parallel Loading Enabler ==="
+if [[ "${VANTAGE_QUIET_MODE:-0}" != "1" && "${VANTAGE_SUPPRESS_MODULE_MESSAGES:-0}" != "1" ]]; then
+    echo "=== VANTAGE Parallel Loading Enabler ==="
     echo
 fi
 
@@ -60,19 +60,19 @@ echo
 echo "Configuring parallel loading in .bashrc..."
 
 # Check if parallel loading is already configured
-if ! grep -q "SENTINEL_PARALLEL_LOADING" "$HOME/.bashrc" 2>/dev/null; then
+if ! grep -q "VANTAGE_PARALLEL_LOADING" "$HOME/.bashrc" 2>/dev/null; then
     cat >> "$HOME/.bashrc" << 'EOF'
 
-# SENTINEL Parallel Module Loading Configuration
-export SENTINEL_PARALLEL_LOADING=1
-export SENTINEL_PARALLEL_MAX_JOBS=4
-export SENTINEL_MODULE_CACHE_DIR="$HOME/.cache/sentinel/modules"
+# VANTAGE Parallel Module Loading Configuration
+export VANTAGE_PARALLEL_LOADING=1
+export VANTAGE_PARALLEL_MAX_JOBS=4
+export VANTAGE_MODULE_CACHE_DIR="$HOME/.cache/vantage/modules"
 
 # Use parallel loading if available
 if [[ -f "$HOME/.enabled_modules" ]] && grep -q "parallel_loader" "$HOME/.enabled_modules" 2>/dev/null; then
     # Source the parallel loader first
-    if [[ -f "${SENTINEL_ROOT}/bash_modules.d/parallel_loader.module" ]]; then
-        source "${SENTINEL_ROOT}/bash_modules.d/parallel_loader.module"
+    if [[ -f "${VANTAGE_ROOT}/bash_modules.d/parallel_loader.module" ]]; then
+        source "${VANTAGE_ROOT}/bash_modules.d/parallel_loader.module"
         # Use parallel loading for remaining modules
         parallel_load_modules "$HOME/.enabled_modules"
     fi
@@ -84,7 +84,7 @@ else
 fi
 
 # Create cache directory
-CACHE_DIR="$HOME/.cache/sentinel/modules"
+CACHE_DIR="$HOME/.cache/vantage/modules"
 mkdir -p "$CACHE_DIR"
 echo "✓ Created cache directory: $CACHE_DIR"
 
@@ -112,7 +112,7 @@ fi
 echo
 echo "=== Configuration Summary ==="
 echo "Parallel loading: ENABLED"
-echo "Max parallel jobs: ${SENTINEL_PARALLEL_MAX_JOBS:-4}"
+echo "Max parallel jobs: ${VANTAGE_PARALLEL_MAX_JOBS:-4}"
 echo "Cache directory: $CACHE_DIR"
 echo "Enabled modules: $(wc -l < "$ENABLED_MODULES")"
 echo
@@ -137,11 +137,11 @@ cat << 'USAGE'
    $ clear_module_cache
 
 6. To disable parallel loading:
-   $ export SENTINEL_PARALLEL_LOADING=0
+   $ export VANTAGE_PARALLEL_LOADING=0
 
 For more information, see:
-  "${SENTINEL_ROOT}/docs/internal/improvement_project/team1_performance/parallel_loading.md"
-  "${SENTINEL_ROOT}/docs/internal/improvement_project/team1_performance/caching.md"
+  "${VANTAGE_ROOT}/docs/internal/improvement_project/team1_performance/parallel_loading.md"
+  "${VANTAGE_ROOT}/docs/internal/improvement_project/team1_performance/caching.md"
 
 USAGE
 
