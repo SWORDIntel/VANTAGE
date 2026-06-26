@@ -19,3 +19,9 @@ CLAUDE.md
 /.ipc/
 
 __pycache__/
+**/target/
+*.o
+indexer/indexer_daemon
+sentinel_indexer/indexer_daemon
+net/c/simple_test
+net/c/test_memshadow

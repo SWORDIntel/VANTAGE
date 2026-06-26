@@ -1,0 +1,69 @@
+# SENTINEL Context Hooks
+# Records command activity and access patterns for background indexing
+
+# Update epoch timestamp on every command via PROMPT_COMMAND
+_sentinel_update_active() {
+    ( date +%s > /tmp/sentinel_last_active & ) 2>/dev/null
+}
+
+if [[ ! "$PROMPT_COMMAND" == *_sentinel_update_active* ]]; then
+    PROMPT_COMMAND="${PROMPT_COMMAND:-}${PROMPT_COMMAND:+;}_sentinel_update_active"
+fi
+
+# Hook ls and cd to record directories
+_sentinel_log_dir() {
+    echo "$PWD" >> /tmp/sentinel_pending_dirs
+}
+
+cd() {
+    builtin cd "$@"
+    local ret=$?
+    ( _sentinel_log_dir & ) 2>/dev/null
+    return $ret
+}
+
+ls() {
+    command ls "$@"
+    local ret=$?
+    ( _sentinel_log_dir & ) 2>/dev/null
+    return $ret
+}
+
+# Hook cat and vim to record files
+_sentinel_log_file() {
+    local file="$1"
+    local abs_path
+    
+    # Attempt to resolve absolute path
+    abs_path="$(readlink -f "$file" 2>/dev/null)"
+    
+    # Fallback if readlink fails
+    if [[ -z "$abs_path" ]]; then
+        if [[ "$file" = /* ]]; then
+            abs_path="$file"
+        else
+            abs_path="${PWD}/${file}"
+        fi
+    fi
+    
+    echo "$abs_path" >> /tmp/sentinel_pending_files
+}
+
+_sentinel_process_files() {
+    for arg in "$@"; do
+        # Ignore options starting with '-'
+        if [[ "$arg" != -* ]]; then
+            _sentinel_log_file "$arg"
+        fi
+    done
+}
+
+cat() {
+    ( _sentinel_process_files "$@" & ) 2>/dev/null
+    command cat "$@"
+}
+
+vim() {
+    ( _sentinel_process_files "$@" & ) 2>/dev/null
+    command vim "$@"
+}

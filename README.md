@@ -1,30 +1,37 @@
-# SENTINEL - WezTerm Edition
+# VANTAGE - The Hyper-Converged Terminal Operating System
 
-**SENTINEL** has been completely overhauled into a next-generation terminal operating system. We have migrated away from complex Bash-heavy multiplexing towards a completely native, blazing fast **WezTerm Plugin**, powered by a compiled **Rust Backend** and **Context-Aware AI**.
+**VANTAGE** has been completely overhauled into a next-generation terminal operating system. We have migrated away from complex Bash-heavy multiplexing towards a completely native, blazing fast **WezTerm Plugin**, powered by a compiled **Rust Backend**, an **eBPF Firewall**, a **Quantum-Inspired Database (HYBRID_DB)**, and **Context-Aware AI**.
 
-## 🚀 The 3 Core Pillars (Phase 3 Architecture)
+## 🚀 The 5 Core Pillars (Completed Architecture)
 
-1. **Official WezTerm Plugin:** SENTINEL is no longer a hacked-together config file. It is a standardized WezTerm plugin loaded instantly via `wezterm.plugin.require()`.
-2. **Rust Micro-Binary Core:** Heavy shell subprocesses (like status checks and system parsing) have been replaced by a compiled Rust binary (`sentinel-core`) that natively streams JSON state directly to the Lua UI with zero latency.
-3. **TurboQuant AI Autocomplete:** By pressing `CTRL+SPACE`, SENTINEL scrapes your screen context, detects your hardware (`nvidia-smi`), and generates contextual shell commands via a native WezTerm dropdown UI. 
-    - *Hardware Adaptive*: If you have a dedicated GPU, it uses full GPU KV-Caching offload via Ollama. If you don't, it natively routes through the `framewerx` AEGIS-LAB engines to use CPU/VPU optimized TurboQuant inference!
+1. **Official WezTerm Plugin UI:** VANTAGE is no longer a hacked-together config file. It is a standardized WezTerm plugin loaded instantly via `wezterm.plugin.require()`. We feature rich interactive `InputSelector` overlays for OSINT, Git, Workspaces, and Health Diagnostics.
+2. **Rust Micro-Binary Core:** Heavy shell subprocesses have been replaced by a compiled Rust binary (`vantage-core`). It statically links the MSNET gossip protocol with pure-Rust constant-time cryptography (ChaCha20-Poly1305, HMAC-SHA256).
+3. **HYBRID_DB (QIHSE + KEYSTONE):** VANTAGE natively integrates a massive heterogeneous database. It dynamically routes queries using a UMA Dispatcher to either Keystone's deterministic scalar interpolation or QIHSE's quantum-inspired random fourier feature mappings.
+4. **eBPF/XDP Firewall:** VANTAGE drops malicious IPs in kernel-space before they ever hit the networking stack, utilizing a 100,000-entry BPF hash map directly queried by the XDP hook `vantage_xdp.c`.
+5. **Idle Context Scanner:** An ultra-lightweight C daemon (`indexer_daemon.c`) runs at ~0% CPU, asynchronously tracking your Bash directories, clustering them in RAM, and executing a flush to ZFS only when idle for >30 seconds.
 
-## 📦 Installation
+## 📦 Installation & End-to-End Build
 
-SENTINEL still provides a rich UI bootstrapper to automatically wire up the `thin_bash` hooks and compile the Rust backend.
+VANTAGE provides an end-to-end Makefile to build the Rust core, the C indexer daemon, and the eBPF objects in one swoop.
 
-1. Install [WezTerm](https://wezfurlong.org/wezterm/install/linux.html) and `cargo`.
-2. Run the bootstrap script:
 ```bash
-./install.sh
+cd VANTAGE
+make all
 ```
-3. Launch `wezterm`.
 
-*(To completely purge the system or reinstall, you can use `./uninstall.sh` or `./reinstall.sh` respectively).*
+To run the full end-to-end integration benchmark:
+```bash
+make bench
+```
 
 ## ⌨️ Native Hotkeys
 
-- `CTRL+SHIFT+M`: Master SENTINEL UI Menu
+- `CTRL+SHIFT+M`: Master VANTAGE UI Menu
+- `CTRL+SHIFT+O`: Interactive OSINT Dashboard
+- `CTRL+SHIFT+G`: Interactive Git UI
+- `CTRL+SHIFT+H`: Interactive Health Diagnostics
+- `CTRL+SHIFT+W`: Interactive Workspace Manager
+- `CTRL+SHIFT+D`: Workspace Builder (PenTest / Dev Layouts)
 - `CTRL+SPACE`: TurboQuant AI Command Suggestions
 - `CTRL+SHIFT+S`: Save Context Session / Workspace State
 - `CTRL+SHIFT+L`: Load Context Session / Workspace State

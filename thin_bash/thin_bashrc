@@ -1,7 +1,15 @@
-for d in ~/.config/sentinel/bash_aliases.d ~/.config/sentinel/bash_functions.d ~/.config/sentinel/completions.d; do
-    if [ -d "$d" ]; then
-        for f in "$d"/*.sh "$d"/*.module; do
-            [ -f "$f" ] && source "$f"
-        done
-    fi
-done
+# VANTAGE Thin Bash Configuration
+# Sourced by ~/.bashrc
+
+# 1. Source all aliases (Consolidated Category B)
+if [ -f ~/.config/vantage/vantage_aliases.sh ]; then
+    source ~/.config/vantage/vantage_aliases.sh
+fi
+
+# 2. Source all functions (Consolidated Category B)
+if [ -f ~/.config/vantage/vantage_functions.sh ]; then
+    source ~/.config/vantage/vantage_functions.sh
+fi
+
+# Note: All Python ML Daemons have been successfully detached
+# and migrated to WezTerm native gui-startup (vantage-core daemon).

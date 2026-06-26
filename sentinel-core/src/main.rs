@@ -2,6 +2,8 @@ use serde::Serialize;
 use std::env;
 use std::process::Command;
 
+pub mod hybrid_db;
+
 #[derive(Serialize)]
 struct ToolStatus {
     installed: bool,
@@ -38,6 +40,8 @@ fn main() {
     let command = &args[1];
     match command.as_str() {
         "health" => {
+            let db_res = hybrid_db::db_search(10);
+            println!("Hybrid DB test result: {}", db_res);
             let status = HealthStatus {
                 git: ToolStatus { installed: check_tool("git") },
                 jq: ToolStatus { installed: check_tool("jq") },
@@ -54,6 +58,8 @@ fn main() {
         }
         "osint" => {
             println!("OSINT command placeholder");
+            let result = hybrid_db::db_search(42);
+            println!("Hybrid DB OSINT Search result: {}", result);
         }
         _ => {
             eprintln!("Unknown command: {}", command);

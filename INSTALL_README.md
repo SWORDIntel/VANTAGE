@@ -1,12 +1,12 @@
-# SENTINEL Installation Notes
+# VANTAGE Installation Notes
 
 This file is a compatibility landing page. The maintained installation guide lives at [`docs/installation.md`](docs/installation.md).
 
 ## Quick Start
 
 ```bash
-git clone https://github.com/SWORDIntel/SENTINEL.git
-cd SENTINEL
+git clone https://github.com/SWORDIntel/VANTAGE.git
+cd VANTAGE
 bash install.sh
 source ~/.bashrc
 ```

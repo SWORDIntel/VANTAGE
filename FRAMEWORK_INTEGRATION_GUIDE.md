@@ -1,29 +1,29 @@
-# SENTINEL Framework Integration Guide
+# VANTAGE Framework Integration Guide
 
-The Modular Framework Integration Architecture in SENTINEL allows developers to dynamically extend its capabilities. Since frameworks (like Metasploit, Covenant, or Framewerx) are typically full repositories rather than single scripts, SENTINEL uses a bridge-file approach to load external capabilities.
+The Modular Framework Integration Architecture in VANTAGE allows developers to dynamically extend its capabilities. Since frameworks (like Metasploit, Covenant, or Framewerx) are typically full repositories rather than single scripts, VANTAGE uses a bridge-file approach to load external capabilities.
 
 ## 1. Adding a New Framework Repository
 
-To add a new integration, clone or place the entire framework repository into the `~/SENTINEL/plugin/frameworks/` directory.
+To add a new integration, clone or place the entire framework repository into the `~/VANTAGE/plugin/frameworks/` directory.
 
 ```bash
-cd ~/SENTINEL/plugin/frameworks/
-git clone https://github.com/example/covenant-sentinel.git
+cd ~/VANTAGE/plugin/frameworks/
+git clone https://github.com/example/covenant-vantage.git
 ```
 
-### The `sentinel_hook.lua` Bridge Script
+### The `vantage_hook.lua` Bridge Script
 
-For SENTINEL to recognize and load your framework, your repository **must** contain a `sentinel_hook.lua` file in its root directory. This script acts as the bridge between your repository's internal logic, WezTerm's UI, the Abstract Syntax Tree (AST), and the Rust `sentinel-core` backend.
+For VANTAGE to recognize and load your framework, your repository **must** contain a `vantage_hook.lua` file in its root directory. This script acts as the bridge between your repository's internal logic, WezTerm's UI, the Abstract Syntax Tree (AST), and the Rust `vantage-core` backend.
 
-The `sentinel_hook.lua` file must return a module table containing an `apply_to_config(config)` function.
+The `vantage_hook.lua` file must return a module table containing an `apply_to_config(config)` function.
 
-Example (`~/SENTINEL/plugin/frameworks/covenant-sentinel/sentinel_hook.lua`):
+Example (`~/VANTAGE/plugin/frameworks/covenant-vantage/vantage_hook.lua`):
 ```lua
 local wezterm = require 'wezterm'
 
 -- To load other Lua files from your repository, construct the absolute path
 -- or append your repository to package.path
-local repo_path = os.getenv("HOME") .. "/SENTINEL/plugin/frameworks/covenant-sentinel/"
+local repo_path = os.getenv("HOME") .. "/VANTAGE/plugin/frameworks/covenant-vantage/"
 -- local my_internal_module = dofile(repo_path .. "src/internal.lua")
 
 local M = {}
@@ -37,7 +37,7 @@ end
 return M
 ```
 
-When WezTerm starts, `framework_loader.lua` scans all subdirectories in `frameworks/` for `sentinel_hook.lua` files and safely executes their `apply_to_config(config)` functions.
+When WezTerm starts, `framework_loader.lua` scans all subdirectories in `frameworks/` for `vantage_hook.lua` files and safely executes their `apply_to_config(config)` functions.
 
 ## 2. Hooking into WezTerm UI Elements
 
@@ -82,21 +82,21 @@ wezterm.on('open-framework-dashboard', function(window, pane)
 end)
 ```
 
-## 3. Interfacing with Rust `sentinel-core` and AST
+## 3. Interfacing with Rust `vantage-core` and AST
 
-The core engine of SENTINEL is written in Rust (`sentinel-core`). Integrations can communicate with `sentinel-core` using child processes, WezTerm's background task APIs, named pipes, or UNIX sockets.
+The core engine of VANTAGE is written in Rust (`vantage-core`). Integrations can communicate with `vantage-core` using child processes, WezTerm's background task APIs, named pipes, or UNIX sockets.
 
 ### Spawning Child Processes
-You can invoke the `sentinel-core` CLI directly from your hook module to fetch data, trigger internal state changes, or pass AST payloads.
+You can invoke the `vantage-core` CLI directly from your hook module to fetch data, trigger internal state changes, or pass AST payloads.
 
 ```lua
 local wezterm = require 'wezterm'
 
 function M.apply_to_config(config)
     wezterm.on('fetch-framework-agents', function(window, pane)
-        -- Call sentinel-core as a child process
+        -- Call vantage-core as a child process
         local success, stdout, stderr = wezterm.run_child_process {
-            'sentinel-core', 'framework', 'list-agents'
+            'vantage-core', 'framework', 'list-agents'
         }
         
         if success then
@@ -107,10 +107,10 @@ end
 ```
 
 ### Advanced IPC (Unix Sockets & Named Pipes)
-For robust communication (e.g., streaming real-time events from Framewerx, managing a Covenant listener, or pushing live AST updates), `sentinel-core` exposes local UNIX sockets. Your Lua script can interact with this via `socat` or `curl` inside child processes, or by using WezTerm's native plugin ecosystem if socket communication primitives are exposed.
+For robust communication (e.g., streaming real-time events from Framewerx, managing a Covenant listener, or pushing live AST updates), `vantage-core` exposes local UNIX sockets. Your Lua script can interact with this via `socat` or `curl` inside child processes, or by using WezTerm's native plugin ecosystem if socket communication primitives are exposed.
 
 ## Important Notes
 
-*   **Initialization Order**: Hook scripts are loaded *after* all core plugins. You can rely on core SENTINEL services being fully initialized.
-*   **Error Handling**: The `framework_loader` wraps hook execution in a `pcall`. If a hook throws an error, it is logged to the WezTerm console without crashing SENTINEL.
-*   **Module Pathing**: Since your framework is an external repository, standard `require` paths might not point to your internal modules. Use `dofile` with absolute paths, or explicitly update `package.path` inside your `sentinel_hook.lua`.
+*   **Initialization Order**: Hook scripts are loaded *after* all core plugins. You can rely on core VANTAGE services being fully initialized.
+*   **Error Handling**: The `framework_loader` wraps hook execution in a `pcall`. If a hook throws an error, it is logged to the WezTerm console without crashing VANTAGE.
+*   **Module Pathing**: Since your framework is an external repository, standard `require` paths might not point to your internal modules. Use `dofile` with absolute paths, or explicitly update `package.path` inside your `vantage_hook.lua`.
